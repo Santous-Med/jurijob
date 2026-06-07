@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { supabase } from './supabase'
+import AdminDashboard from './Admin'
+import { useState, useEffect } from "react";
 
 const NAVY="#0B2545",GOLD="#C8A046",CREAM="#F8F5ED",GOLD_LIGHT="#F5EDD6",NAVY2="#1a3a6b";
 
@@ -28,6 +30,16 @@ const Pill=({active,onClick,children})=><button onClick={onClick} style={{paddin
 const SecTitle=({t})=><p style={{fontSize:11,fontWeight:500,color:GOLD,textTransform:"uppercase",letterSpacing:.8,margin:"0 0 10px",borderBottom:`1px solid ${CREAM}`,paddingBottom:6}}>{t}</p>;
 const Logo=()=><div style={{background:NAVY,color:GOLD,fontWeight:700,fontSize:18,padding:"6px 14px",borderRadius:8,letterSpacing:1,display:"inline-block"}}>JURI<span style={{color:"#fff"}}>JOB</span></div>;
 
+/* ───── ÉCRAN DE CHARGEMENT ───── */
+function Chargement(){
+  return(
+    <div style={{background:CREAM,minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16}}>
+      <Logo/>
+      <p style={{fontSize:13,color:"#718096"}}>Chargement…</p>
+    </div>
+  );
+}
+
 /* ═══════════════════════════════════════
    LANDING PAGE
 ═══════════════════════════════════════ */
@@ -52,13 +64,13 @@ function Landing({onChoose}){
             <div style={{width:44,height:44,borderRadius:10,background:GOLD_LIGHT,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:14,fontSize:22}}>👤</div>
             <p style={{margin:"0 0 6px",fontSize:16,fontWeight:500,color:NAVY}}>Je suis Candidat</p>
             <p style={{margin:"0 0 16px",fontSize:13,color:"#718096",lineHeight:1.5}}>Juriste, avocat, notaire, compliance officer… Créez votre profil et accédez aux meilleures opportunités.</p>
-            <span style={{fontSize:13,fontWeight:500,color:GOLD}}>Créer mon profil →</span>
+            <span style={{fontSize:13,fontWeight:500,color:GOLD}}>Continuer avec Google →</span>
           </button>
           <button onClick={()=>onChoose("recruteur")} style={{flex:1,minWidth:220,background:GOLD,border:"none",borderRadius:14,padding:"28px 20px",cursor:"pointer",transition:"transform .15s",textAlign:"left"}}>
             <div style={{width:44,height:44,borderRadius:10,background:"rgba(255,255,255,0.35)",display:"flex",alignItems:"center",justifyContent:"center",marginBottom:14,fontSize:22}}>🏢</div>
             <p style={{margin:"0 0 6px",fontSize:16,fontWeight:500,color:NAVY}}>Je suis Recruteur</p>
             <p style={{margin:"0 0 16px",fontSize:13,color:NAVY,opacity:.75,lineHeight:1.5}}>Entreprise, cabinet ou étude notariale… Déposez vos critères et recevez une short-list sous 48h.</p>
-            <span style={{fontSize:13,fontWeight:500,color:NAVY}}>Déposer une demande →</span>
+            <span style={{fontSize:13,fontWeight:500,color:NAVY}}>Se connecter →</span>
           </button>
         </div>
       </div>
@@ -70,7 +82,7 @@ function Landing({onChoose}){
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:24}}>
           {[
             {icon:"👤",titre:"Côté Candidat",etapes:["Créez votre profil complet en quelques minutes","Votre profil intègre la CVthèque sécurisée","Soyez contacté(e) dès qu'un poste correspond à votre profil"]},
-            {icon:"🏢",titre:"Côté Recruteur",etapes:["Saisissez vos critères via le module « Entrez Vos Critères »","L'équipe JURIJOB sélectionne les meilleurs profils","Recevez votre short-list sous 48h ouvrées"]},
+            {icon:"🏢",titre:"Côté Recruteur",etapes:["Saisissez vos critères via le module « Entrez vos critères »","L'équipe JURIJOB sélectionne les meilleurs profils","Recevez votre short-list sous 48h ouvrées"]},
           ].map(({icon,titre,etapes})=>(
             <div key={titre} style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:12,padding:"22px 20px"}}>
               <p style={{margin:"0 0 12px",fontSize:15,fontWeight:500,color:NAVY}}>{icon} {titre}</p>
@@ -99,7 +111,67 @@ function Landing({onChoose}){
 
       {/* FOOTER */}
       <div style={{padding:"20px 24px",textAlign:"center"}}>
-        <p style={{fontSize:12,color:"#A0AEC0",margin:0}}>© 2026 JURIJOB — Tous droits réservés</p>
+        <p style={{fontSize:12,color:"#A0AEC0",margin:0}}>© 2026 JURIJOB — Tous droits réservés</p> <button onClick={()=>onChoose("admin")} style={{background:"none",border:"none",color:"#CBD5E0",fontSize:11,cursor:"pointer",marginTop:8}}>
+  Accès Admin
+</button>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════
+   CONNEXION RECRUTEUR (e-mail / mot de passe)
+═══════════════════════════════════════ */
+function AuthRecruteur({onBack}){
+  const [mode,setMode]=useState("login"); // "login" | "signup"
+  const [email,setEmail]=useState("");
+  const [pwd,setPwd]=useState("");
+  const [entreprise,setEntreprise]=useState("");
+  const [contact,setContact]=useState("");
+  const [msg,setMsg]=useState("");
+  const [busy,setBusy]=useState(false);
+
+  const submit=async()=>{
+    setMsg(""); setBusy(true);
+    try{
+      if(mode==="signup"){
+        const {error}=await supabase.auth.signUp({email,password:pwd,options:{data:{entreprise,contact}}});
+        if(error){ setMsg(error.message); }
+        else { setMsg("Compte créé ✔ Si une confirmation par e-mail est demandée, validez-la puis connectez-vous."); setMode("login"); }
+      } else {
+        const {error}=await supabase.auth.signInWithPassword({email,password:pwd});
+        if(error){ setMsg(error.message); }
+        // succès : la session déclenche automatiquement l'ouverture de l'espace recruteur
+      }
+    } catch(e){ setMsg(e.message); }
+    setBusy(false);
+  };
+
+  return(
+    <div style={{background:CREAM,minHeight:"100vh"}}>
+      <div style={{background:NAVY,padding:"14px 24px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <Logo/>
+        <button onClick={onBack} style={{background:"transparent",border:"none",color:"rgba(255,255,255,0.6)",fontSize:13,cursor:"pointer"}}>← Accueil</button>
+      </div>
+      <div style={{padding:"40px 16px",maxWidth:420,margin:"0 auto"}}>
+        <div style={{background:"#fff",borderRadius:16,border:"1px solid #E2E8F0",padding:"28px 26px"}}>
+          <p style={{fontSize:12,color:GOLD,fontWeight:500,margin:"0 0 4px",textTransform:"uppercase",letterSpacing:.8}}>Espace Recruteur</p>
+          <h2 style={{color:NAVY,fontSize:20,fontWeight:500,margin:"0 0 20px"}}>{mode==="login"?"Connexion":"Créer un compte"}</h2>
+          <div style={{display:"flex",flexDirection:"column",gap:14}}>
+            {mode==="signup"&&<div><Lbl t="Entreprise / Cabinet" r/><input value={entreprise} onChange={e=>setEntreprise(e.target.value)} placeholder="Nom de votre structure" style={iSt}/></div>}
+            {mode==="signup"&&<div><Lbl t="Nom du contact RH"/><input value={contact} onChange={e=>setContact(e.target.value)} placeholder="Prénom Nom" style={iSt}/></div>}
+            <div><Lbl t="E-mail professionnel" r/><input value={email} onChange={e=>setEmail(e.target.value)} placeholder="vous@entreprise.com" style={iSt}/></div>
+            <div><Lbl t="Mot de passe" r/><input type="password" value={pwd} onChange={e=>setPwd(e.target.value)} placeholder="••••••••" style={iSt}/></div>
+            {msg&&<p style={{fontSize:12.5,color:msg.includes("✔")?"#2F855A":"#E53E3E",margin:0,lineHeight:1.5}}>{msg}</p>}
+            <button onClick={submit} disabled={busy||!email.trim()||!pwd.trim()||(mode==="signup"&&!entreprise.trim())} style={{padding:"11px",borderRadius:8,fontSize:14,cursor:busy?"default":"pointer",background:(busy||!email.trim()||!pwd.trim()||(mode==="signup"&&!entreprise.trim()))?"#E2E8F0":NAVY,color:(busy||!email.trim()||!pwd.trim()||(mode==="signup"&&!entreprise.trim()))?"#A0AEC0":"#fff",border:"none",fontWeight:500}}>{busy?"…":(mode==="login"?"Se connecter":"Créer mon compte")}</button>
+          </div>
+          <p style={{fontSize:12.5,color:"#718096",textAlign:"center",marginTop:18}}>
+            {mode==="login"?"Pas encore de compte ? ":"Vous avez déjà un compte ? "}
+            <button onClick={()=>{setMode(mode==="login"?"signup":"login");setMsg("");}} style={{background:"none",border:"none",color:GOLD,fontWeight:500,cursor:"pointer",fontSize:12.5}}>
+              {mode==="login"?"Créer un compte":"Se connecter"}
+            </button>
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -108,10 +180,50 @@ function Landing({onChoose}){
 /* ═══════════════════════════════════════
    ESPACE CANDIDAT
 ═══════════════════════════════════════ */
-function EspaceCandidат({onBack}){
+function EspaceCandidat({session,onLogout}){
+  const meta=session?.user?.user_metadata||{};
+  const authEmail=session?.user?.email||"";
+  const fullName=meta.full_name||meta.name||"";
+  const initPrenom=meta.given_name||fullName.split(" ")[0]||"";
+  const initNom=meta.family_name||fullName.split(" ").slice(1).join(" ")||"";
+
   const [step,setStep]=useState(0);
   const [done,setDone]=useState(false);
-  const [f,setF]=useState({prenom:"",nom:"",email:"",tel:"",ville:"",titre:"",formations:[],experiences:[],specs:[],langues:[{id:1,langue:"Français",niveau:"Courant"}],contrats:[],dispo:"",salaire:"",salaireNote:""});
+  const [checking,setChecking]=useState(true);
+  const [existing,setExisting]=useState(null);
+  const [f,setF]=useState({prenom:initPrenom,nom:initNom,email:authEmail,tel:"",ville:"",titre:"",formations:[],experiences:[],specs:[],langues:[{id:1,langue:"Français",niveau:"Courant"}],contrats:[],dispo:"",salaire:"",salaireNote:"",salaireActuel:""});
+
+  // Vérifie si un profil existe déjà pour cet e-mail Google
+  useEffect(()=>{
+    let active=true;
+    (async()=>{
+      try{
+        const {data,error}=await supabase.from('candidats').select('*').eq('email',authEmail).limit(1);
+        if(active){
+          if(!error && data && data.length>0) setExisting(data[0]);
+          setChecking(false);
+        }
+      }catch(e){ if(active) setChecking(false); }
+    })();
+    return ()=>{active=false;};
+  },[authEmail]);
+
+  const sauvegarderProfil = async () => {
+  const { error } = await supabase
+    .from('candidats')
+    .insert([{
+      prenom: f.prenom, nom: f.nom, email: f.email,
+      tel: f.tel, ville: f.ville, titre: f.titre,
+      formations: f.formations, experiences: f.experiences,
+      specs: f.specs, langues: f.langues,
+      contrats: f.contrats, disponibilite: f.dispo,
+      salaire: f.salaire, salaire_note: f.salaireNote,
+salaire_actuel: f.salaireActuel,
+      statut: 'en_attente'
+    }])
+  if(error){ alert('Erreur : ' + error.message) }
+  else { setDone(true) }
+}
   const upd=(k,v)=>setF(x=>({...x,[k]:v}));
   const togSpec=s=>upd("specs",f.specs.includes(s)?f.specs.filter(x=>x!==s):[...f.specs,s]);
   const togCtx=c=>upd("contrats",f.contrats.includes(c)?f.contrats.filter(x=>x!==c):[...f.contrats,c]);
@@ -141,7 +253,7 @@ function EspaceCandidат({onBack}){
           <div><Lbl t="Nom" r/><Inp val={f.nom} onChange={v=>upd("nom",v)} ph="Votre nom"/></div>
         </div>
         <div><Lbl t="Titre professionnel"/><Inp val={f.titre} onChange={v=>upd("titre",v)} ph="Ex. : Juriste d'entreprise · Avocat · Notaire stagiaire"/></div>
-        <div><Lbl t="E-mail" r/><Inp val={f.email} onChange={v=>upd("email",v)} ph="votre@email.com"/></div>
+        <div><Lbl t="E-mail (compte Google)" r/><input value={f.email} readOnly style={{...iSt,background:"#F0F4F8",color:"#718096",cursor:"not-allowed"}}/></div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
           <div><Lbl t="Téléphone"/><Inp val={f.tel} onChange={v=>upd("tel",v)} ph="+212 6XX XXX XXX" filter={v=>v.replace(/[^0-9+\s()-]/g,'')}/></div>
           <div><Lbl t="Ville"/><Inp val={f.ville} onChange={v=>upd("ville",v)} ph="Ex. : Casablanca"/></div>
@@ -250,7 +362,7 @@ function EspaceCandidат({onBack}){
         <div><Lbl t="Type(s) de contrat recherché(s)" r/><div style={{display:"flex",flexWrap:"wrap",gap:8}}>{CONTRATS.map(c=><Pill key={c} active={f.contrats.includes(c)} onClick={()=>togCtx(c)}>{c}</Pill>)}</div></div>
         <div><Lbl t="Disponibilité" r/><div style={{display:"flex",flexWrap:"wrap",gap:8}}>{DISPOS.map(d=><Pill key={d} active={f.dispo===d} onClick={()=>upd("dispo",d)}>{d}</Pill>)}</div></div>
         <div>
-          <Lbl t="Prétentions salariales — Net mensuel" r/>
+          <Lbl t="Salaire actuel (optionnel)"/><div style={{display:"flex",flexDirection:"column",gap:7,marginBottom:16}}>{FOURCH.map(fo=>(<button key={fo} onClick={()=>upd("salaireActuel",fo)} style={{padding:"8px 14px",borderRadius:8,fontSize:13,cursor:"pointer",textAlign:"left",background:f.salaireActuel===fo?NAVY:"transparent",color:f.salaireActuel===fo?"#fff":NAVY,border:`1.5px solid ${f.salaireActuel===fo?NAVY:"#CBD5E0"}`,fontWeight:f.salaireActuel===fo?500:400}}>{fo}</button>))}</div><Lbl t="Prétentions salariales — Net mensuel" r/>
           <div style={{display:"flex",flexDirection:"column",gap:7}}>
             {FOURCH.map(fo=><button key={fo} onClick={()=>upd("salaire",fo)} style={{padding:"9px 14px",borderRadius:8,fontSize:13,cursor:"pointer",textAlign:"left",background:f.salaire===fo?NAVY:"transparent",color:f.salaire===fo?"#fff":NAVY,border:`1.5px solid ${f.salaire===fo?NAVY:"#CBD5E0"}`,fontWeight:f.salaire===fo?500:400}}>{fo}</button>)}
           </div>
@@ -277,7 +389,7 @@ function EspaceCandidат({onBack}){
             {f.experiences.length>0&&<div><SecTitle t="Expériences professionnelles"/>{f.experiences.map(e=><div key={e.id} style={{marginBottom:10}}><p style={{margin:0,fontSize:13,fontWeight:500,color:NAVY}}>{e.poste}{e.org?` — ${e.org}`:""}</p><p style={{margin:"2px 0 3px",fontSize:12,color:"#718096"}}>{e.debut}{e.encours?" – En cours":e.fin?` – ${e.fin}`:""}</p>{e.missions&&<p style={{margin:0,fontSize:12,color:"#4A5568",lineHeight:1.5}}>{e.missions}</p>}</div>)}</div>}
             {f.specs.length>0&&<div><SecTitle t="Spécialisations"/><div style={{display:"flex",flexWrap:"wrap",gap:6}}>{f.specs.map(s=><span key={s} style={{background:CREAM,color:NAVY,fontSize:12,padding:"4px 10px",borderRadius:20,border:"1px solid #E2E8F0"}}>{s}</span>)}</div></div>}
             {f.langues.filter(l=>l.langue).length>0&&<div><SecTitle t="Langues"/><div style={{display:"flex",flexWrap:"wrap",gap:12}}>{f.langues.filter(l=>l.langue).map(l=><span key={l.id} style={{fontSize:13,color:NAVY}}><strong>{l.langue}</strong> <span style={{color:"#718096",fontSize:12}}>— {l.niveau}</span></span>)}</div></div>}
-            <div><SecTitle t="Préférences"/><div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:9}}>{[["Contrat(s)",f.contrats.join(", ")],["Disponibilité",f.dispo],["Prétentions",f.salaire]].map(([k,v])=>v?<div key={k} style={{background:CREAM,borderRadius:8,padding:"10px 12px"}}><p style={{margin:"0 0 3px",fontSize:11,color:"#A0AEC0"}}>{k}</p><p style={{margin:0,fontSize:12,fontWeight:500,color:NAVY}}>{v}</p></div>:null)}</div></div>
+            <div><SecTitle t="Préférences"/><div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:9}}>{[["Contrat(s)",f.contrats.join(", ")],["Disponibilité",f.dispo],["Salaire actuel",f.salaireActuel||"—"],["Prétentions",f.salaire]].map(([k,v])=>v?<div key={k} style={{background:CREAM,borderRadius:8,padding:"10px 12px"}}><p style={{margin:"0 0 3px",fontSize:11,color:"#A0AEC0"}}>{k}</p><p style={{margin:0,fontSize:12,fontWeight:500,color:NAVY}}>{v}</p></div>:null)}</div></div>
             <div style={{background:GOLD_LIGHT,borderRadius:8,padding:"12px 16px",display:"flex",alignItems:"center",gap:10}}>
               <span style={{fontSize:20}}>⏳</span>
               <div><p style={{margin:0,fontSize:13,fontWeight:500,color:NAVY}}>Profil en attente de validation</p><p style={{margin:"2px 0 0",fontSize:12,color:"#718096"}}>L'équipe JURIJOB vérifiera et activera votre profil sous 24h.</p></div>
@@ -288,6 +400,30 @@ function EspaceCandidат({onBack}){
     );
   };
 
+  // Écran de vérification du profil existant
+  if(checking)return <Chargement/>;
+
+  // Profil déjà enregistré → on l'accueille sans reproposer le formulaire
+  if(existing && !done)return(
+    <div style={{background:CREAM,minHeight:"100vh"}}>
+      <div style={{background:NAVY,padding:"14px 24px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <Logo/>
+        <button onClick={onLogout} style={{background:"transparent",border:"none",color:"rgba(255,255,255,0.6)",fontSize:13,cursor:"pointer"}}>Se déconnecter</button>
+      </div>
+      <div style={{padding:"40px 16px",maxWidth:480,margin:"0 auto"}}>
+        <div style={{background:"#fff",borderRadius:16,padding:36,border:"1px solid #E2E8F0",textAlign:"center"}}>
+          <div style={{width:58,height:58,borderRadius:"50%",background:GOLD,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px",fontSize:20,fontWeight:600,color:NAVY}}>{(existing.prenom?.[0]||"?")}{(existing.nom?.[0]||"")}</div>
+          <h2 style={{color:NAVY,fontSize:20,fontWeight:500,margin:"0 0 8px"}}>Bonjour {existing.prenom} 👋</h2>
+          <p style={{color:"#718096",fontSize:14,margin:"0 0 6px"}}>Votre profil est déjà enregistré dans la CVthèque JURIJOB.</p>
+          <div style={{background:GOLD_LIGHT,borderRadius:8,padding:"10px 16px",display:"inline-block",margin:"12px 0 4px"}}>
+            <span style={{fontSize:13,color:NAVY,fontWeight:500}}>Statut : {existing.statut==='valide'?'Validé ✔':existing.statut==='actif'?'Actif ✔':'En attente de validation ⏳'}</span>
+          </div>
+          <p style={{color:"#A0AEC0",fontSize:12,margin:"16px 0 0"}}>La modification de profil sera bientôt disponible.</p>
+        </div>
+      </div>
+    </div>
+  );
+
   if(done)return(
     <div style={{background:CREAM,minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:24}}>
       <div style={{background:"#fff",borderRadius:16,padding:36,maxWidth:420,width:"100%",textAlign:"center",border:"1px solid #E2E8F0"}}>
@@ -295,7 +431,7 @@ function EspaceCandidат({onBack}){
         <h2 style={{color:NAVY,fontSize:20,fontWeight:500,margin:"0 0 10px"}}>Merci, {f.prenom} !</h2>
         <p style={{color:"#718096",fontSize:14,margin:"0 0 8px"}}>Votre profil a bien été soumis à l'équipe JURIJOB.</p>
         <p style={{color:"#718096",fontSize:14,margin:"0 0 24px"}}>Une confirmation vous sera envoyée par e-mail sous <strong>24h ouvrées</strong>.</p>
-        <button onClick={onBack} style={{background:"transparent",color:NAVY,border:`1.5px solid #CBD5E0`,borderRadius:8,padding:"9px 22px",fontSize:13,cursor:"pointer"}}>← Retour à l'accueil</button>
+        <button onClick={onLogout} style={{background:"transparent",color:NAVY,border:`1.5px solid #CBD5E0`,borderRadius:8,padding:"9px 22px",fontSize:13,cursor:"pointer"}}>Se déconnecter</button>
       </div>
     </div>
   );
@@ -304,7 +440,7 @@ function EspaceCandidат({onBack}){
     <div style={{background:CREAM,minHeight:"100vh",padding:"0 0 32px"}}>
       <div style={{background:NAVY,padding:"14px 24px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
         <Logo/>
-        <button onClick={onBack} style={{background:"transparent",border:"none",color:"rgba(255,255,255,0.6)",fontSize:13,cursor:"pointer"}}>← Accueil</button>
+        <button onClick={onLogout} style={{background:"transparent",border:"none",color:"rgba(255,255,255,0.6)",fontSize:13,cursor:"pointer"}}>Se déconnecter</button>
       </div>
       <div style={{padding:"22px 16px",maxWidth:580,margin:"0 auto"}}>
         <div style={{marginBottom:22}}>
@@ -318,7 +454,7 @@ function EspaceCandidат({onBack}){
           <div style={{display:"flex",justifyContent:"space-between",marginTop:24,paddingTop:16,borderTop:"1px solid #F0F4F8"}}>
             <button onClick={()=>setStep(s=>s-1)} disabled={step===0} style={{padding:"8px 18px",borderRadius:8,fontSize:13,cursor:step===0?"default":"pointer",background:"transparent",color:step===0?"#CBD5E0":NAVY,border:`1.5px solid ${step===0?"#E2E8F0":"#CBD5E0"}`}}>← Précédent</button>
             {step<6?<button onClick={()=>setStep(s=>s+1)} disabled={!ok()} style={{padding:"8px 22px",borderRadius:8,fontSize:13,cursor:ok()?"pointer":"default",background:ok()?NAVY:"#E2E8F0",color:ok()?"#fff":"#A0AEC0",border:"none",fontWeight:500}}>Suivant →</button>
-            :<button onClick={()=>setDone(true)} style={{padding:"9px 24px",borderRadius:8,fontSize:13,cursor:"pointer",background:GOLD,color:NAVY,border:"none",fontWeight:600}}>Valider mon profil</button>}
+            :<button onClick={sauvegarderProfil} style={{padding:"9px 24px",borderRadius:8,fontSize:13,cursor:"pointer",background:GOLD,color:NAVY,border:"none",fontWeight:600}}>Valider mon profil</button>}
           </div>
         </div>
         <div style={{display:"flex",justifyContent:"center",gap:6,marginTop:16}}>{STEPS_C.map((_,i)=><div key={i} style={{width:i===step?20:7,height:7,borderRadius:4,background:i===step?NAVY:i<step?GOLD:"#CBD5E0",transition:"all .2s"}}/>)}</div>
@@ -330,10 +466,50 @@ function EspaceCandidат({onBack}){
 /* ═══════════════════════════════════════
    ESPACE RECRUTEUR
 ═══════════════════════════════════════ */
-function EspaceRecruteur({onBack}){
+const STAT_R={en_cours:{bg:"#EFF6FF",color:"#1D4ED8",label:"En cours d'analyse"},terminee:{bg:"#F0FDF4",color:"#166534",label:"Short-list envoyée"},annulee:{bg:"#F1F5F9",color:"#64748B",label:"Annulée"}};
+
+function EspaceRecruteur({session,onLogout}){
+  const rmeta=session?.user?.user_metadata||{};
+  const initialF={entreprise:rmeta.entreprise||"",contact:rmeta.contact||"",poste:"",genre:"",langues:[],niveau:"",diplome:"",specs:[],nbCv:3,urgence:"normal",notes:"",budget:"",budgetConfidentiel:false};
+  const [vue,setVue]=useState("dashboard"); // "dashboard" | "form"
+  const [mesDemandes,setMesDemandes]=useState([]);
+  const [chargement,setChargement]=useState(true);
   const [step,setStep]=useState(0);
   const [submitted,setSubmitted]=useState(false);
-  const [f,setF]=useState({entreprise:"",contact:"",poste:"",genre:"",langues:[],niveau:"",diplome:"",specs:[],nbCv:3,urgence:"normal",notes:""});
+  const [f,setF]=useState(initialF);
+
+  const chargerMesDemandes = async () => {
+    setChargement(true);
+    const { data } = await supabase.from('demandes').select('*').eq('recruteur_email',session?.user?.email).order('created_at',{ascending:false});
+    if(data) setMesDemandes(data);
+    setChargement(false);
+  };
+  useEffect(()=>{ chargerMesDemandes(); },[]);
+
+  const nouvelleDemande = () => { setF(initialF); setStep(0); setVue("form"); };
+  const retourDashboard = () => { setSubmitted(false); setF(initialF); setStep(0); setVue("dashboard"); chargerMesDemandes(); };
+
+  const sauvegarderDemande = async () => {
+  const { error } = await supabase
+    .from('demandes')
+    .insert([{
+      entreprise: f.entreprise,
+      contact: f.contact,
+      poste: f.poste,
+      niveau: f.niveau,
+      diplome: f.diplome,
+      specs: f.specs,
+      langues: f.langues,
+      nb_cv: f.nbCv,
+      urgence: f.urgence,
+      notes: f.notes,
+budget: f.budgetConfidentiel ? "Confidentiel" : f.budget,
+      recruteur_email: session?.user?.email,
+      statut: 'en_cours'
+    }])
+  if(error){ alert('Erreur : ' + error.message) }
+  else { setSubmitted(true) }
+}
   const set=(k,v)=>setF(x=>({...x,[k]:v}));
   const toggle=(k,v)=>setF(x=>({...x,[k]:x[k].includes(v)?x[k].filter(i=>i!==v):[...x[k],v]}));
   const ok=()=>{
@@ -395,12 +571,12 @@ function EspaceRecruteur({onBack}){
             </div>
           ))}
         </div>
-        <div style={{marginTop:16}}><Lbl t="Notes complémentaires"/><textarea value={f.notes} onChange={e=>set("notes",e.target.value)} placeholder="Précisions sur le poste, contexte, exigences spécifiques…" style={{...iSt,resize:"vertical",minHeight:72}}/></div>
+        <div style={{marginTop:16}}><Lbl t="Budget alloué au poste (optionnel)"/><div style={{display:"flex",flexDirection:"column",gap:7,marginBottom:12}}>{FOURCH.map(fo=>(<button key={fo} onClick={()=>set("budget",fo)} style={{padding:"8px 14px",borderRadius:8,fontSize:13,cursor:"pointer",textAlign:"left",background:f.budget===fo?NAVY:"transparent",color:f.budget===fo?"#fff":NAVY,border:`1.5px solid ${f.budget===fo?NAVY:"#CBD5E0"}`,fontWeight:f.budget===fo?500:400}}>{fo}</button>))}</div><label style={{display:"flex",alignItems:"center",gap:8,fontSize:13,color:NAVY,cursor:"pointer",marginBottom:12}}><input type="checkbox" checked={f.budgetConfidentiel} onChange={e=>set("budgetConfidentiel",e.target.checked)}/>Budget confidentiel / À négocier</label><Lbl t="Notes complémentaires"/><textarea value={f.notes} onChange={e=>set("notes",e.target.value)} placeholder="Précisions sur le poste, contexte, exigences spécifiques…" style={{...iSt,resize:"vertical",minHeight:72}}/></div>
       </div>
     );
     if(step===4)return(
       <div style={{display:"flex",flexDirection:"column",gap:10}}>
-        {[["Entreprise",f.entreprise],["Contact RH",f.contact||"—"],["Poste",f.poste],["CV demandés",f.nbCv],["Urgence",f.urgence==="normal"?"Normal":f.urgence==="urgent"?"Urgent":"Immédiat"],["Genre",f.genre==="H"?"Homme":f.genre==="F"?"Femme":"Indifférent"],["Langues",f.langues.join(", ")],["Niveau",NIVEAUX_RH.find(n=>n.val===f.niveau)?.label],["Diplôme",DIPLOMES_RH.find(d=>d.val===f.diplome)?.label],["Spécialisations",f.specs.join(" · ")],["Notes",f.notes||"—"]].map(([k,v])=>(
+        {[["Entreprise",f.entreprise],["Contact RH",f.contact||"—"],["Poste",f.poste],["CV demandés",f.nbCv],["Urgence",f.urgence==="normal"?"Normal":f.urgence==="urgent"?"Urgent":"Immédiat"],["Genre",f.genre==="H"?"Homme":f.genre==="F"?"Femme":"Indifférent"],["Langues",f.langues.join(", ")],["Niveau",NIVEAUX_RH.find(n=>n.val===f.niveau)?.label],["Diplôme",DIPLOMES_RH.find(d=>d.val===f.diplome)?.label],["Spécialisations",f.specs.join(" · ")],["Budget",f.budgetConfidentiel?"Confidentiel":f.budget||"—"],["Notes",f.notes||"—"]].map(([k,v])=>(
           <div key={k} style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"9px 13px",background:CREAM,borderRadius:8,gap:12}}>
             <span style={{fontSize:13,color:"#718096",flexShrink:0}}>{k}</span>
             <span style={{fontSize:13,color:NAVY,fontWeight:500,textAlign:"right"}}>{v}</span>
@@ -417,17 +593,61 @@ function EspaceRecruteur({onBack}){
         <div style={{width:64,height:64,borderRadius:"50%",background:GOLD_LIGHT,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 20px",fontSize:28,color:NAVY}}>✓</div>
         <h2 style={{color:NAVY,fontSize:22,fontWeight:500,margin:"0 0 10px"}}>Merci, {f.contact||f.entreprise} !</h2>
         <p style={{color:"#718096",fontSize:14,margin:"0 0 6px"}}>Votre demande a été transmise à l'équipe JURIJOB.</p>
-        <p style={{color:"#718096",fontSize:14,margin:"0 0 28px"}}>Votre short-list de <strong>{f.nbCv} CV</strong> vous sera communiquée sous <strong>48h ouvrées</strong>.</p>
-        <button onClick={onBack} style={{background:"transparent",color:NAVY,border:`1.5px solid #CBD5E0`,borderRadius:8,padding:"9px 22px",fontSize:13,cursor:"pointer"}}>← Retour à l'accueil</button>
+        <p style={{color:"#718096",fontSize:14,margin:"0 0 28px"}}>Votre short-list de <strong>{f.nbCv} CV</strong> vous sera communiquée sous <strong>48h ouvrées</strong>. Vous pouvez suivre son statut depuis votre tableau de bord.</p>
+        <button onClick={retourDashboard} style={{background:NAVY,color:"#fff",border:"none",borderRadius:8,padding:"10px 24px",fontSize:13,cursor:"pointer",fontWeight:500}}>Voir mes demandes →</button>
       </div>
     </div>
   );
 
+  // TABLEAU DE BORD RECRUTEUR (vue par défaut)
+  if(vue!=="form")return(
+    <div style={{background:CREAM,minHeight:"100vh",padding:"0 0 40px"}}>
+      <div style={{background:NAVY,padding:"14px 24px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <Logo/>
+        <button onClick={onLogout} style={{background:"transparent",border:"none",color:"rgba(255,255,255,0.6)",fontSize:13,cursor:"pointer"}}>Se déconnecter</button>
+      </div>
+      <div style={{padding:"24px 16px",maxWidth:640,margin:"0 auto"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:12,marginBottom:20}}>
+          <div>
+            <p style={{fontSize:11,color:GOLD,fontWeight:500,textTransform:"uppercase",letterSpacing:.8,margin:"0 0 4px"}}>Espace Recruteur</p>
+            <h2 style={{color:NAVY,fontSize:20,fontWeight:500,margin:0}}>Mes demandes</h2>
+            {(rmeta.entreprise||rmeta.contact)&&<p style={{fontSize:13,color:"#718096",margin:"4px 0 0"}}>{rmeta.entreprise}{rmeta.contact?` · ${rmeta.contact}`:""}</p>}
+          </div>
+          <button onClick={nouvelleDemande} style={{background:GOLD,color:NAVY,border:"none",borderRadius:9,padding:"10px 18px",fontSize:13.5,fontWeight:600,cursor:"pointer"}}>+ Nouvelle demande</button>
+        </div>
+        {chargement&&<p style={{color:"#718096",fontSize:13}}>Chargement de vos demandes…</p>}
+        {!chargement&&mesDemandes.length===0&&(
+          <div style={{background:"#fff",border:"1px dashed #CBD5E0",borderRadius:12,padding:"32px 24px",textAlign:"center"}}>
+            <p style={{fontSize:14,color:NAVY,fontWeight:500,margin:"0 0 6px"}}>Aucune demande pour le moment</p>
+            <p style={{fontSize:13,color:"#718096",margin:"0 0 16px"}}>Déposez votre première demande pour recevoir une short-list sous 48h.</p>
+            <button onClick={nouvelleDemande} style={{background:NAVY,color:"#fff",border:"none",borderRadius:8,padding:"9px 20px",fontSize:13,fontWeight:500,cursor:"pointer"}}>Déposer une demande</button>
+          </div>
+        )}
+        {!chargement&&mesDemandes.map(d=>{
+          const st=STAT_R[d.statut]||STAT_R.en_cours;
+          return(
+            <div key={d.id} style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:11,padding:"14px 16px",marginBottom:10}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10}}>
+                <div style={{flex:1,minWidth:0}}>
+                  <p style={{margin:"0 0 2px",fontSize:14,fontWeight:500,color:NAVY}}>{d.poste}</p>
+                  <p style={{margin:0,fontSize:12,color:"#718096"}}>{d.entreprise}{d.created_at?` · ${new Date(d.created_at).toLocaleDateString("fr-FR")}`:""}</p>
+                  <p style={{margin:"4px 0 0",fontSize:12,color:"#718096"}}>📁 {d.nb_cv} CV demandé{d.nb_cv>1?"s":""}{(d.langues&&d.langues.length)?` · 🌍 ${d.langues.join(", ")}`:""}</p>
+                </div>
+                <span style={{background:st.bg,color:st.color,fontSize:11,fontWeight:500,padding:"4px 10px",borderRadius:20,whiteSpace:"nowrap",flexShrink:0}}>{st.label}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  // FORMULAIRE « Entrez vos critères »
   return(
     <div style={{background:CREAM,minHeight:"100vh",padding:"0 0 32px"}}>
       <div style={{background:NAVY,padding:"14px 24px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
         <Logo/>
-        <button onClick={onBack} style={{background:"transparent",border:"none",color:"rgba(255,255,255,0.6)",fontSize:13,cursor:"pointer"}}>← Accueil</button>
+        <button onClick={()=>setVue("dashboard")} style={{background:"transparent",border:"none",color:"rgba(255,255,255,0.6)",fontSize:13,cursor:"pointer"}}>← Mes demandes</button>
       </div>
       <div style={{padding:"22px 16px",maxWidth:580,margin:"0 auto"}}>
         <div style={{marginBottom:22}}>
@@ -441,7 +661,7 @@ function EspaceRecruteur({onBack}){
           <div style={{display:"flex",justifyContent:"space-between",marginTop:24,paddingTop:16,borderTop:"1px solid #F0F4F8"}}>
             <button onClick={()=>setStep(s=>s-1)} disabled={step===0} style={{padding:"8px 18px",borderRadius:8,fontSize:13,cursor:step===0?"default":"pointer",background:"transparent",color:step===0?"#CBD5E0":NAVY,border:`1.5px solid ${step===0?"#E2E8F0":"#CBD5E0"}`}}>← Précédent</button>
             {step<4?<button onClick={()=>setStep(s=>s+1)} disabled={!ok()} style={{padding:"8px 22px",borderRadius:8,fontSize:13,cursor:ok()?"pointer":"default",background:ok()?NAVY:"#E2E8F0",color:ok()?"#fff":"#A0AEC0",border:"none",fontWeight:500}}>Suivant →</button>
-            :<button onClick={()=>setSubmitted(true)} style={{padding:"9px 26px",borderRadius:8,fontSize:13,cursor:"pointer",background:GOLD,color:NAVY,border:"none",fontWeight:600}}>Soumettre la demande</button>}
+            :<button onClick={sauvegarderDemande} style={{padding:"9px 26px",borderRadius:8,fontSize:13,cursor:"pointer",background:GOLD,color:NAVY,border:"none",fontWeight:600}}>Soumettre la demande</button>}
           </div>
         </div>
         <div style={{display:"flex",justifyContent:"center",gap:6,marginTop:16}}>{STEPS_R.map((_,i)=><div key={i} style={{width:i===step?20:7,height:7,borderRadius:4,background:i===step?NAVY:i<step?GOLD:"#CBD5E0",transition:"all .2s"}}/>)}</div>
@@ -454,8 +674,50 @@ function EspaceRecruteur({onBack}){
    APP ROOT
 ═══════════════════════════════════════ */
 export default function App(){
+  const ADMIN_EMAIL="admin@jurijob.ma";
   const [view,setView]=useState("landing");
-  if(view==="candidat") return <EspaceCandidат onBack={()=>setView("landing")}/>;
-  if(view==="recruteur") return <EspaceRecruteur onBack={()=>setView("landing")}/>;
-  return <Landing onChoose={setView}/>;
+  const [session,setSession]=useState(null);
+  const [ready,setReady]=useState(false);
+
+  useEffect(()=>{
+    supabase.auth.getSession().then(({data})=>{ setSession(data.session); setReady(true); });
+    const { data:sub } = supabase.auth.onAuthStateChange((_event,s)=>{ setSession(s); });
+    return ()=>{ sub.subscription.unsubscribe(); };
+  },[]);
+
+  const loginGoogle = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider:'google',
+      options:{ redirectTo: window.location.origin }
+    });
+  };
+
+  const logout = async () => {
+    await supabase.auth.signOut();
+    setView("landing");
+  };
+
+  if(!ready) return <Chargement/>;
+
+  const provider = session?.user?.app_metadata?.provider;
+  const isAdmin = session?.user?.email === ADMIN_EMAIL;
+
+  // Admin : via le bouton « Accès Admin » ou si une session admin est déjà active
+  if(view==="admin" || isAdmin) return <AdminDashboard onBack={()=>setView("landing")}/>;
+
+  // Connecté via Google → espace Candidat
+  if(session && provider==="google") return <EspaceCandidat session={session} onLogout={logout}/>;
+
+  // Connecté par e-mail (et pas admin) → espace Recruteur
+  if(session) return <EspaceRecruteur session={session} onLogout={logout}/>;
+
+  // Pas de session : écran de connexion recruteur si demandé
+  if(view==="recruteur-auth") return <AuthRecruteur onBack={()=>setView("landing")}/>;
+
+  // Sinon, page d'accueil
+  return <Landing onChoose={(v)=>{
+    if(v==="candidat") loginGoogle();
+    else if(v==="recruteur") setView("recruteur-auth");
+    else setView(v);
+  }}/>;
 }

@@ -143,6 +143,15 @@ if(!auth) return(
     setLoading(false);
   };
 
+  // ── Notifications e-mail (via la fonction serveur "notify" + Resend) ──
+  const emailShell = (titre,corps) => `<div style="font-family:Arial,sans-serif;background:#F8F5ED;padding:24px"><div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #E2E8F0"><div style="background:#0B2545;padding:20px 24px"><span style="background:#C8A046;color:#0B2545;font-weight:700;font-size:16px;padding:4px 11px;border-radius:7px;letter-spacing:1px">JURIJOB</span></div><div style="padding:28px 24px;color:#0B2545"><h1 style="font-size:18px;font-weight:600;margin:0 0 14px;color:#0B2545">${titre}</h1>${corps}</div><div style="padding:16px 24px;background:#F8F5ED;color:#A0AEC0;font-size:11px;text-align:center">JURIJOB · Recrutement juridique au Maroc · jurijob.ma</div></div></div>`;
+
+  const envoyerNotification = async (to,subject,html) => {
+    if(!to) return;
+    try{ await supabase.functions.invoke('notify',{body:{to,subject,html}}); }
+    catch(e){ console.error('Notification e-mail non envoyée :',e); }
+  };
+
   const statD={
     en_cours:demandes.filter(d=>d.statut==="en_cours").length,
     terminee:demandes.filter(d=>d.statut==="terminee").length,
@@ -156,7 +165,17 @@ if(!auth) return(
 
   const validerCandidat = async (id,s) => {
     const{error}=await supabase.from('candidats').update({statut:s}).eq('id',id);
-    if(!error) setCandidats(cs=>cs.map(c=>c.id===id?{...c,statut:s}:c));
+    if(!error){
+      setCandidats(cs=>cs.map(c=>c.id===id?{...c,statut:s}:c));
+      if(s==="valide"){
+        const c=candidats.find(x=>x.id===id);
+        if(c?.email){
+          envoyerNotification(c.email,"Votre profil JURIJOB a été validé",
+            emailShell("Votre profil a été validé ✓",
+              `<p style="font-size:14px;line-height:1.6;margin:0 0 12px">Bonjour ${c.prenom||""},</p><p style="font-size:14px;line-height:1.6;margin:0 0 12px">Bonne nouvelle : votre profil sur JURIJOB vient d'être <strong>validé</strong> par notre équipe. Il est désormais visible par les recruteurs et pourra être proposé pour des missions correspondant à votre expertise.</p><p style="font-size:14px;line-height:1.6;margin:0 0 12px">Vous pouvez mettre à jour vos informations à tout moment depuis votre espace candidat.</p><p style="margin:22px 0 0"><a href="https://www.jurijob.ma" style="background:#C8A046;color:#0B2545;text-decoration:none;font-weight:600;font-size:14px;padding:11px 22px;border-radius:8px;display:inline-block">Accéder à mon espace</a></p>`));
+        }
+      }
+    }
   };
 
   const cloturerDemande = async (id,s) => {
@@ -180,22 +199,29 @@ if(!auth) return(
   };
 
   const envoyerShortlist = async () => {
+    const dem=selectedDem;
+    const nb=shortlistSel.length;
     const choisis=candidats.filter(c=>shortlistSel.includes(c.id));
     const{error}=await supabase.from('shortlists').insert([{
-      demande_id:selectedDem.id,
+      demande_id:dem.id,
       candidat_ids:shortlistSel,
       statut:'envoyee'
     }]);
     if(error){ alert('Erreur : '+error.message); return; }
+    if(dem.recruteur_email){
+      envoyerNotification(dem.recruteur_email,`Votre short-list JURIJOB — ${dem.poste}`,
+        emailShell("Votre short-list est prête 📋",
+          `<p style="font-size:14px;line-height:1.6;margin:0 0 12px">Bonjour ${dem.contact||""},</p><p style="font-size:14px;line-height:1.6;margin:0 0 12px">Votre demande de recrutement pour le poste de <strong>${dem.poste}</strong> a été traitée. Une short-list de <strong>${nb} profil${nb>1?"s":""}</strong>, sélectionné${nb>1?"s":""} pour leur adéquation avec vos critères, vient d'être préparée.</p><p style="font-size:14px;line-height:1.6;margin:0 0 12px">Connectez-vous à votre espace recruteur pour la consulter.</p><p style="margin:22px 0 0"><a href="https://www.jurijob.ma" style="background:#C8A046;color:#0B2545;text-decoration:none;font-weight:600;font-size:14px;padding:11px 22px;border-radius:8px;display:inline-block">Voir ma short-list</a></p>`));
+    }
     setShortlistSent(sl=>[...sl,{
-      demId:selectedDem.id,
-      entreprise:selectedDem.entreprise,
-      poste:selectedDem.poste,
-      contact:selectedDem.contact,
+      demId:dem.id,
+      entreprise:dem.entreprise,
+      poste:dem.poste,
+      contact:dem.contact,
       candidats:choisis,
       date:new Date().toLocaleDateString("fr-FR")
     }]);
-    await cloturerDemande(selectedDem.id,"terminee");
+    await cloturerDemande(dem.id,"terminee");
     setSelectedDem(null);
     setShortlistSel([]);
     setTab("shortlists");

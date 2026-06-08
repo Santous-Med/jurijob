@@ -64,7 +64,7 @@ function Landing({onChoose}){
             <div style={{width:44,height:44,borderRadius:10,background:GOLD_LIGHT,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:14,fontSize:22}}>👤</div>
             <p style={{margin:"0 0 6px",fontSize:16,fontWeight:500,color:NAVY}}>Je suis Candidat</p>
             <p style={{margin:"0 0 16px",fontSize:13,color:"#718096",lineHeight:1.5}}>Juriste, avocat, notaire, compliance officer… Créez votre profil et accédez aux meilleures opportunités.</p>
-            <span style={{fontSize:13,fontWeight:500,color:GOLD}}>Continuer avec Google →</span>
+            <span style={{fontSize:13,fontWeight:500,color:GOLD}}>Créer mon profil →</span>
           </button>
           <button onClick={()=>onChoose("recruteur")} style={{flex:1,minWidth:220,background:GOLD,border:"none",borderRadius:14,padding:"28px 20px",cursor:"pointer",transition:"transform .15s",textAlign:"left"}}>
             <div style={{width:44,height:44,borderRadius:10,background:"rgba(255,255,255,0.35)",display:"flex",alignItems:"center",justifyContent:"center",marginBottom:14,fontSize:22}}>🏢</div>
@@ -135,7 +135,7 @@ function AuthRecruteur({onBack}){
     setMsg(""); setBusy(true);
     try{
       if(mode==="signup"){
-        const {error}=await supabase.auth.signUp({email,password:pwd,options:{data:{entreprise,contact}}});
+        const {error}=await supabase.auth.signUp({email,password:pwd,options:{data:{entreprise,contact,role:'recruteur'}}});
         if(error){ setMsg(error.message); }
         else { setMsg("Compte créé ✔ Si une confirmation par e-mail est demandée, validez-la puis connectez-vous."); setMode("login"); }
       } else {
@@ -164,6 +164,93 @@ function AuthRecruteur({onBack}){
             <div><Lbl t="Mot de passe" r/><input type="password" value={pwd} onChange={e=>setPwd(e.target.value)} placeholder="••••••••" style={iSt}/></div>
             {msg&&<p style={{fontSize:12.5,color:msg.includes("✔")?"#2F855A":"#E53E3E",margin:0,lineHeight:1.5}}>{msg}</p>}
             <button onClick={submit} disabled={busy||!email.trim()||!pwd.trim()||(mode==="signup"&&!entreprise.trim())} style={{padding:"11px",borderRadius:8,fontSize:14,cursor:busy?"default":"pointer",background:(busy||!email.trim()||!pwd.trim()||(mode==="signup"&&!entreprise.trim()))?"#E2E8F0":NAVY,color:(busy||!email.trim()||!pwd.trim()||(mode==="signup"&&!entreprise.trim()))?"#A0AEC0":"#fff",border:"none",fontWeight:500}}>{busy?"…":(mode==="login"?"Se connecter":"Créer mon compte")}</button>
+          </div>
+          <p style={{fontSize:12.5,color:"#718096",textAlign:"center",marginTop:18}}>
+            {mode==="login"?"Pas encore de compte ? ":"Vous avez déjà un compte ? "}
+            <button onClick={()=>{setMode(mode==="login"?"signup":"login");setMsg("");}} style={{background:"none",border:"none",color:GOLD,fontWeight:500,cursor:"pointer",fontSize:12.5}}>
+              {mode==="login"?"Créer un compte":"Se connecter"}
+            </button>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════
+   COMPTE / RÔLE NON CORRESPONDANT
+═══════════════════════════════════════ */
+function RoleMismatch({email,actualLabel,intendedLabel,onContinue,onLogout}){
+  return(
+    <div style={{background:CREAM,minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:24}}>
+      <div style={{background:"#fff",borderRadius:16,padding:"36px 32px",maxWidth:440,width:"100%",border:"1px solid #E2E8F0",textAlign:"center"}}>
+        <div style={{width:56,height:56,borderRadius:"50%",background:GOLD_LIGHT,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px",fontSize:24}}>⚠️</div>
+        <h2 style={{color:NAVY,fontSize:19,fontWeight:500,margin:"0 0 12px"}}>Ce compte est un compte {actualLabel}</h2>
+        <p style={{color:"#718096",fontSize:13.5,lineHeight:1.6,margin:"0 0 8px"}}>L'adresse <strong>{email}</strong> est déjà associée à un espace <strong>{actualLabel}</strong>, alors que vous tentez d'accéder à l'espace <strong>{intendedLabel}</strong>.</p>
+        <p style={{color:"#A0AEC0",fontSize:12.5,lineHeight:1.6,margin:"0 0 22px"}}>Une même adresse e-mail ne peut avoir qu'un seul rôle. Pour être à la fois candidat et recruteur, utilisez deux adresses différentes.</p>
+        <div style={{display:"flex",flexDirection:"column",gap:10}}>
+          <button onClick={onContinue} style={{padding:"11px",borderRadius:8,fontSize:14,cursor:"pointer",background:NAVY,color:"#fff",border:"none",fontWeight:500}}>Accéder à mon espace {actualLabel}</button>
+          <button onClick={onLogout} style={{padding:"10px",borderRadius:8,fontSize:13,cursor:"pointer",background:"transparent",color:NAVY,border:"1.5px solid #CBD5E0"}}>Se déconnecter et changer de compte</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════
+   CONNEXION CANDIDAT (Google OU e-mail/mot de passe)
+═══════════════════════════════════════ */
+function AuthCandidat({onBack,onGoogle}){
+  const [mode,setMode]=useState("login"); // "login" | "signup"
+  const [email,setEmail]=useState("");
+  const [pwd,setPwd]=useState("");
+  const [msg,setMsg]=useState("");
+  const [busy,setBusy]=useState(false);
+
+  const submit=async()=>{
+    setMsg(""); setBusy(true);
+    try{
+      if(mode==="signup"){
+        const {error}=await supabase.auth.signUp({email,password:pwd,options:{data:{role:'candidat'}}});
+        if(error){ setMsg(error.message); }
+        else { setMsg("Compte créé ✔ Si une confirmation par e-mail est demandée, validez-la puis connectez-vous."); setMode("login"); }
+      } else {
+        const {error}=await supabase.auth.signInWithPassword({email,password:pwd});
+        if(error){ setMsg(error.message); }
+        // succès : la session ouvre automatiquement l'espace candidat
+      }
+    } catch(e){ setMsg(e.message); }
+    setBusy(false);
+  };
+
+  const invalide = busy||!email.trim()||!pwd.trim();
+
+  return(
+    <div style={{background:CREAM,minHeight:"100vh"}}>
+      <div style={{background:NAVY,padding:"14px 24px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <Logo/>
+        <button onClick={onBack} style={{background:"transparent",border:"none",color:"rgba(255,255,255,0.6)",fontSize:13,cursor:"pointer"}}>← Accueil</button>
+      </div>
+      <div style={{padding:"40px 16px",maxWidth:420,margin:"0 auto"}}>
+        <div style={{background:"#fff",borderRadius:16,border:"1px solid #E2E8F0",padding:"28px 26px"}}>
+          <p style={{fontSize:12,color:GOLD,fontWeight:500,margin:"0 0 4px",textTransform:"uppercase",letterSpacing:.8}}>Espace Candidat</p>
+          <h2 style={{color:NAVY,fontSize:20,fontWeight:500,margin:"0 0 20px"}}>{mode==="login"?"Connexion":"Créer un compte"}</h2>
+
+          <button onClick={onGoogle} style={{width:"100%",padding:"11px",borderRadius:8,fontSize:14,cursor:"pointer",background:"#fff",color:NAVY,border:"1.5px solid #CBD5E0",fontWeight:500,display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
+            <span style={{fontSize:16,fontWeight:700,color:"#4285F4"}}>G</span> Continuer avec Google
+          </button>
+
+          <div style={{display:"flex",alignItems:"center",gap:10,margin:"18px 0"}}>
+            <div style={{flex:1,height:1,background:"#E2E8F0"}}/>
+            <span style={{fontSize:12,color:"#A0AEC0"}}>ou par e-mail</span>
+            <div style={{flex:1,height:1,background:"#E2E8F0"}}/>
+          </div>
+
+          <div style={{display:"flex",flexDirection:"column",gap:14}}>
+            <div><Lbl t="E-mail" r/><input value={email} onChange={e=>setEmail(e.target.value)} placeholder="votre@email.com" style={iSt}/></div>
+            <div><Lbl t="Mot de passe" r/><input type="password" value={pwd} onChange={e=>setPwd(e.target.value)} placeholder="••••••••" style={iSt}/></div>
+            {msg&&<p style={{fontSize:12.5,color:msg.includes("✔")?"#2F855A":"#E53E3E",margin:0,lineHeight:1.5}}>{msg}</p>}
+            <button onClick={submit} disabled={invalide} style={{padding:"11px",borderRadius:8,fontSize:14,cursor:busy?"default":"pointer",background:invalide?"#E2E8F0":NAVY,color:invalide?"#A0AEC0":"#fff",border:"none",fontWeight:500}}>{busy?"…":(mode==="login"?"Se connecter":"Créer mon compte")}</button>
           </div>
           <p style={{fontSize:12.5,color:"#718096",textAlign:"center",marginTop:18}}>
             {mode==="login"?"Pas encore de compte ? ":"Vous avez déjà un compte ? "}
@@ -678,6 +765,7 @@ export default function App(){
   const [view,setView]=useState("landing");
   const [session,setSession]=useState(null);
   const [ready,setReady]=useState(false);
+  const [intendedRole,setIntendedRole]=useState(null); // "candidat" | "recruteur" | null
 
   useEffect(()=>{
     supabase.auth.getSession().then(({data})=>{ setSession(data.session); setReady(true); });
@@ -694,30 +782,37 @@ export default function App(){
 
   const logout = async () => {
     await supabase.auth.signOut();
+    setIntendedRole(null);
     setView("landing");
   };
 
   if(!ready) return <Chargement/>;
 
   const provider = session?.user?.app_metadata?.provider;
+  const role = session?.user?.user_metadata?.role;
   const isAdmin = session?.user?.email === ADMIN_EMAIL;
+  const actualRole = provider==="google" ? "candidat" : (role || "recruteur");
+  const roleLabel = r => r==="candidat" ? "Candidat" : "Recruteur";
 
   // Admin : via le bouton « Accès Admin » ou si une session admin est déjà active
   if(view==="admin" || isAdmin) return <AdminDashboard onBack={()=>setView("landing")}/>;
 
-  // Connecté via Google → espace Candidat
-  if(session && provider==="google") return <EspaceCandidat session={session} onLogout={logout}/>;
+  if(session){
+    // Connexion par une « porte » qui ne correspond pas au rôle réel du compte
+    if(intendedRole && actualRole!==intendedRole)
+      return <RoleMismatch email={session.user.email} actualLabel={roleLabel(actualRole)} intendedLabel={roleLabel(intendedRole)} onContinue={()=>setIntendedRole(actualRole)} onLogout={logout}/>;
+    if(actualRole==="candidat") return <EspaceCandidat session={session} onLogout={logout}/>;
+    return <EspaceRecruteur session={session} onLogout={logout}/>;
+  }
 
-  // Connecté par e-mail (et pas admin) → espace Recruteur
-  if(session) return <EspaceRecruteur session={session} onLogout={logout}/>;
-
-  // Pas de session : écran de connexion recruteur si demandé
+  // Pas de session : écrans de connexion selon le choix
+  if(view==="candidat-auth") return <AuthCandidat onBack={()=>setView("landing")} onGoogle={loginGoogle}/>;
   if(view==="recruteur-auth") return <AuthRecruteur onBack={()=>setView("landing")}/>;
 
   // Sinon, page d'accueil
   return <Landing onChoose={(v)=>{
-    if(v==="candidat") loginGoogle();
-    else if(v==="recruteur") setView("recruteur-auth");
+    if(v==="candidat"){ setIntendedRole("candidat"); setView("candidat-auth"); }
+    else if(v==="recruteur"){ setIntendedRole("recruteur"); setView("recruteur-auth"); }
     else setView(v);
   }}/>;
 }

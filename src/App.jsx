@@ -554,16 +554,26 @@ salaire_actuel: f.salaireActuel,
    ESPACE RECRUTEUR
 ═══════════════════════════════════════ */
 const STAT_R={en_cours:{bg:"#EFF6FF",color:"#1D4ED8",label:"En cours d'analyse"},terminee:{bg:"#F0FDF4",color:"#166534",label:"Short-list envoyée"},annulee:{bg:"#F1F5F9",color:"#64748B",label:"Annulée"}};
+const STAT_PAY={en_attente:{bg:"#FEF3C7",color:"#92400E",label:"Paiement en attente"},confirme:{bg:"#D1FAE5",color:"#065F46",label:"Paiement confirmé"},annule:{bg:"#F1F5F9",color:"#64748B",label:"Paiement annulé"}};
+const SLUG_PAYMENT_FN="rapid-task"; // Slug technique de la fonction Edge "request_payment_info"
 
 function EspaceRecruteur({session,onLogout}){
   const rmeta=session?.user?.user_metadata||{};
   const initialF={entreprise:rmeta.entreprise||"",contact:rmeta.contact||"",poste:"",genre:"",langues:[],niveau:"",diplome:"",specs:[],nbCv:3,urgence:"normal",notes:"",budget:"",budgetConfidentiel:false};
-  const [vue,setVue]=useState("dashboard"); // "dashboard" | "form"
+  const [vue,setVue]=useState("dashboard"); // "dashboard" | "form" | "detail"
   const [mesDemandes,setMesDemandes]=useState([]);
   const [chargement,setChargement]=useState(true);
   const [step,setStep]=useState(0);
   const [submitted,setSubmitted]=useState(false);
   const [f,setF]=useState(initialF);
+  // Vue détail
+  const [selectedDem,setSelectedDem]=useState(null);
+  const [paiement,setPaiement]=useState(null);
+  const [shortlist,setShortlist]=useState(null);
+  const [candidatsList,setCandidatsList]=useState([]);
+  const [chargementDetail,setChargementDetail]=useState(false);
+  const [envoiEmail,setEnvoiEmail]=useState(false);
+  const [msgEmail,setMsgEmail]=useState("");
 
   const chargerMesDemandes = async () => {
     setChargement(true);
@@ -573,30 +583,44 @@ function EspaceRecruteur({session,onLogout}){
   };
   useEffect(()=>{ chargerMesDemandes(); },[]);
 
+  const ouvrirDetail = async (d) => {
+    setSelectedDem(d); setVue("detail"); setChargementDetail(true); setMsgEmail("");
+    setPaiement(null); setShortlist(null); setCandidatsList([]);
+    const { data: pay } = await supabase.from('paiements').select('*').eq('demande_id',d.id).order('created_at',{ascending:false}).limit(1).maybeSingle();
+    setPaiement(pay);
+    const { data: sl } = await supabase.from('shortlists').select('*').eq('demande_id',d.id).maybeSingle();
+    setShortlist(sl);
+    if(pay?.statut==='confirme' && sl?.candidat_ids?.length){
+      const { data: cands } = await supabase.from('candidats').select('*').in('id',sl.candidat_ids);
+      setCandidatsList(cands||[]);
+    }
+    setChargementDetail(false);
+  };
+
+  const demanderCoordonnees = async () => {
+    setEnvoiEmail(true); setMsgEmail("");
+    try{
+      const { data, error } = await supabase.functions.invoke(SLUG_PAYMENT_FN, { body: { demande_id: selectedDem.id } });
+      if(error){ setMsgEmail("Erreur : "+error.message); }
+      else if(data?.error){ setMsgEmail("Erreur : "+data.error); }
+      else { setMsgEmail("✓ Email envoyé ! Vérifiez votre boîte mail (et le dossier spam)."); await ouvrirDetail(selectedDem); }
+    } catch(e){ setMsgEmail("Erreur : "+e.message); }
+    setEnvoiEmail(false);
+  };
+
   const nouvelleDemande = () => { setF(initialF); setStep(0); setVue("form"); };
-  const retourDashboard = () => { setSubmitted(false); setF(initialF); setStep(0); setVue("dashboard"); chargerMesDemandes(); };
+  const retourDashboard = () => { setSubmitted(false); setF(initialF); setStep(0); setVue("dashboard"); setSelectedDem(null); setPaiement(null); setShortlist(null); setCandidatsList([]); chargerMesDemandes(); };
 
   const sauvegarderDemande = async () => {
-  const { error } = await supabase
-    .from('demandes')
-    .insert([{
-      entreprise: f.entreprise,
-      contact: f.contact,
-      poste: f.poste,
-      niveau: f.niveau,
-      diplome: f.diplome,
-      specs: f.specs,
-      langues: f.langues,
-      nb_cv: f.nbCv,
-      urgence: f.urgence,
-      notes: f.notes,
-budget: f.budgetConfidentiel ? "Confidentiel" : f.budget,
-      recruteur_email: session?.user?.email,
-      statut: 'en_cours'
-    }])
-  if(error){ alert('Erreur : ' + error.message) }
-  else { setSubmitted(true) }
-}
+    const { error } = await supabase.from('demandes').insert([{
+      entreprise:f.entreprise, contact:f.contact, poste:f.poste, niveau:f.niveau, diplome:f.diplome,
+      specs:f.specs, langues:f.langues, nb_cv:f.nbCv, urgence:f.urgence, notes:f.notes,
+      budget:f.budgetConfidentiel?"Confidentiel":f.budget,
+      recruteur_email:session?.user?.email, statut:'en_cours'
+    }]);
+    if(error){ alert('Erreur : '+error.message); } else { setSubmitted(true); }
+  };
+
   const set=(k,v)=>setF(x=>({...x,[k]:v}));
   const toggle=(k,v)=>setF(x=>({...x,[k]:x[k].includes(v)?x[k].filter(i=>i!==v):[...x[k],v]}));
   const ok=()=>{
@@ -686,6 +710,91 @@ budget: f.budgetConfidentiel ? "Confidentiel" : f.budget,
     </div>
   );
 
+  // VUE DÉTAIL DEMANDE
+  if(vue==="detail" && selectedDem){
+    const montantTotal = (paiement?.montant_total) || (selectedDem.nb_cv*1490);
+    const statutPay = paiement?.statut;
+    return(
+      <div style={{background:CREAM,minHeight:"100vh",padding:"0 0 40px"}}>
+        <div style={{background:NAVY,padding:"14px 24px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <Logo/>
+          <button onClick={()=>setVue("dashboard")} style={{background:"transparent",border:"none",color:"rgba(255,255,255,0.6)",fontSize:13,cursor:"pointer"}}>← Mes demandes</button>
+        </div>
+        <div style={{padding:"24px 16px",maxWidth:640,margin:"0 auto"}}>
+          <p style={{fontSize:11,color:GOLD,fontWeight:500,textTransform:"uppercase",letterSpacing:.8,margin:"0 0 4px"}}>Espace recruteur · Détail demande</p>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10,marginBottom:18}}>
+            <h2 style={{color:NAVY,fontSize:20,fontWeight:500,margin:0}}>{selectedDem.poste} — {selectedDem.entreprise}</h2>
+            {statutPay && <span style={{background:STAT_PAY[statutPay].bg,color:STAT_PAY[statutPay].color,fontSize:11,fontWeight:500,padding:"4px 10px",borderRadius:20}}>{STAT_PAY[statutPay].label}</span>}
+          </div>
+
+          {chargementDetail && <p style={{color:"#718096",fontSize:13}}>Chargement du détail…</p>}
+
+          {!chargementDetail && !shortlist && (
+            <div style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:12,padding:"20px 18px"}}>
+              <p style={{fontSize:14,color:NAVY,margin:0}}>Aucune short-list n'est encore disponible pour cette demande.</p>
+            </div>
+          )}
+
+          {!chargementDetail && shortlist && !paiement && (
+            <div>
+              <div style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:12,padding:"18px",marginBottom:14}}>
+                <p style={{fontSize:15,fontWeight:500,color:NAVY,margin:"0 0 6px"}}>Votre short-list est prête</p>
+                <p style={{fontSize:13,color:"#718096",margin:0,lineHeight:1.6}}>{selectedDem.nb_cv} CV ont été sélectionnés par l'équipe JURIJOB pour votre poste. Pour accéder aux profils identifiés, réglez le montant ci-dessous par virement bancaire.</p>
+              </div>
+              <div style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:12,padding:"18px",textAlign:"center",marginBottom:14}}>
+                <p style={{fontSize:12,color:"#718096",margin:"0 0 4px"}}>{selectedDem.nb_cv} CV × 1 490 MAD</p>
+                <p style={{fontSize:26,fontWeight:600,color:NAVY,margin:0}}>{(selectedDem.nb_cv*1490).toLocaleString("fr-FR")} MAD</p>
+              </div>
+              <button onClick={demanderCoordonnees} disabled={envoiEmail} style={{width:"100%",background:envoiEmail?"#E2E8F0":GOLD,color:envoiEmail?"#A0AEC0":NAVY,border:"none",borderRadius:10,padding:"13px",fontSize:14,fontWeight:600,cursor:envoiEmail?"default":"pointer"}}>{envoiEmail?"Envoi en cours…":"Recevoir mes coordonnées bancaires par email"}</button>
+              <p style={{fontSize:12,color:"#718096",textAlign:"center",marginTop:10,lineHeight:1.5}}>Vous recevrez immédiatement nos coordonnées bancaires et votre référence unique de virement.</p>
+              {msgEmail && <p style={{fontSize:13,color:msgEmail.startsWith("✓")?"#2F855A":"#E53E3E",margin:"10px 0 0",textAlign:"center"}}>{msgEmail}</p>}
+            </div>
+          )}
+
+          {!chargementDetail && paiement && paiement.statut==='en_attente' && (
+            <div>
+              <div style={{background:GOLD_LIGHT,border:`1px solid ${GOLD}`,borderRadius:12,padding:"18px",marginBottom:14}}>
+                <p style={{fontSize:14,fontWeight:500,color:NAVY,margin:"0 0 10px"}}>📧 Coordonnées bancaires envoyées</p>
+                <p style={{fontSize:12.5,color:"#4A5568",margin:"0 0 12px",lineHeight:1.6}}>Un email contenant nos coordonnées bancaires et la référence de virement à indiquer a été envoyé à <strong>{session?.user?.email}</strong> le {new Date(paiement.created_at).toLocaleString("fr-FR")}.</p>
+                <div style={{background:"#fff",borderRadius:8,padding:"10px 12px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                  <div><p style={{fontSize:10,color:"#A0AEC0",margin:"0 0 2px",textTransform:"uppercase",letterSpacing:.6}}>Référence</p><p style={{fontSize:13,fontWeight:600,color:NAVY,margin:0,fontFamily:"monospace"}}>{paiement.reference_virement}</p></div>
+                  <div><p style={{fontSize:10,color:"#A0AEC0",margin:"0 0 2px",textTransform:"uppercase",letterSpacing:.6}}>Montant</p><p style={{fontSize:13,fontWeight:600,color:NAVY,margin:0}}>{paiement.montant_total.toLocaleString("fr-FR")} MAD</p></div>
+                </div>
+              </div>
+              <p style={{fontSize:12.5,color:"#718096",margin:"0 0 14px",lineHeight:1.6}}>Une fois votre virement effectué auprès d'Attijariwafa Bank, l'équipe JURIJOB confirmera la réception sous 24h ouvrées et vos CV seront immédiatement débloqués sur cet espace.</p>
+              <button onClick={demanderCoordonnees} disabled={envoiEmail} style={{background:"transparent",color:NAVY,border:`1.5px solid ${NAVY}`,borderRadius:8,padding:"9px 18px",fontSize:13,cursor:envoiEmail?"default":"pointer",opacity:envoiEmail?0.5:1}}>{envoiEmail?"Envoi…":"Renvoyer l'email"}</button>
+              {msgEmail && <p style={{fontSize:13,color:msgEmail.startsWith("✓")?"#2F855A":"#E53E3E",margin:"10px 0 0"}}>{msgEmail}</p>}
+            </div>
+          )}
+
+          {!chargementDetail && paiement && paiement.statut==='confirme' && (
+            <div>
+              <div style={{background:"#D1FAE5",border:"1px solid #6EE7B7",borderRadius:12,padding:"14px 16px",marginBottom:14}}>
+                <p style={{fontSize:13,color:"#065F46",margin:0,lineHeight:1.6}}>✓ Paiement confirmé le {paiement.date_confirmation?new Date(paiement.date_confirmation).toLocaleString("fr-FR"):"—"}. Réf. {paiement.reference_virement}.</p>
+              </div>
+              <div style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:12,padding:"18px"}}>
+                <p style={{fontSize:15,fontWeight:500,color:NAVY,margin:"0 0 14px"}}>Vos {candidatsList.length} CV identifié{candidatsList.length>1?"s":""}</p>
+                {candidatsList.map(c=>(
+                  <div key={c.id} style={{display:"flex",gap:12,padding:"12px 0",borderBottom:"0.5px solid #E2E8F0",alignItems:"flex-start"}}>
+                    <div style={{width:38,height:38,borderRadius:"50%",background:GOLD,color:NAVY,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:600,flexShrink:0}}>{(c.prenom?.[0]||"?")}{(c.nom?.[0]||"")}</div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <p style={{fontSize:14,fontWeight:500,color:NAVY,margin:0}}>{c.prenom} {c.nom}</p>
+                      {c.titre && <p style={{fontSize:12,color:"#4A5568",margin:"2px 0 0"}}>{c.titre}</p>}
+                      <p style={{fontSize:11.5,color:"#718096",margin:"4px 0 0"}}>{[c.email,c.tel,c.ville].filter(Boolean).join(" · ")}</p>
+                      {c.specs?.length>0 && <div style={{display:"flex",flexWrap:"wrap",gap:4,marginTop:5}}>{c.specs.slice(0,5).map(s=><span key={s} style={{background:CREAM,color:NAVY,fontSize:10,padding:"2px 7px",borderRadius:10,border:"1px solid #E2E8F0"}}>{s}</span>)}{c.specs.length>5 && <span style={{fontSize:10,color:"#718096"}}>+{c.specs.length-5}</span>}</div>}
+                      {c.langues?.length>0 && <p style={{fontSize:11,color:"#718096",margin:"4px 0 0"}}>Langues : {c.langues.filter(l=>l.langue).map(l=>l.langue).join(", ")}</p>}
+                    </div>
+                  </div>
+                ))}
+                {candidatsList.length===0 && <p style={{fontSize:13,color:"#718096",margin:0}}>Profils en cours de chargement…</p>}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   // TABLEAU DE BORD RECRUTEUR (vue par défaut)
   if(vue!=="form")return(
     <div style={{background:CREAM,minHeight:"100vh",padding:"0 0 40px"}}>
@@ -712,15 +821,19 @@ budget: f.budgetConfidentiel ? "Confidentiel" : f.budget,
         )}
         {!chargement&&mesDemandes.map(d=>{
           const st=STAT_R[d.statut]||STAT_R.en_cours;
+          const clickable = d.statut==='terminee';
           return(
-            <div key={d.id} style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:11,padding:"14px 16px",marginBottom:10}}>
+            <div key={d.id} onClick={clickable?()=>ouvrirDetail(d):undefined} style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:11,padding:"14px 16px",marginBottom:10,cursor:clickable?"pointer":"default",transition:"all .15s"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10}}>
                 <div style={{flex:1,minWidth:0}}>
                   <p style={{margin:"0 0 2px",fontSize:14,fontWeight:500,color:NAVY}}>{d.poste}</p>
                   <p style={{margin:0,fontSize:12,color:"#718096"}}>{d.entreprise}{d.created_at?` · ${new Date(d.created_at).toLocaleDateString("fr-FR")}`:""}</p>
                   <p style={{margin:"4px 0 0",fontSize:12,color:"#718096"}}>📁 {d.nb_cv} CV demandé{d.nb_cv>1?"s":""}{(d.langues&&d.langues.length)?` · 🌍 ${d.langues.join(", ")}`:""}</p>
                 </div>
-                <span style={{background:st.bg,color:st.color,fontSize:11,fontWeight:500,padding:"4px 10px",borderRadius:20,whiteSpace:"nowrap",flexShrink:0}}>{st.label}</span>
+                <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:6}}>
+                  <span style={{background:st.bg,color:st.color,fontSize:11,fontWeight:500,padding:"4px 10px",borderRadius:20,whiteSpace:"nowrap"}}>{st.label}</span>
+                  {clickable && <span style={{fontSize:11,color:GOLD,fontWeight:500}}>Voir le détail →</span>}
+                </div>
               </div>
             </div>
           );

@@ -1,7 +1,7 @@
 import { supabase } from './supabase'
 import AdminDashboard from './Admin'
 import { useState, useEffect } from "react";
-
+import Logo from './Logo'
 const NAVY="#0B2545",GOLD="#C8A046",CREAM="#F8F5ED",GOLD_LIGHT="#F5EDD6",NAVY2="#1a3a6b";
 
 /* ───── DONNÉES COMMUNES ───── */
@@ -28,13 +28,13 @@ const Inp=({val,onChange,ph,style,filter})=><input value={val} onChange={e=>onCh
 const Lbl=({t,r})=><label style={{fontSize:12,fontWeight:500,color:"#4A5568",display:"block",marginBottom:5}}>{t}{r&&<span style={{color:GOLD,marginLeft:3}}>*</span>}</label>;
 const Pill=({active,onClick,children})=><button onClick={onClick} style={{padding:"6px 13px",borderRadius:20,fontSize:12.5,cursor:"pointer",background:active?NAVY:"transparent",color:active?"#fff":NAVY,border:`1.5px solid ${active?NAVY:"#CBD5E0"}`,fontWeight:active?500:400}}>{children}</button>;
 const SecTitle=({t})=><p style={{fontSize:11,fontWeight:500,color:GOLD,textTransform:"uppercase",letterSpacing:.8,margin:"0 0 10px",borderBottom:`1px solid ${CREAM}`,paddingBottom:6}}>{t}</p>;
-const Logo=()=><div style={{background:NAVY,color:GOLD,fontWeight:700,fontSize:18,padding:"6px 14px",borderRadius:8,letterSpacing:1,display:"inline-block"}}>JURI<span style={{color:"#fff"}}>JOB</span></div>;
+
 
 /* ───── ÉCRAN DE CHARGEMENT ───── */
 function Chargement(){
   return(
     <div style={{background:CREAM,minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16}}>
-      <Logo/>
+     <Logo variant="dark" size="large" />
       <p style={{fontSize:13,color:"#718096"}}>Chargement…</p>
     </div>
   );
@@ -48,7 +48,7 @@ function Landing({onChoose}){
     <div style={{background:CREAM,minHeight:"100vh"}}>
       {/* NAV */}
       <div style={{background:NAVY,padding:"14px 32px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-        <Logo/>
+        <Logo variant="light" size="header" />
         <span style={{fontSize:12,color:"rgba(255,255,255,0.5)",letterSpacing:.5}}>La plateforme juridique de recrutement</span>
       </div>
 
@@ -150,7 +150,7 @@ function AuthRecruteur({onBack}){
   return(
     <div style={{background:CREAM,minHeight:"100vh"}}>
       <div style={{background:NAVY,padding:"14px 24px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-        <Logo/>
+        <Logo variant="light" size="header" />
         <button onClick={onBack} style={{background:"transparent",border:"none",color:"rgba(255,255,255,0.6)",fontSize:13,cursor:"pointer"}}>← Accueil</button>
       </div>
       <div style={{padding:"40px 16px",maxWidth:420,margin:"0 auto"}}>
@@ -228,7 +228,7 @@ function AuthCandidat({onBack,onGoogle}){
   return(
     <div style={{background:CREAM,minHeight:"100vh"}}>
       <div style={{background:NAVY,padding:"14px 24px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-        <Logo/>
+        <Logo variant="light" size="header" />
         <button onClick={onBack} style={{background:"transparent",border:"none",color:"rgba(255,255,255,0.6)",fontSize:13,cursor:"pointer"}}>← Accueil</button>
       </div>
       <div style={{padding:"40px 16px",maxWidth:420,margin:"0 auto"}}>
@@ -494,7 +494,7 @@ salaire_actuel: f.salaireActuel,
   if(existing && !done)return(
     <div style={{background:CREAM,minHeight:"100vh"}}>
       <div style={{background:NAVY,padding:"14px 24px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-        <Logo/>
+        <Logo variant="light" size="header" />
         <button onClick={onLogout} style={{background:"transparent",border:"none",color:"rgba(255,255,255,0.6)",fontSize:13,cursor:"pointer"}}>Se déconnecter</button>
       </div>
       <div style={{padding:"40px 16px",maxWidth:480,margin:"0 auto"}}>
@@ -526,7 +526,7 @@ salaire_actuel: f.salaireActuel,
   return(
     <div style={{background:CREAM,minHeight:"100vh",padding:"0 0 32px"}}>
       <div style={{background:NAVY,padding:"14px 24px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-        <Logo/>
+        <Logo variant="light" size="header" />
         <button onClick={onLogout} style={{background:"transparent",border:"none",color:"rgba(255,255,255,0.6)",fontSize:13,cursor:"pointer"}}>Se déconnecter</button>
       </div>
       <div style={{padding:"22px 16px",maxWidth:580,margin:"0 auto"}}>
@@ -717,7 +717,7 @@ function EspaceRecruteur({session,onLogout}){
     return(
       <div style={{background:CREAM,minHeight:"100vh",padding:"0 0 40px"}}>
         <div style={{background:NAVY,padding:"14px 24px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-          <Logo/>
+          <Logo variant="light" size="header" />
           <button onClick={()=>setVue("dashboard")} style={{background:"transparent",border:"none",color:"rgba(255,255,255,0.6)",fontSize:13,cursor:"pointer"}}>← Mes demandes</button>
         </div>
         <div style={{padding:"24px 16px",maxWidth:640,margin:"0 auto"}}>
@@ -799,7 +799,7 @@ function EspaceRecruteur({session,onLogout}){
   if(vue!=="form")return(
     <div style={{background:CREAM,minHeight:"100vh",padding:"0 0 40px"}}>
       <div style={{background:NAVY,padding:"14px 24px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-        <Logo/>
+        <Logo variant="light" size="header" />
         <button onClick={onLogout} style={{background:"transparent",border:"none",color:"rgba(255,255,255,0.6)",fontSize:13,cursor:"pointer"}}>Se déconnecter</button>
       </div>
       <div style={{padding:"24px 16px",maxWidth:640,margin:"0 auto"}}>
@@ -846,7 +846,7 @@ function EspaceRecruteur({session,onLogout}){
   return(
     <div style={{background:CREAM,minHeight:"100vh",padding:"0 0 32px"}}>
       <div style={{background:NAVY,padding:"14px 24px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-        <Logo/>
+        <Logo variant="light" size="header" />
         <button onClick={()=>setVue("dashboard")} style={{background:"transparent",border:"none",color:"rgba(255,255,255,0.6)",fontSize:13,cursor:"pointer"}}>← Mes demandes</button>
       </div>
       <div style={{padding:"22px 16px",maxWidth:580,margin:"0 auto"}}>

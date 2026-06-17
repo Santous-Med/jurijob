@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import { useState, useEffect } from 'react'
+import Logo from './Logo'
 
 const NAVY="#0B2545",GOLD="#C8A046",CREAM="#F8F5ED",GOLD_LIGHT="#F5EDD6";
 const ADMIN_EMAIL="admin@jurijob.ma";
@@ -120,7 +121,7 @@ const deconnexion = async () => { await supabase.auth.signOut(); window.location
 if(!auth) return(
   <div style={{background:CREAM,minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:24}}>
     <div style={{background:"#fff",borderRadius:16,padding:"40px 36px",maxWidth:380,width:"100%",border:"1px solid #E2E8F0",textAlign:"center"}}>
-      <div style={{background:NAVY,color:GOLD,fontWeight:700,fontSize:20,padding:"6px 16px",borderRadius:8,letterSpacing:1,display:"inline-block",marginBottom:24}}>JURI<span style={{color:"#fff"}}>JOB</span></div>
+      <div style={{marginBottom:24}}><Logo variant="dark" size="large" /></div>
       <p style={{fontSize:13,color:"#718096",margin:"0 0 20px"}}>Accès réservé à l'administrateur</p>
       <input
         type="password"
@@ -288,7 +289,7 @@ if(!auth) return(
   const Header=()=>(
     <div style={{background:NAVY,padding:"0 20px",display:"flex",alignItems:"center",justifyContent:"space-between",height:52}}>
       <div style={{display:"flex",alignItems:"center",gap:10}}>
-        <div style={{background:GOLD,color:NAVY,fontWeight:700,fontSize:16,padding:"4px 11px",borderRadius:7,letterSpacing:1}}>JURIJOB</div>
+        <Logo variant="light" size="header" />
         <span style={{fontSize:12,color:"rgba(255,255,255,0.4)"}}>Admin</span>
       </div>
       <div style={{display:"flex",alignItems:"center",gap:8}}>

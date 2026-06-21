@@ -1,6 +1,5 @@
 import { supabase } from './supabase'
 import { useState, useEffect } from 'react'
-import Logo from './Logo'
 
 const NAVY="#0B2545",GOLD="#C8A046",CREAM="#F8F5ED",GOLD_LIGHT="#F5EDD6";
 const ADMIN_EMAIL="admin@jurijob.ma";
@@ -21,7 +20,8 @@ function scoreCandidat(c,d){
   const specScore=d.specs&&d.specs.length>0?Math.round((specMatch.length/d.specs.length)*40):0;
   score+=specScore;
   details.specs={score:specScore,max:40,matched:specMatch,total:d.specs?d.specs.length:0};
-  const langMatch=d.langues?d.langues.filter(l=>c.langues&&c.langues.includes(l)):[];
+  const candLangs=(c.langues||[]).map(l=>typeof l==="string"?l:(l&&l.langue)).filter(Boolean);
+  const langMatch=d.langues?d.langues.filter(l=>candLangs.includes(l)):[];
   const langScore=d.langues&&d.langues.length>0?Math.round((langMatch.length/d.langues.length)*25):25;
   score+=langScore;
   details.langues={score:langScore,max:25,matched:langMatch,total:d.langues?d.langues.length:0};
@@ -54,8 +54,6 @@ function scoreColor(s){
 const URGENCE_STYLE={immediat:{bg:"#FEE2E2",color:"#991B1B",label:"Immédiat"},urgent:{bg:"#FEF3C7",color:"#92400E",label:"Urgent"},normal:{bg:"#E1F5EE",color:"#0F6E56",label:"Normal"}};
 const STATUT_D={en_cours:{bg:"#EFF6FF",color:"#1D4ED8",label:"En cours"},terminee:{bg:"#F0FDF4",color:"#166534",label:"Terminée"},annulee:{bg:"#F1F5F9",color:"#64748B",label:"Annulée"}};
 const STATUT_C={valide:{bg:"#F0FDF4",color:"#166534",label:"Validé"},en_attente:{bg:GOLD_LIGHT,color:"#92400E",label:"En attente"},refuse:{bg:"#FEF2F2",color:"#991B1B",label:"Refusé"}};
-/* ── PAIEMENTS ── */
-const STATUT_PAY={en_attente:{bg:"#FEF3C7",color:"#92400E",label:"En attente"},confirme:{bg:"#D1FAE5",color:"#065F46",label:"Confirmé"},annule:{bg:"#F1F5F9",color:"#64748B",label:"Annulé"}};
 
 const Badge=({bg,color,label})=><span style={{background:bg,color,fontSize:11,fontWeight:500,padding:"3px 9px",borderRadius:20,whiteSpace:"nowrap"}}>{label}</span>;
 
@@ -99,11 +97,8 @@ export default function AdminDashboard(){
   const [shortlistSent,setShortlistSent]=useState([]);
   const [expandedScore,setExpandedScore]=useState(null);
   const [loading,setLoading]=useState(true);
-  /* ── PAIEMENTS ── */
-  const [paiements,setPaiements]=useState([]);
-  const [refVirementInputs,setRefVirementInputs]=useState({});
-  const [confirming,setConfirming]=useState(null);
 
+// Si une session admin est déjà active (rechargement de page), on garde l'accès
 useEffect(()=>{
   supabase.auth.getSession().then(({data})=>{
     if(data.session?.user?.email===ADMIN_EMAIL) setAuth(true);
@@ -112,6 +107,7 @@ useEffect(()=>{
 
 useEffect(()=>{ if(auth) chargerDonnees(); },[auth]);
 
+// Connexion admin via un vrai compte Supabase (le mot de passe n'est plus dans le code)
 const connexion = async () => {
   const { error } = await supabase.auth.signInWithPassword({ email: ADMIN_EMAIL, password: mdp });
   if(error){ setErreur(true); } else { setAuth(true); }
@@ -121,7 +117,7 @@ const deconnexion = async () => { await supabase.auth.signOut(); window.location
 if(!auth) return(
   <div style={{background:CREAM,minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:24}}>
     <div style={{background:"#fff",borderRadius:16,padding:"40px 36px",maxWidth:380,width:"100%",border:"1px solid #E2E8F0",textAlign:"center"}}>
-      <div style={{marginBottom:24}}><Logo variant="dark" size="large" /></div>
+      <div style={{background:NAVY,color:GOLD,fontWeight:700,fontSize:20,padding:"6px 16px",borderRadius:8,letterSpacing:1,display:"inline-block",marginBottom:24}}>JURI<span style={{color:"#fff"}}>JOB</span></div>
       <p style={{fontSize:13,color:"#718096",margin:"0 0 20px"}}>Accès réservé à l'administrateur</p>
       <input
         type="password"
@@ -143,13 +139,12 @@ if(!auth) return(
     setLoading(true);
     const {data:d} = await supabase.from('demandes').select('*').order('created_at',{ascending:false});
     const {data:c} = await supabase.from('candidats').select('*').order('created_at',{ascending:false});
-    const {data:p} = await supabase.from('paiements').select('*').order('created_at',{ascending:false});
     if(d) setDemandes(d);
     if(c) setCandidats(c);
-    if(p) setPaiements(p);
     setLoading(false);
   };
 
+  // ── Notifications e-mail (via la fonction serveur "notify" + Resend) ──
   const emailShell = (titre,corps) => `<div style="font-family:Arial,sans-serif;background:#F8F5ED;padding:24px"><div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #E2E8F0"><div style="background:#0B2545;padding:20px 24px"><span style="background:#C8A046;color:#0B2545;font-weight:700;font-size:16px;padding:4px 11px;border-radius:7px;letter-spacing:1px">JURIJOB</span></div><div style="padding:28px 24px;color:#0B2545"><h1 style="font-size:18px;font-weight:600;margin:0 0 14px;color:#0B2545">${titre}</h1>${corps}</div><div style="padding:16px 24px;background:#F8F5ED;color:#A0AEC0;font-size:11px;text-align:center">JURIJOB · Recrutement juridique au Maroc · jurijob.ma</div></div></div>`;
 
   const envoyerNotification = async (to,subject,html) => {
@@ -167,16 +162,6 @@ if(!auth) return(
     valide:candidats.filter(c=>c.statut==="valide").length,
     en_attente:candidats.filter(c=>c.statut==="en_attente").length,
     refuse:candidats.filter(c=>c.statut==="refuse").length
-  };
-  /* ── PAIEMENTS ── */
-  const statP={
-    en_attente:paiements.filter(p=>p.statut==="en_attente").length,
-    confirme:paiements.filter(p=>p.statut==="confirme").length,
-    total_mois:paiements.filter(p=>{
-      if(p.statut!=="confirme"||!p.date_confirmation) return false;
-      const dt=new Date(p.date_confirmation),now=new Date();
-      return dt.getMonth()===now.getMonth()&&dt.getFullYear()===now.getFullYear();
-    }).reduce((sum,p)=>sum+(Number(p.montant_total)||0),0)
   };
 
   const validerCandidat = async (id,s) => {
@@ -197,41 +182,6 @@ if(!auth) return(
   const cloturerDemande = async (id,s) => {
     const{error}=await supabase.from('demandes').update({statut:s}).eq('id',id);
     if(!error) setDemandes(ds=>ds.map(d=>d.id===id?{...d,statut:s}:d));
-  };
-
-  /* ── PAIEMENTS ── */
-  const confirmerPaiement = async (paiement) => {
-    const refVir=(refVirementInputs[paiement.id]||"").trim();
-    if(!refVir){
-      if(!window.confirm("Aucune référence de virement Attijariwafa n'est saisie. Confirmer quand même ?")) return;
-    }
-    setConfirming(paiement.id);
-    const now=new Date().toISOString();
-    const noteText=refVir
-      ?`Virement Attijariwafa réf. ${refVir} — confirmé le ${new Date().toLocaleDateString("fr-FR")}`
-      :`Confirmé le ${new Date().toLocaleDateString("fr-FR")} (sans référence)`;
-    const {error}=await supabase.from('paiements').update({
-      statut:'confirme',
-      date_confirmation:now,
-      notes:noteText
-    }).eq('id',paiement.id);
-    if(error){ alert('Erreur : '+error.message); setConfirming(null); return; }
-    setPaiements(ps=>ps.map(p=>p.id===paiement.id?{...p,statut:'confirme',date_confirmation:now,notes:noteText}:p));
-    setRefVirementInputs(inp=>{ const {[paiement.id]:_,...rest}=inp; return rest; });
-    if(paiement.recruteur_email){
-      const dem=demandes.find(d=>d.id===paiement.demande_id);
-      const poste=dem?.poste||"votre poste";
-      const contact=dem?.contact||"";
-      envoyerNotification(paiement.recruteur_email,
-        `Paiement confirmé — vos CV sont débloqués (${poste})`,
-        emailShell("Votre paiement est confirmé ✓",
-          `<p style="font-size:14px;line-height:1.6;margin:0 0 12px">Bonjour ${contact},</p>
-           <p style="font-size:14px;line-height:1.6;margin:0 0 12px">Nous accusons réception de votre virement de <strong>${Number(paiement.montant_total).toLocaleString("fr-FR")} MAD</strong> (référence <strong>${paiement.reference_virement}</strong>) pour votre short-list de ${paiement.nb_cv} CV pour le poste de <strong>${poste}</strong>.</p>
-           <p style="font-size:14px;line-height:1.6;margin:0 0 12px">Vos CV sont désormais <strong>débloqués</strong> sur votre espace recruteur. Vous pouvez maintenant accéder aux coordonnées complètes des candidats sélectionnés.</p>
-           <p style="margin:22px 0 0"><a href="https://www.jurijob.ma" style="background:#C8A046;color:#0B2545;text-decoration:none;font-weight:600;font-size:14px;padding:11px 22px;border-radius:8px;display:inline-block">Accéder à mes CV</a></p>
-           <p style="font-size:13px;line-height:1.6;margin:18px 0 0;color:#718096">Merci pour votre confiance dans JURIJOB.</p>`));
-    }
-    setConfirming(null);
   };
 
   const getScoredCandidats=(dem)=>{
@@ -283,13 +233,12 @@ if(!auth) return(
     {id:"demandes",icon:"📋",label:"Demandes"},
     {id:"cvtheque",icon:"👥",label:"CVthèque"},
     {id:"shortlists",icon:"📤",label:"Short-lists"},
-    {id:"paiements",icon:"💳",label:"Paiements"},
   ];
 
   const Header=()=>(
     <div style={{background:NAVY,padding:"0 20px",display:"flex",alignItems:"center",justifyContent:"space-between",height:52}}>
       <div style={{display:"flex",alignItems:"center",gap:10}}>
-        <Logo variant="light" size="header" />
+        <div style={{background:GOLD,color:NAVY,fontWeight:700,fontSize:16,padding:"4px 11px",borderRadius:7,letterSpacing:1}}>JURIJOB</div>
         <span style={{fontSize:12,color:"rgba(255,255,255,0.4)"}}>Admin</span>
       </div>
       <div style={{display:"flex",alignItems:"center",gap:8}}>
@@ -334,27 +283,6 @@ if(!auth) return(
           ))}
         </div>
       </div>
-      {/* ── PAIEMENTS ── */}
-      <div>
-        <p style={{fontSize:12,fontWeight:500,color:"#4A5568",margin:"0 0 8px"}}>Paiements</p>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
-          {[
-            ["À confirmer",statP.en_attente,"#92400E",GOLD_LIGHT],
-            ["Confirmés",statP.confirme,"#065F46","#D1FAE5"],
-            ["Reçus ce mois (MAD)",statP.total_mois.toLocaleString("fr-FR"),"#0B2545","#F8F5ED"]
-          ].map(([l,v,c,bg])=>(
-            <div key={l} style={{background:bg,borderRadius:10,padding:"14px 16px"}}><p style={{margin:"0 0 4px",fontSize:11,color:c,opacity:.8}}>{l}</p><p style={{margin:0,fontSize:statP.en_attente>0&&l==="À confirmer"?26:22,fontWeight:500,color:c}}>{v}</p></div>
-          ))}
-        </div>
-      </div>
-      {/* ── /PAIEMENTS ── */}
-      {statP.en_attente>0&&(
-        <div style={{background:GOLD_LIGHT,border:"1px solid #FCD34D",borderRadius:12,padding:"14px 18px"}}>
-          <p style={{margin:"0 0 4px",fontSize:13,fontWeight:500,color:"#92400E"}}>💳 {statP.en_attente} paiement{statP.en_attente>1?"s":""} à confirmer</p>
-          <p style={{margin:"0 0 10px",fontSize:12,color:"#92400E"}}>Vérifiez vos virements Attijariwafa et confirmez la réception pour débloquer les CV des recruteurs.</p>
-          <button onClick={()=>setTab("paiements")} style={{padding:"6px 14px",borderRadius:7,background:NAVY,color:"#fff",border:"none",fontSize:12,cursor:"pointer",fontWeight:500}}>Voir les paiements →</button>
-        </div>
-      )}
       {demandes.filter(d=>d.statut==="en_cours"&&d.urgence!=="normal").length>0&&(
         <div style={{background:"#FFF7ED",border:"1px solid #FCD34D",borderRadius:12,padding:"14px 18px"}}>
           <p style={{margin:"0 0 10px",fontSize:13,fontWeight:500,color:"#92400E"}}>⚡ Demandes urgentes à traiter</p>
@@ -437,7 +365,7 @@ if(!auth) return(
                       {(c.specs||[]).filter(s=>(selectedDem.specs||[]).includes(s)).map(s=><span key={s} style={{background:GOLD_LIGHT,color:NAVY,fontSize:11,padding:"2px 8px",borderRadius:20,fontWeight:500}}>✓ {s}</span>)}
                       {(c.specs||[]).filter(s=>!(selectedDem.specs||[]).includes(s)).map(s=><span key={s} style={{background:CREAM,color:"#718096",fontSize:11,padding:"2px 8px",borderRadius:20}}>{s}</span>)}
                     </div>
-                    <p style={{margin:"0 0 6px",fontSize:12,color:"#718096"}}>🌍 {(c.langues||[]).join(", ")} · 💰 {c.salaire} · 📅 {c.disponibilite}</p>
+                    <p style={{margin:"0 0 6px",fontSize:12,color:"#718096"}}>🌍 {(c.langues||[]).map(l=>typeof l==="string"?l:l.langue).filter(Boolean).join(", ")} · 💰 {c.salaire} · 📅 {c.disponibilite}</p>
                     <button onClick={()=>setExpandedScore(expanded?null:c.id)} style={{background:"none",border:"none",fontSize:12,color:"#718096",cursor:"pointer",padding:0,textDecoration:"underline"}}>
                       {expanded?"Masquer le détail":"Voir le détail du score →"}
                     </button>
@@ -521,7 +449,7 @@ if(!auth) return(
                     <p style={{margin:"0 0 2px",fontSize:14,fontWeight:500,color:NAVY}}>{c.prenom} {c.nom}</p>
                     <p style={{margin:"0 0 6px",fontSize:12,color:"#718096"}}>{c.titre} · {c.ville} · {c.diplome}</p>
                     <div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:5}}>{(c.specs||[]).map(s=><span key={s} style={{background:CREAM,color:NAVY,fontSize:11,padding:"2px 8px",borderRadius:20}}>{s}</span>)}</div>
-                    <p style={{margin:0,fontSize:12,color:"#718096"}}>🌍 {(c.langues||[]).join(", ")} · 💰 {c.salaire} · 📅 {c.disponibilite}</p>
+                    <p style={{margin:0,fontSize:12,color:"#718096"}}>🌍 {(c.langues||[]).map(l=>typeof l==="string"?l:l.langue).filter(Boolean).join(", ")} · 💰 {c.salaire} · 📅 {c.disponibilite}</p>
                   </div>
                   <div style={{display:"flex",flexDirection:"column",gap:6,flexShrink:0}}>
                     {statut==="en_attente"&&<><button onClick={()=>validerCandidat(c.id,"valide")} style={{padding:"6px 12px",borderRadius:7,background:"#F0FDF4",color:"#166534",border:"1px solid #BBF7D0",fontSize:12,cursor:"pointer",fontWeight:500}}>✓ Valider</button><button onClick={()=>validerCandidat(c.id,"refuse")} style={{padding:"6px 12px",borderRadius:7,background:"#FEF2F2",color:"#991B1B",border:"1px solid #FECACA",fontSize:12,cursor:"pointer"}}>✕ Refuser</button></>}
@@ -561,87 +489,7 @@ if(!auth) return(
     </div>
   );
 
-  /* ── PAIEMENTS ── */
-  const renderPaiements = () => {
-    const enAttente=paiements.filter(p=>p.statut==="en_attente");
-    const confirmes=paiements.filter(p=>p.statut==="confirme");
-    const annules=paiements.filter(p=>p.statut==="annule");
-
-    const renderPaiementCard = (p, isPending) => {
-      const dem=demandes.find(d=>d.id===p.demande_id);
-      const ref=refVirementInputs[p.id]||"";
-      return(
-        <div key={p.id} style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:10,padding:"14px 16px",marginBottom:8}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12,marginBottom:isPending?10:0}}>
-            <div style={{flex:1,minWidth:0}}>
-              <p style={{margin:"0 0 3px",fontSize:11,color:GOLD,fontWeight:500,letterSpacing:.5,fontFamily:"monospace"}}>{p.reference_virement}</p>
-              <p style={{margin:"0 0 2px",fontSize:14,fontWeight:500,color:NAVY}}>{dem?.poste||"—"}{dem?.entreprise?` · ${dem.entreprise}`:""}</p>
-              <p style={{margin:0,fontSize:12,color:"#718096"}}>{p.recruteur_email}{dem?.contact?` · ${dem.contact}`:""}</p>
-              <p style={{margin:"4px 0 0",fontSize:12,color:"#718096"}}>{p.nb_cv} CV × {Number(p.montant_unitaire).toLocaleString("fr-FR")} MAD · envoyé le {new Date(p.created_at).toLocaleDateString("fr-FR")} à {new Date(p.created_at).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}</p>
-              {p.date_confirmation&&<p style={{margin:"4px 0 0",fontSize:12,color:"#065F46"}}>✓ Confirmé le {new Date(p.date_confirmation).toLocaleDateString("fr-FR")} à {new Date(p.date_confirmation).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}</p>}
-              {p.notes&&!isPending&&<p style={{margin:"4px 0 0",fontSize:11,color:"#A0AEC0",fontStyle:"italic"}}>{p.notes}</p>}
-            </div>
-            <div style={{textAlign:"right",flexShrink:0}}>
-              <p style={{margin:"0 0 4px",fontSize:18,fontWeight:600,color:NAVY}}>{Number(p.montant_total).toLocaleString("fr-FR")} MAD</p>
-              <Badge {...STATUT_PAY[p.statut]}/>
-            </div>
-          </div>
-          {isPending&&(
-            <div style={{borderTop:"1px solid #F0F4F8",paddingTop:10,display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-              <input
-                type="text"
-                value={ref}
-                onChange={e=>setRefVirementInputs(inp=>({...inp,[p.id]:e.target.value}))}
-                placeholder="Référence virement reçu (ex: VIR-25062026-457821)"
-                style={{flex:1,minWidth:200,padding:"7px 11px",borderRadius:7,border:"1px solid #CBD5E0",fontSize:12,outline:"none",color:NAVY}}
-              />
-              <button onClick={()=>confirmerPaiement(p)} disabled={confirming===p.id}
-                style={{padding:"7px 14px",borderRadius:7,background:confirming===p.id?"#A0AEC0":"#065F46",color:"#fff",border:"none",fontSize:12,cursor:confirming===p.id?"default":"pointer",fontWeight:500,whiteSpace:"nowrap"}}>
-                {confirming===p.id?"Confirmation…":"✓ Confirmer paiement reçu"}
-              </button>
-            </div>
-          )}
-        </div>
-      );
-    };
-
-    return(
-      <div style={{padding:"20px"}}>
-        <p style={{fontSize:11,color:GOLD,fontWeight:500,textTransform:"uppercase",letterSpacing:.8,margin:"0 0 4px"}}>Comptabilité</p>
-        <h2 style={{color:NAVY,fontSize:19,fontWeight:500,margin:"0 0 18px"}}>Paiements — {paiements.length} au total</h2>
-        {paiements.length===0&&!loading&&<p style={{color:"#A0AEC0",fontSize:13,textAlign:"center",padding:"32px 0"}}>Aucun paiement enregistré pour le moment.</p>}
-        {enAttente.length>0&&(
-          <div style={{marginBottom:24}}>
-            <p style={{fontSize:12,fontWeight:500,color:"#4A5568",margin:"0 0 8px",display:"flex",alignItems:"center",gap:8}}>
-              <Badge {...STATUT_PAY.en_attente}/>
-              <span>{enAttente.length} paiement{enAttente.length>1?"s":""} à confirmer</span>
-            </p>
-            {enAttente.map(p=>renderPaiementCard(p,true))}
-          </div>
-        )}
-        {confirmes.length>0&&(
-          <div style={{marginBottom:24}}>
-            <p style={{fontSize:12,fontWeight:500,color:"#4A5568",margin:"0 0 8px",display:"flex",alignItems:"center",gap:8}}>
-              <Badge {...STATUT_PAY.confirme}/>
-              <span>{confirmes.length} paiement{confirmes.length>1?"s":""} confirmé{confirmes.length>1?"s":""}</span>
-            </p>
-            {confirmes.map(p=>renderPaiementCard(p,false))}
-          </div>
-        )}
-        {annules.length>0&&(
-          <div style={{marginBottom:24}}>
-            <p style={{fontSize:12,fontWeight:500,color:"#4A5568",margin:"0 0 8px",display:"flex",alignItems:"center",gap:8}}>
-              <Badge {...STATUT_PAY.annule}/>
-              <span>{annules.length} paiement{annules.length>1?"s":""} annulé{annules.length>1?"s":""}</span>
-            </p>
-            {annules.map(p=>renderPaiementCard(p,false))}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const content=tab==="dashboard"?renderDashboard():tab==="demandes"?renderDemandes():tab==="cvtheque"?renderCvtheque():tab==="shortlists"?renderShortlists():renderPaiements();
+  const content=tab==="dashboard"?renderDashboard():tab==="demandes"?renderDemandes():tab==="cvtheque"?renderCvtheque():renderShortlists();
 
   return(
     <div style={{background:CREAM,minHeight:"100vh",display:"flex",flexDirection:"column"}}>

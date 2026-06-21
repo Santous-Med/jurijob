@@ -206,7 +206,15 @@ function AuthCandidat({onBack,onGoogle}){
   const [pwd,setPwd]=useState("");
   const [msg,setMsg]=useState("");
   const [busy,setBusy]=useState(false);
+  const [isInAppBrowser, setIsInAppBrowser] = useState(false);
 
+  // Détection du navigateur interne (Facebook, Instagram, LinkedIn)
+  useEffect(() => {
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    if (/FBAN|FBAV|Instagram|LinkedInApp/i.test(userAgent)) {
+      setIsInAppBrowser(true);
+    }
+  }, []);
   const submit=async()=>{
     setMsg(""); setBusy(true);
     try{

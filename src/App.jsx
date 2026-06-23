@@ -22,6 +22,46 @@ const LANGUES_RH=["Arabe","Français","Anglais","Espagnol","Allemand","Italien",
 const STEPS_C=["Identité","Formation","Expériences","Spécialisations","Langues","Préférences","Aperçu"];
 const STEPS_R=["Votre profil","Genre & Langues","Expérience & Diplôme","Spécialisation","Confirmation"];
 
+/* ── Listes pour la saisie guidée (candidat) ── */
+const PAYS=["Maroc","France","Algérie","Tunisie","Mauritanie","Sénégal","Côte d'Ivoire","Mali","Burkina Faso","Bénin","Togo","Niger","Guinée","Cameroun","Gabon","Congo (Brazzaville)","RD Congo","Tchad","Madagascar","Belgique","Suisse","Canada","Autre"];
+const VILLES={
+  "Maroc":["Casablanca","Rabat","Salé","Témara","Marrakech","Fès","Tanger","Tétouan","Meknès","Oujda","Kénitra","Agadir","Mohammedia","El Jadida","Settat","Béni Mellal","Khouribga","Nador","Safi","Khémisset","Berrechid","Larache","Taza","Errachidia","Laâyoune","Dakhla"],
+  "France":["Paris","Lyon","Marseille","Toulouse","Bordeaux","Lille","Nantes","Strasbourg","Montpellier","Rennes","Nice","Grenoble","Aix-en-Provence"],
+  "Algérie":["Alger","Oran","Constantine","Annaba"],
+  "Tunisie":["Tunis","Sfax","Sousse"],
+  "Sénégal":["Dakar","Thiès","Saint-Louis"],
+  "Côte d'Ivoire":["Abidjan","Yamoussoukro","Bouaké"],
+  "Cameroun":["Yaoundé","Douala"],
+  "Mali":["Bamako"],
+  "Burkina Faso":["Ouagadougou","Bobo-Dioulasso"],
+  "Bénin":["Cotonou","Porto-Novo"],
+  "Togo":["Lomé"],
+  "Niger":["Niamey"],
+  "Guinée":["Conakry"],
+  "Gabon":["Libreville"],
+  "Congo (Brazzaville)":["Brazzaville","Pointe-Noire"],
+  "RD Congo":["Kinshasa","Lubumbashi"],
+  "Mauritanie":["Nouakchott"],
+  "Madagascar":["Antananarivo"],
+};
+const TITRES=["Étudiant(e) en droit","Stagiaire juridique","Juriste junior","Juriste","Juriste d'entreprise","Juriste d'affaires","Juriste contentieux","Juriste senior","Avocat(e)","Avocat(e) stagiaire","Élève-avocat(e)","Notaire","Notaire stagiaire","Clerc de notaire","Assistant(e) juridique / Paralegal","Compliance Officer / Conformité","Fiscaliste","Responsable juridique","Directeur(trice) juridique","Magistrat(e)","Huissier de justice","Enseignant(e)-chercheur(se) en droit"];
+const DIPLOMES_CAND=[
+  {val:"bac",label:"Baccalauréat"},
+  {val:"deug",label:"DEUG / Bac+2"},
+  {val:"licence",label:"Licence"},
+  {val:"master1",label:"Master I"},
+  {val:"master2",label:"Master II / DESA / DESS / DEA"},
+  {val:"barreau",label:"CAPA (avocat — France)"},
+  {val:"doctorat",label:"Doctorat"},
+  {val:"autre",label:"Autre"},
+];
+const ECOLES=[
+  "Université Mohammed V de Rabat — FSJES Agdal","Université Mohammed V de Rabat — FSJES Souissi","Université Hassan II de Casablanca — FSJES Aïn Chock","Université Hassan II de Casablanca — FSJES Mohammedia","Université Cadi Ayyad — FSJES Marrakech","Université Ibn Tofaïl — FSJES Kénitra","Université Abdelmalek Essaâdi — FSJES Tanger / Tétouan","Université Sidi Mohamed Ben Abdellah — FSJES Fès","Université Mohammed Premier — FSJES Oujda","Université Ibn Zohr — FSJES Agadir","Université Hassan 1er — FSJES Settat","Université Moulay Ismaïl — FSJES Meknès","Université Chouaïb Doukkali — FSJES El Jadida","Université Sultan Moulay Slimane — FSJES Béni Mellal","Université Internationale de Rabat (UIR)","Université Internationale de Casablanca (UIC)","Université Mundiapolis — Casablanca","ISCAE — Casablanca / Rabat",
+  "Université Paris 1 Panthéon-Sorbonne","Université Paris 2 Panthéon-Assas","Université Paris Nanterre","Université Paris Cité","Université Paris-Saclay","Université Paris-Est Créteil (UPEC)","Université Sorbonne Paris Nord","Université de Versailles Saint-Quentin (UVSQ)","CY Cergy Paris Université","Université Gustave Eiffel","Sciences Po Paris","Université Aix-Marseille","Université Jean Moulin Lyon 3","Université Lumière Lyon 2","Université de Bordeaux","Université de Montpellier","Université Toulouse 1 Capitole","Université de Strasbourg","Université de Lille","Université de Rennes 1","Université de Nantes","Université Grenoble Alpes","Université Côte d'Azur (Nice)","Université de Lorraine","Université de Bourgogne (Dijon)","Université Clermont Auvergne","Université de Caen Normandie","Université de Rouen Normandie","Université de Poitiers","Université de Limoges","Université de Tours","Université d'Orléans","Université de Reims Champagne-Ardenne","Université de Franche-Comté (Besançon)","Université de Pau et des Pays de l'Adour","Université de Bretagne Occidentale (Brest)","Université de Perpignan Via Domitia","Université de Picardie Jules Verne (Amiens)","Université Savoie Mont Blanc","Université de La Rochelle","Université d'Avignon",
+  "Université catholique de Louvain (UCLouvain)","Université libre de Bruxelles (ULB)","Université de Liège (ULiège)","Université de Namur (UNamur)","UCLouvain Saint-Louis Bruxelles",
+  "Université Cheikh Anta Diop (UCAD), Dakar","Université Félix Houphouët-Boigny, Abidjan","Université de Yaoundé II (Soa)","Université de Douala","Université des Sciences Juridiques et Politiques de Bamako (USJPB)","Université Thomas Sankara (Ouagadougou)","Université Joseph Ki-Zerbo (Ouagadougou)","Université d'Abomey-Calavi","Université de Lomé","Université Abdou Moumouni (Niamey)","Université Omar Bongo (Libreville)","Université Marien Ngouabi (Brazzaville)","Université de Kinshasa (UNIKIN)","Université de Lubumbashi","Université Général Lansana Conté de Sonfonia (Conakry)","Université de Nouakchott","Université d'Antananarivo","Université de Tunis El Manar — Faculté de droit de Tunis","Faculté de droit de Sfax","Université d'Alger 1 — Faculté de droit (Ben Aknoun)","Université d'Oran",
+];
+
 let uid=50; const nid=()=>++uid;
 const iSt={padding:"8px 11px",borderRadius:7,fontSize:13,border:"1.5px solid #CBD5E0",background:"#fff",color:NAVY,outline:"none",width:"100%",boxSizing:"border-box"};
 const Inp=({val,onChange,ph,style,filter})=><input value={val} onChange={e=>onChange(filter?filter(e.target.value):e.target.value)} placeholder={ph} style={{...iSt,...style}}/>;
@@ -29,6 +69,22 @@ const Lbl=({t,r})=><label style={{fontSize:12,fontWeight:500,color:"#4A5568",dis
 const Pill=({active,onClick,children})=><button onClick={onClick} style={{padding:"6px 13px",borderRadius:20,fontSize:12.5,cursor:"pointer",background:active?NAVY:"transparent",color:active?"#fff":NAVY,border:`1.5px solid ${active?NAVY:"#CBD5E0"}`,fontWeight:active?500:400}}>{children}</button>;
 const SecTitle=({t})=><p style={{fontSize:11,fontWeight:500,color:GOLD,textTransform:"uppercase",letterSpacing:.8,margin:"0 0 10px",borderBottom:`1px solid ${CREAM}`,paddingBottom:6}}>{t}</p>;
 const Logo=()=><div style={{background:NAVY,color:GOLD,fontWeight:700,fontSize:18,padding:"6px 14px",borderRadius:8,letterSpacing:1,display:"inline-block"}}>JURI<span style={{color:"#fff"}}>JOB</span></div>;
+
+/* Menu déroulant avec option « Autre… » qui révèle un champ libre */
+function SelectOuAutre({value,options,onChange,ph}){
+  const known=options.includes(value);
+  const [autre,setAutre]=useState(value!=="" && !known);
+  return(
+    <>
+      <select value={autre?"__autre__":value} onChange={e=>{const v=e.target.value; if(v==="__autre__"){setAutre(true);onChange("");}else{setAutre(false);onChange(v);}}} style={{...iSt,cursor:"pointer"}}>
+        <option value="">— Sélectionner —</option>
+        {options.map(o=><option key={o} value={o}>{o}</option>)}
+        <option value="__autre__">Autre…</option>
+      </select>
+      {autre&&<input value={value} onChange={e=>onChange(e.target.value)} placeholder={ph||"Précisez"} style={{...iSt,marginTop:8}}/>}
+    </>
+  );
+}
 
 /* ───── ÉCRAN DE CHARGEMENT ───── */
 function Chargement(){
@@ -320,7 +376,7 @@ function EspaceCandidat({session,onLogout}){
   const [deleted,setDeleted]=useState(false);
   const [savedMsg,setSavedMsg]=useState("");
   const [saving,setSaving]=useState(false);
-  const [f,setF]=useState({prenom:initPrenom,nom:initNom,email:authEmail,tel:"",ville:"",titre:"",formations:[],experiences:[],specs:[],langues:[{id:1,langue:"Français",niveau:"Courant"}],contrats:[],dispo:"",salaire:"",salaireNote:"",salaireActuel:""});
+  const [f,setF]=useState({prenom:initPrenom,nom:initNom,email:authEmail,tel:"",ville:"",titre:"",pays:"Maroc",niveau:"",diplome:"",formations:[],experiences:[],specs:[],langues:[{id:1,langue:"Français",niveau:"Courant"}],contrats:[],dispo:"",salaire:"",salaireNote:"",salaireActuel:""});
 
   // Vérifie si un profil existe déjà pour cet e-mail Google
   useEffect(()=>{
@@ -343,6 +399,7 @@ function EspaceCandidat({session,onLogout}){
     .insert([{
       prenom: f.prenom, nom: f.nom, email: f.email,
       tel: f.tel, ville: f.ville, titre: f.titre,
+      pays: f.pays, niveau: f.niveau, diplome: f.diplome,
       formations: f.formations, experiences: f.experiences,
       specs: f.specs, langues: f.langues,
       contrats: f.contrats, disponibilite: f.dispo,
@@ -360,6 +417,7 @@ salaire_actuel: f.salaireActuel,
     setF({
       prenom:e.prenom||"", nom:e.nom||"", email:e.email||authEmail,
       tel:e.tel||"", ville:e.ville||"", titre:e.titre||"",
+      pays:e.pays||"Maroc", niveau:e.niveau||"", diplome:e.diplome||"",
       formations:(e.formations||[]).map((x,i)=>({id:x.id||i+1,type:x.type||"Diplôme",diplome:x.diplome||"",etab:x.etab||"",annee:x.annee||"",spec:x.spec||"",editing:false})),
       experiences:(e.experiences||[]).map((x,i)=>({id:x.id||i+1,poste:x.poste||"",org:x.org||"",debut:x.debut||"",fin:x.fin||"",encours:!!x.encours,missions:x.missions||"",editing:false})),
       specs:e.specs||[],
@@ -375,6 +433,7 @@ salaire_actuel: f.salaireActuel,
     setSaving(true);
     const payload={
       prenom:f.prenom, nom:f.nom, tel:f.tel, ville:f.ville, titre:f.titre,
+      pays:f.pays, niveau:f.niveau, diplome:f.diplome,
       formations:f.formations.map(({editing,...r})=>r),
       experiences:f.experiences.map(({editing,...r})=>r),
       specs:f.specs, langues:f.langues, contrats:f.contrats,
@@ -424,16 +483,33 @@ salaire_actuel: f.salaireActuel,
           <div><Lbl t="Prénom" r/><Inp val={f.prenom} onChange={v=>upd("prenom",v)} ph="Votre prénom"/></div>
           <div><Lbl t="Nom" r/><Inp val={f.nom} onChange={v=>upd("nom",v)} ph="Votre nom"/></div>
         </div>
-        <div><Lbl t="Titre professionnel"/><Inp val={f.titre} onChange={v=>upd("titre",v)} ph="Ex. : Juriste d'entreprise · Avocat · Notaire stagiaire"/></div>
+        <div><Lbl t="Titre professionnel"/><SelectOuAutre value={f.titre} options={TITRES} onChange={v=>upd("titre",v)} ph="Précisez votre titre"/></div>
         <div><Lbl t="E-mail (compte Google)" r/><input value={f.email} readOnly style={{...iSt,background:"#F0F4F8",color:"#718096",cursor:"not-allowed"}}/></div>
+        <div><Lbl t="Téléphone"/><Inp val={f.tel} onChange={v=>upd("tel",v)} ph="+212 6XX XXX XXX" filter={v=>v.replace(/[^0-9+\s()-]/g,'')}/></div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-          <div><Lbl t="Téléphone"/><Inp val={f.tel} onChange={v=>upd("tel",v)} ph="+212 6XX XXX XXX" filter={v=>v.replace(/[^0-9+\s()-]/g,'')}/></div>
-          <div><Lbl t="Ville"/><Inp val={f.ville} onChange={v=>upd("ville",v)} ph="Ex. : Casablanca"/></div>
+          <div><Lbl t="Pays"/>
+            <select value={f.pays} onChange={e=>setF(x=>({...x,pays:e.target.value,ville:""}))} style={{...iSt,cursor:"pointer"}}>
+              {PAYS.map(p=><option key={p} value={p}>{p}</option>)}
+            </select>
+          </div>
+          <div><Lbl t="Ville"/>
+            {VILLES[f.pays]
+              ? <SelectOuAutre key={f.pays} value={f.ville} options={VILLES[f.pays]} onChange={v=>upd("ville",v)} ph="Votre ville"/>
+              : <Inp val={f.ville} onChange={v=>upd("ville",v)} ph="Votre ville"/>}
+          </div>
         </div>
       </div>
     );
     if(step===1)return(
       <div>
+        <datalist id="ecoles-list">{ECOLES.map(e=><option key={e} value={e}/>)}</datalist>
+        <div style={{marginBottom:16}}><Lbl t="Diplôme le plus élevé"/>
+          <select value={f.diplome} onChange={e=>upd("diplome",e.target.value)} style={{...iSt,cursor:"pointer"}}>
+            <option value="">— Sélectionner —</option>
+            {DIPLOMES_CAND.map(d=><option key={d.val} value={d.val}>{d.label}</option>)}
+          </select>
+          <p style={{fontSize:11,color:"#A0AEC0",margin:"5px 0 0"}}>Sert au classement de votre profil dans les recherches. Détaillez vos diplômes ci-dessous.</p>
+        </div>
         {f.formations.length===0&&<p style={{textAlign:"center",padding:"16px 0",color:"#A0AEC0",fontSize:13}}>Aucune formation ajoutée. Cliquez ci-dessous pour commencer.</p>}
         {f.formations.map((fo,i)=>(
           <div key={fo.id} style={{background:CREAM,borderRadius:10,padding:14,marginBottom:10,border:`1.5px solid ${fo.editing?GOLD:"#E2E8F0"}`}}>
@@ -454,7 +530,7 @@ salaire_actuel: f.salaireActuel,
                 <div><Lbl t="Type"/><div style={{display:"flex",gap:7,flexWrap:"wrap"}}>{["Diplôme","Certificat","Formation continue","Autre"].map(t=><Pill key={t} active={fo.type===t} onClick={()=>updFo(fo.id,"type",t)}>{t}</Pill>)}</div></div>
                 <div><Lbl t="Intitulé" r/><Inp val={fo.diplome} onChange={v=>updFo(fo.id,"diplome",v)} ph="Ex. : Master II Droit des affaires, Certificat CIMA…"/></div>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-                  <div><Lbl t="Établissement"/><Inp val={fo.etab} onChange={v=>updFo(fo.id,"etab",v)} ph="Université, École…"/></div>
+                  <div><Lbl t="Établissement"/><input value={fo.etab} onChange={e=>updFo(fo.id,"etab",e.target.value)} placeholder="Université, faculté, école…" list="ecoles-list" style={iSt}/></div>
                   <div><Lbl t="Année"/><Inp val={fo.annee} onChange={v=>updFo(fo.id,"annee",v)} ph="2022" filter={v=>v.replace(/[^0-9]/g,'').slice(0,4)}/></div>
                 </div>
                 <div><Lbl t="Spécialité / mention"/><Inp val={fo.spec} onChange={v=>updFo(fo.id,"spec",v)} ph="Ex. : Droit fiscal international"/></div>
@@ -468,6 +544,12 @@ salaire_actuel: f.salaireActuel,
     );
     if(step===2)return(
       <div>
+        <div style={{marginBottom:16}}><Lbl t="Niveau d'expérience"/>
+          <select value={f.niveau} onChange={e=>upd("niveau",e.target.value)} style={{...iSt,cursor:"pointer"}}>
+            <option value="">— Sélectionner —</option>
+            {NIVEAUX_RH.map(n=><option key={n.val} value={n.val}>{n.label} · {n.sub}</option>)}
+          </select>
+        </div>
         <p style={{fontSize:12,color:"#A0AEC0",margin:"0 0 12px"}}>Cette étape est facultative pour les candidats sans expérience professionnelle.</p>
         {f.experiences.map((e,i)=>(
           <div key={e.id} style={{background:CREAM,borderRadius:10,padding:14,marginBottom:10,border:`1.5px solid ${e.editing?GOLD:"#E2E8F0"}`}}>
@@ -552,7 +634,7 @@ salaire_actuel: f.salaireActuel,
               <div>
                 <p style={{margin:0,fontSize:17,fontWeight:500,color:"#fff"}}>{f.prenom} {f.nom}</p>
                 {f.titre&&<p style={{margin:"3px 0 0",fontSize:13,color:GOLD}}>{f.titre}</p>}
-                <p style={{margin:"3px 0 0",fontSize:12,color:"rgba(255,255,255,0.6)"}}>{[f.ville,f.email,f.tel].filter(Boolean).join(" · ")}</p>
+                <p style={{margin:"3px 0 0",fontSize:12,color:"rgba(255,255,255,0.6)"}}>{[[f.ville,f.pays].filter(Boolean).join(", "),f.email,f.tel].filter(Boolean).join(" · ")}</p>
               </div>
             </div>
           </div>
@@ -588,7 +670,7 @@ salaire_actuel: f.salaireActuel,
           <h2 style={{color:NAVY,fontSize:20,fontWeight:500,margin:"0 0 8px"}}>Profil supprimé</h2>
           <p style={{color:"#718096",fontSize:14,margin:"0 0 22px",lineHeight:1.6}}>Votre profil a été définitivement supprimé de la CVthèque JURIJOB. Vous pouvez en créer un nouveau quand vous le souhaitez.</p>
           <div style={{display:"flex",flexDirection:"column",gap:10}}>
-            <button onClick={()=>{setDeleted(false);setF({prenom:initPrenom,nom:initNom,email:authEmail,tel:"",ville:"",titre:"",formations:[],experiences:[],specs:[],langues:[{id:1,langue:"Français",niveau:"Courant"}],contrats:[],dispo:"",salaire:"",salaireNote:"",salaireActuel:""});setStep(0);setFormMode(null);}} style={{padding:"11px",borderRadius:8,fontSize:14,cursor:"pointer",background:NAVY,color:"#fff",border:"none",fontWeight:500}}>Créer un nouveau profil</button>
+            <button onClick={()=>{setDeleted(false);setF({prenom:initPrenom,nom:initNom,email:authEmail,tel:"",ville:"",titre:"",pays:"Maroc",niveau:"",diplome:"",formations:[],experiences:[],specs:[],langues:[{id:1,langue:"Français",niveau:"Courant"}],contrats:[],dispo:"",salaire:"",salaireNote:"",salaireActuel:""});setStep(0);setFormMode(null);}} style={{padding:"11px",borderRadius:8,fontSize:14,cursor:"pointer",background:NAVY,color:"#fff",border:"none",fontWeight:500}}>Créer un nouveau profil</button>
             <button onClick={onLogout} style={{padding:"10px",borderRadius:8,fontSize:13,cursor:"pointer",background:"transparent",color:NAVY,border:"1.5px solid #CBD5E0"}}>Se déconnecter</button>
           </div>
         </div>
@@ -612,11 +694,13 @@ salaire_actuel: f.salaireActuel,
             <div style={{flex:1}}>
               <p style={{margin:0,fontSize:18,fontWeight:500,color:"#fff"}}>{existing.prenom} {existing.nom}</p>
               {existing.titre&&<p style={{margin:"3px 0 0",fontSize:13,color:GOLD}}>{existing.titre}</p>}
-              <p style={{margin:"3px 0 0",fontSize:12,color:"rgba(255,255,255,0.6)"}}>{[existing.ville,existing.email,existing.tel].filter(Boolean).join(" · ")}</p>
+              <p style={{margin:"3px 0 0",fontSize:12,color:"rgba(255,255,255,0.6)"}}>{[[existing.ville,existing.pays].filter(Boolean).join(", "),existing.email,existing.tel].filter(Boolean).join(" · ")}</p>
             </div>
           </div>
-          <div style={{padding:"12px 24px",borderBottom:"1px solid #F0F4F8"}}>
+          <div style={{padding:"12px 24px",borderBottom:"1px solid #F0F4F8",display:"flex",flexWrap:"wrap",gap:8}}>
             <span style={{fontSize:12.5,color:NAVY,fontWeight:500,background:GOLD_LIGHT,padding:"4px 12px",borderRadius:20}}>Statut : {existing.statut==='valide'?'Validé ✔':existing.statut==='refuse'?'Non retenu':'En attente de validation ⏳'}</span>
+            {existing.niveau&&<span style={{fontSize:12.5,color:"#4A5568",background:CREAM,padding:"4px 12px",borderRadius:20,border:"1px solid #E2E8F0"}}>{NIVEAUX_RH.find(n=>n.val===existing.niveau)?.label||existing.niveau}</span>}
+            {existing.diplome&&<span style={{fontSize:12.5,color:"#4A5568",background:CREAM,padding:"4px 12px",borderRadius:20,border:"1px solid #E2E8F0"}}>{DIPLOMES_CAND.find(d=>d.val===existing.diplome)?.label||existing.diplome}</span>}
           </div>
           <div style={{padding:"18px 24px",display:"flex",flexDirection:"column",gap:16}}>
             {(existing.formations||[]).length>0&&<div><SecTitle t="Formation & certifications"/>{(existing.formations||[]).map((fo,i)=><div key={i} style={{marginBottom:8}}><p style={{margin:0,fontSize:13,fontWeight:500,color:NAVY}}>{fo.diplome}</p><p style={{margin:"2px 0 0",fontSize:12,color:"#718096"}}>{fo.etab}{fo.annee?` · ${fo.annee}`:""}{fo.spec?` · ${fo.spec}`:""}</p></div>)}</div>}

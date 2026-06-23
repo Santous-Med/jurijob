@@ -12,7 +12,7 @@ const SPECS=[
 ];
 
 const NIV_ORDER=["stagiaire","junior","confirme","senior","directeur"];
-const DIPL_ORDER=["licence","master1","master2","barreau","notariat","doctorat"];
+const DIPL_ORDER=["bac","deug","licence","master1","master2","barreau","notariat","doctorat"];
 
 function scoreCandidat(c,d){
   let score=0; const details={};

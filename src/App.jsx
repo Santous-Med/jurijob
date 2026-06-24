@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import AdminDashboard from './Admin'
+import Logo from './Logo'
 import { useState, useEffect } from "react";
 
 const NAVY="#0B2545",GOLD="#C8A046",CREAM="#F8F5ED",GOLD_LIGHT="#F5EDD6",NAVY2="#1a3a6b";
@@ -85,8 +86,6 @@ const calcDuree=(debut,fin,encours)=>{
   if(mois>0) return `${mois} mois`;
   return "< 1 mois";
 };
-
-const Logo=()=><div style={{background:NAVY,color:GOLD,fontWeight:700,fontSize:18,padding:"6px 14px",borderRadius:8,letterSpacing:1,display:"inline-block"}}>JURI<span style={{color:"#fff"}}>JOB</span></div>;
 
 /* Menu déroulant avec option « Autre… » qui révèle un champ libre */
 function SelectOuAutre({value,options,onChange,ph}){

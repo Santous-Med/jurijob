@@ -68,6 +68,24 @@ const Inp=({val,onChange,ph,style,filter})=><input value={val} onChange={e=>onCh
 const Lbl=({t,r})=><label style={{fontSize:12,fontWeight:500,color:"#4A5568",display:"block",marginBottom:5}}>{t}{r&&<span style={{color:GOLD,marginLeft:3}}>*</span>}</label>;
 const Pill=({active,onClick,children})=><button onClick={onClick} style={{padding:"6px 13px",borderRadius:20,fontSize:12.5,cursor:"pointer",background:active?NAVY:"transparent",color:active?"#fff":NAVY,border:`1.5px solid ${active?NAVY:"#CBD5E0"}`,fontWeight:active?500:400}}>{children}</button>;
 const SecTitle=({t})=><p style={{fontSize:11,fontWeight:500,color:GOLD,textTransform:"uppercase",letterSpacing:.8,margin:"0 0 10px",borderBottom:`1px solid ${CREAM}`,paddingBottom:6}}>{t}</p>;
+
+/* Calcule la durée entre deux dates MM/AAAA (ou « en cours ») */
+const calcDuree=(debut,fin,encours)=>{
+  if(!debut) return "";
+  const p=s=>{const a=(s||"").split("/");return a.length===2?{m:parseInt(a[0],10),y:parseInt(a[1],10)}:null;};
+  const d=p(debut); if(!d||!d.y) return "";
+  let fObj;
+  if(encours||!fin){ const n=new Date(); fObj={m:n.getMonth()+1,y:n.getFullYear()}; }
+  else { fObj=p(fin); if(!fObj||!fObj.y) return ""; }
+  let mois=(fObj.y-d.y)*12+(fObj.m-d.m);
+  if(mois<0) return "";
+  const ans=Math.floor(mois/12); mois=mois%12;
+  if(ans>0&&mois>0) return `${ans} an${ans>1?"s":""} ${mois} mois`;
+  if(ans>0) return `${ans} an${ans>1?"s":""}`;
+  if(mois>0) return `${mois} mois`;
+  return "< 1 mois";
+};
+
 const Logo=()=><div style={{background:NAVY,color:GOLD,fontWeight:700,fontSize:18,padding:"6px 14px",borderRadius:8,letterSpacing:1,display:"inline-block"}}>JURI<span style={{color:"#fff"}}>JOB</span></div>;
 
 /* Menu déroulant avec option « Autre… » qui révèle un champ libre */
@@ -555,7 +573,7 @@ salaire_actuel: f.salaireActuel,
           <div key={e.id} style={{background:CREAM,borderRadius:10,padding:14,marginBottom:10,border:`1.5px solid ${e.editing?GOLD:"#E2E8F0"}`}}>
             {!e.editing?(
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                <div><p style={{margin:0,fontWeight:500,fontSize:13,color:NAVY}}>{e.poste||"Sans titre"}</p><p style={{margin:"2px 0 0",fontSize:12,color:"#718096"}}>{e.org}{e.debut?` · ${e.debut}`:""}{e.encours?" – En cours":e.fin?` – ${e.fin}`:""}</p></div>
+                <div><p style={{margin:0,fontWeight:500,fontSize:13,color:NAVY}}>{e.poste||"Sans titre"}</p><p style={{margin:"2px 0 0",fontSize:12,color:"#718096"}}>{e.org}{e.debut?` · ${e.debut}`:""}{e.encours?" – En cours":e.fin?` – ${e.fin}`:""}{(()=>{const dur=calcDuree(e.debut,e.fin,e.encours);return dur?` · ${dur}`:""})()}</p></div>
                 <div style={{display:"flex",gap:8}}>
                   <button onClick={()=>updEx(e.id,"editing",true)} style={{background:"none",border:"none",cursor:"pointer",fontSize:14}}>✏️</button>
                   <button onClick={()=>delEx(e.id)} style={{background:"none",border:"none",cursor:"pointer",fontSize:14,color:"#E53E3E"}}>✕</button>
@@ -640,7 +658,7 @@ salaire_actuel: f.salaireActuel,
           </div>
           <div style={{padding:"18px 22px",display:"flex",flexDirection:"column",gap:16}}>
             {f.formations.length>0&&<div><SecTitle t="Formation & certifications"/>{f.formations.map(fo=><div key={fo.id} style={{marginBottom:8}}><p style={{margin:0,fontSize:13,fontWeight:500,color:NAVY}}>{fo.diplome}</p><p style={{margin:"2px 0 0",fontSize:12,color:"#718096"}}>{fo.etab}{fo.annee?` · ${fo.annee}`:""}{fo.spec?` · ${fo.spec}`:""}</p></div>)}</div>}
-            {f.experiences.length>0&&<div><SecTitle t="Expériences professionnelles"/>{f.experiences.map(e=><div key={e.id} style={{marginBottom:10}}><p style={{margin:0,fontSize:13,fontWeight:500,color:NAVY}}>{e.poste}{e.org?` — ${e.org}`:""}</p><p style={{margin:"2px 0 3px",fontSize:12,color:"#718096"}}>{e.debut}{e.encours?" – En cours":e.fin?` – ${e.fin}`:""}</p>{e.missions&&<p style={{margin:0,fontSize:12,color:"#4A5568",lineHeight:1.5}}>{e.missions}</p>}</div>)}</div>}
+            {f.experiences.length>0&&<div><SecTitle t="Expériences professionnelles"/>{f.experiences.map(e=><div key={e.id} style={{marginBottom:10}}><p style={{margin:0,fontSize:13,fontWeight:500,color:NAVY}}>{e.poste}{e.org?` — ${e.org}`:""}</p><p style={{margin:"2px 0 3px",fontSize:12,color:"#718096"}}>{e.debut}{e.encours?" – En cours":e.fin?` – ${e.fin}`:""}{(()=>{const dur=calcDuree(e.debut,e.fin,e.encours);return dur?` · ${dur}`:""})()}</p>{e.missions&&<p style={{margin:0,fontSize:12,color:"#4A5568",lineHeight:1.5}}>{e.missions}</p>}</div>)}</div>}
             {f.specs.length>0&&<div><SecTitle t="Spécialisations"/><div style={{display:"flex",flexWrap:"wrap",gap:6}}>{f.specs.map(s=><span key={s} style={{background:CREAM,color:NAVY,fontSize:12,padding:"4px 10px",borderRadius:20,border:"1px solid #E2E8F0"}}>{s}</span>)}</div></div>}
             {f.langues.filter(l=>l.langue).length>0&&<div><SecTitle t="Langues"/><div style={{display:"flex",flexWrap:"wrap",gap:12}}>{f.langues.filter(l=>l.langue).map(l=><span key={l.id} style={{fontSize:13,color:NAVY}}><strong>{l.langue}</strong> <span style={{color:"#718096",fontSize:12}}>— {l.niveau}</span></span>)}</div></div>}
             <div><SecTitle t="Préférences"/><div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:9}}>{[["Contrat(s)",f.contrats.join(", ")],["Disponibilité",f.dispo],["Salaire actuel",f.salaireActuel||"—"],["Prétentions",f.salaire]].map(([k,v])=>v?<div key={k} style={{background:CREAM,borderRadius:8,padding:"10px 12px"}}><p style={{margin:"0 0 3px",fontSize:11,color:"#A0AEC0"}}>{k}</p><p style={{margin:0,fontSize:12,fontWeight:500,color:NAVY}}>{v}</p></div>:null)}</div></div>
@@ -704,7 +722,7 @@ salaire_actuel: f.salaireActuel,
           </div>
           <div style={{padding:"18px 24px",display:"flex",flexDirection:"column",gap:16}}>
             {(existing.formations||[]).length>0&&<div><SecTitle t="Formation & certifications"/>{(existing.formations||[]).map((fo,i)=><div key={i} style={{marginBottom:8}}><p style={{margin:0,fontSize:13,fontWeight:500,color:NAVY}}>{fo.diplome}</p><p style={{margin:"2px 0 0",fontSize:12,color:"#718096"}}>{fo.etab}{fo.annee?` · ${fo.annee}`:""}{fo.spec?` · ${fo.spec}`:""}</p></div>)}</div>}
-            {(existing.experiences||[]).length>0&&<div><SecTitle t="Expériences professionnelles"/>{(existing.experiences||[]).map((e,i)=><div key={i} style={{marginBottom:10}}><p style={{margin:0,fontSize:13,fontWeight:500,color:NAVY}}>{e.poste}{e.org?` — ${e.org}`:""}</p><p style={{margin:"2px 0 3px",fontSize:12,color:"#718096"}}>{e.debut}{e.encours?" – En cours":e.fin?` – ${e.fin}`:""}</p>{e.missions&&<p style={{margin:0,fontSize:12,color:"#4A5568",lineHeight:1.5}}>{e.missions}</p>}</div>)}</div>}
+            {(existing.experiences||[]).length>0&&<div><SecTitle t="Expériences professionnelles"/>{(existing.experiences||[]).map((e,i)=><div key={i} style={{marginBottom:10}}><p style={{margin:0,fontSize:13,fontWeight:500,color:NAVY}}>{e.poste}{e.org?` — ${e.org}`:""}</p><p style={{margin:"2px 0 3px",fontSize:12,color:"#718096"}}>{e.debut}{e.encours?" – En cours":e.fin?` – ${e.fin}`:""}{(()=>{const dur=calcDuree(e.debut,e.fin,e.encours);return dur?` · ${dur}`:""})()}</p>{e.missions&&<p style={{margin:0,fontSize:12,color:"#4A5568",lineHeight:1.5}}>{e.missions}</p>}</div>)}</div>}
             {(existing.specs||[]).length>0&&<div><SecTitle t="Spécialisations"/><div style={{display:"flex",flexWrap:"wrap",gap:6}}>{(existing.specs||[]).map(s=><span key={s} style={{background:CREAM,color:NAVY,fontSize:12,padding:"4px 10px",borderRadius:20,border:"1px solid #E2E8F0"}}>{s}</span>)}</div></div>}
             {(existing.langues||[]).filter(l=>l&&l.langue).length>0&&<div><SecTitle t="Langues"/><div style={{display:"flex",flexWrap:"wrap",gap:12}}>{(existing.langues||[]).filter(l=>l&&l.langue).map((l,i)=><span key={i} style={{fontSize:13,color:NAVY}}><strong>{l.langue}</strong> <span style={{color:"#718096",fontSize:12}}>— {l.niveau}</span></span>)}</div></div>}
           </div>

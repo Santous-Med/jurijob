@@ -121,7 +121,7 @@ function Landing({onChoose}){
     <div style={{background:CREAM,minHeight:"100vh"}}>
       {/* NAV */}
       <div style={{background:NAVY,padding:"14px 32px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-        <Logo/>
+        <Logo variant="light"/>
         <span style={{fontSize:12,color:"rgba(255,255,255,0.5)",letterSpacing:.5}}>La plateforme juridique de recrutement</span>
       </div>
 
@@ -244,7 +244,7 @@ function AuthRecruteur({onBack}){
   return(
     <div style={{background:CREAM,minHeight:"100vh"}}>
       <div style={{background:NAVY,padding:"14px 24px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-        <Logo/>
+        <Logo variant="light"/>
         <button onClick={onBack} style={{background:"transparent",border:"none",color:"rgba(255,255,255,0.6)",fontSize:13,cursor:"pointer"}}>← Accueil</button>
       </div>
       <div style={{padding:"40px 16px",maxWidth:420,margin:"0 auto"}}>
@@ -332,7 +332,7 @@ function AuthCandidat({onBack,onGoogle}){
   return(
     <div style={{background:CREAM,minHeight:"100vh"}}>
       <div style={{background:NAVY,padding:"14px 24px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-        <Logo/>
+        <Logo variant="light"/>
         <button onClick={onBack} style={{background:"transparent",border:"none",color:"rgba(255,255,255,0.6)",fontSize:13,cursor:"pointer"}}>← Accueil</button>
       </div>
       <div style={{padding:"40px 16px",maxWidth:420,margin:"0 auto"}}>
@@ -678,7 +678,7 @@ salaire_actuel: f.salaireActuel,
   if(deleted)return(
     <div style={{background:CREAM,minHeight:"100vh"}}>
       <div style={{background:NAVY,padding:"14px 24px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-        <Logo/>
+        <Logo variant="light"/>
         <button onClick={onLogout} style={{background:"transparent",border:"none",color:"rgba(255,255,255,0.6)",fontSize:13,cursor:"pointer"}}>Se déconnecter</button>
       </div>
       <div style={{padding:"40px 16px",maxWidth:460,margin:"0 auto"}}>
@@ -699,7 +699,7 @@ salaire_actuel: f.salaireActuel,
   if(existing && formMode!=='edit' && !done)return(
     <div style={{background:CREAM,minHeight:"100vh",paddingBottom:32}}>
       <div style={{background:NAVY,padding:"14px 24px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-        <Logo/>
+        <Logo variant="light"/>
         <button onClick={onLogout} style={{background:"transparent",border:"none",color:"rgba(255,255,255,0.6)",fontSize:13,cursor:"pointer"}}>Se déconnecter</button>
       </div>
       <div style={{padding:"32px 16px",maxWidth:600,margin:"0 auto"}}>
@@ -749,7 +749,7 @@ salaire_actuel: f.salaireActuel,
   return(
     <div style={{background:CREAM,minHeight:"100vh",padding:"0 0 32px"}}>
       <div style={{background:NAVY,padding:"14px 24px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-        <Logo/>
+        <Logo variant="light"/>
         {formMode==='edit'
           ? <button onClick={()=>{setFormMode(null);setStep(0);setSavedMsg("");}} style={{background:"transparent",border:"none",color:"rgba(255,255,255,0.6)",fontSize:13,cursor:"pointer"}}>← Mon profil</button>
           : <button onClick={onLogout} style={{background:"transparent",border:"none",color:"rgba(255,255,255,0.6)",fontSize:13,cursor:"pointer"}}>Se déconnecter</button>}
@@ -919,7 +919,7 @@ budget: f.budgetConfidentiel ? "Confidentiel" : f.budget,
   if(vue!=="form")return(
     <div style={{background:CREAM,minHeight:"100vh",padding:"0 0 40px"}}>
       <div style={{background:NAVY,padding:"14px 24px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-        <Logo/>
+        <Logo variant="light"/>
         <button onClick={onLogout} style={{background:"transparent",border:"none",color:"rgba(255,255,255,0.6)",fontSize:13,cursor:"pointer"}}>Se déconnecter</button>
       </div>
       <div style={{padding:"24px 16px",maxWidth:640,margin:"0 auto"}}>
@@ -962,7 +962,7 @@ budget: f.budgetConfidentiel ? "Confidentiel" : f.budget,
   return(
     <div style={{background:CREAM,minHeight:"100vh",padding:"0 0 32px"}}>
       <div style={{background:NAVY,padding:"14px 24px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-        <Logo/>
+        <Logo variant="light"/>
         <button onClick={()=>setVue("dashboard")} style={{background:"transparent",border:"none",color:"rgba(255,255,255,0.6)",fontSize:13,cursor:"pointer"}}>← Mes demandes</button>
       </div>
       <div style={{padding:"22px 16px",maxWidth:580,margin:"0 auto"}}>

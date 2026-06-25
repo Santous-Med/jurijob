@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react'
 const NAVY="#0B2545",GOLD="#C8A046",CREAM="#F8F5ED",GOLD_LIGHT="#F5EDD6";
 const ADMIN_EMAIL="admin@jurijob.ma";
 
+const DIPLOMES_CAND_LABELS={bac:"Bac",deug:"DEUG",licence:"Licence",master1:"Master I",master2:"Master II",barreau:"CAPA",doctorat:"Doctorat",autre:"Autre"};
+const NIVEAUX_LABELS={stagiaire:"Stagiaire",junior:"Junior",confirme:"Confirmé",senior:"Senior",directeur:"Directeur juridique"};
+
 const SPECS=[
   {cat:"Droit des entreprises",items:["Droit des sociétés","Droit commercial","Droit des contrats","Droit fiscal","Droit social / RH","Droit bancaire & financier","Droit de la propriété intellectuelle","Droit de la concurrence","Compliance & conformité","Droit numérique & IT","Droit des assurances","Droit des procédures collectives","Droit des sûretés"]},
   {cat:"Droit du contentieux",items:["Droit pénal des affaires","Droit pénal général","Arbitrage & MARD","Droit de l'exécution forcée","Recouvrement de créances","Droit administratif"]},
@@ -357,10 +360,12 @@ if(!auth) return(
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:6}}>
                       <div>
                         <p style={{margin:"0 0 1px",fontSize:14,fontWeight:500,color:NAVY}}>{c.prenom} {c.nom}</p>
-                        <p style={{margin:0,fontSize:12,color:"#718096"}}>{c.titre} · {c.ville}</p>
+                        <p style={{margin:0,fontSize:12,color:"#718096"}}>{c.titre} · {c.ville}{c.diplome?` · ${DIPLOMES_CAND_LABELS[c.diplome]||c.diplome}`:""}{c.niveau?` · ${NIVEAUX_LABELS[c.niveau]||c.niveau}`:""}</p>
                       </div>
                       <ScoreRing score={c.score}/>
                     </div>
+                    {(c.formations||[]).length>0&&<div style={{margin:"6px 0 0"}}><p style={{margin:"0 0 2px",fontSize:10,fontWeight:500,color:"#4A5568"}}>🎓 Formation</p>{(c.formations||[]).slice(0,2).map((fo,i)=><p key={i} style={{margin:"0 0 1px",fontSize:10,color:"#718096"}}>{fo.diplome}{fo.etab?` — ${fo.etab}`:""}{fo.annee?` (${fo.annee})`:""}</p>)}{(c.formations||[]).length>2&&<p style={{margin:0,fontSize:9,color:"#A0AEC0"}}>+ {(c.formations||[]).length-2} autre(s)</p>}</div>}
+                    {(c.experiences||[]).length>0&&<div style={{margin:"4px 0 0"}}><p style={{margin:"0 0 2px",fontSize:10,fontWeight:500,color:"#4A5568"}}>💼 Expérience</p>{(c.experiences||[]).slice(0,2).map((e,i)=><p key={i} style={{margin:"0 0 1px",fontSize:10,color:"#718096"}}>{e.poste}{e.org?` — ${e.org}`:""}{e.debut?` (${e.debut}${e.encours?" – en cours":e.fin?` – ${e.fin}`:""})`:""}</p>)}{(c.experiences||[]).length>2&&<p style={{margin:0,fontSize:9,color:"#A0AEC0"}}>+ {(c.experiences||[]).length-2} autre(s)</p>}</div>}
                     <div style={{display:"flex",flexWrap:"wrap",gap:5,margin:"8px 0 6px"}}>
                       {(c.specs||[]).filter(s=>(selectedDem.specs||[]).includes(s)).map(s=><span key={s} style={{background:GOLD_LIGHT,color:NAVY,fontSize:11,padding:"2px 8px",borderRadius:20,fontWeight:500}}>✓ {s}</span>)}
                       {(c.specs||[]).filter(s=>!(selectedDem.specs||[]).includes(s)).map(s=><span key={s} style={{background:CREAM,color:"#718096",fontSize:11,padding:"2px 8px",borderRadius:20}}>{s}</span>)}
@@ -447,7 +452,9 @@ if(!auth) return(
                   <Avatar prenom={c.prenom||""} nom={c.nom||""}/>
                   <div style={{flex:1}}>
                     <p style={{margin:"0 0 2px",fontSize:14,fontWeight:500,color:NAVY}}>{c.prenom} {c.nom}</p>
-                    <p style={{margin:"0 0 6px",fontSize:12,color:"#718096"}}>{c.titre} · {c.ville} · {c.diplome}</p>
+                    <p style={{margin:"0 0 6px",fontSize:12,color:"#718096"}}>{c.titre} · {c.ville}{c.pays&&c.pays!=="Maroc"?`, ${c.pays}`:""}{c.diplome?` · ${DIPLOMES_CAND_LABELS[c.diplome]||c.diplome}`:""}{c.niveau?` · ${NIVEAUX_LABELS[c.niveau]||c.niveau}`:""}</p>
+                    {(c.formations||[]).length>0&&<div style={{margin:"0 0 6px"}}><p style={{margin:"0 0 3px",fontSize:11,fontWeight:500,color:"#4A5568"}}>🎓 Formation</p>{(c.formations||[]).slice(0,3).map((fo,i)=><p key={i} style={{margin:"0 0 2px",fontSize:11,color:"#718096"}}>{fo.diplome}{fo.etab?` — ${fo.etab}`:""}{fo.annee?` (${fo.annee})`:""}</p>)}{(c.formations||[]).length>3&&<p style={{margin:0,fontSize:10,color:"#A0AEC0"}}>+ {(c.formations||[]).length-3} autre(s)</p>}</div>}
+                    {(c.experiences||[]).length>0&&<div style={{margin:"0 0 6px"}}><p style={{margin:"0 0 3px",fontSize:11,fontWeight:500,color:"#4A5568"}}>💼 Expérience</p>{(c.experiences||[]).slice(0,3).map((e,i)=><p key={i} style={{margin:"0 0 2px",fontSize:11,color:"#718096"}}>{e.poste}{e.org?` — ${e.org}`:""}{e.debut?` (${e.debut}${e.encours?" – en cours":e.fin?` – ${e.fin}`:""})`:""}</p>)}{(c.experiences||[]).length>3&&<p style={{margin:0,fontSize:10,color:"#A0AEC0"}}>+ {(c.experiences||[]).length-3} autre(s)</p>}</div>}
                     <div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:5}}>{(c.specs||[]).map(s=><span key={s} style={{background:CREAM,color:NAVY,fontSize:11,padding:"2px 8px",borderRadius:20}}>{s}</span>)}</div>
                     <p style={{margin:0,fontSize:12,color:"#718096"}}>🌍 {(c.langues||[]).map(l=>typeof l==="string"?l:l.langue).filter(Boolean).join(", ")} · 💰 {c.salaire} · 📅 {c.disponibilite}</p>
                   </div>

@@ -114,80 +114,74 @@ function Chargement(){
 }
 
 /* ═══════════════════════════════════════
-   LANDING PAGE
+   LANDING PAGE — Design minimaliste
 ═══════════════════════════════════════ */
 function Landing({onChoose}){
+  useEffect(()=>{
+    if(!document.getElementById('gfont-inter')){
+      const l=document.createElement('link');l.id='gfont-inter';l.rel='stylesheet';
+      l.href='https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap';
+      document.head.appendChild(l);
+    }
+  },[]);
+  const ff="'Inter',system-ui,sans-serif";
+  const [hov,setHov]=useState(null);
+
   return(
-    <div style={{background:CREAM,minHeight:"100vh"}}>
+    <div style={{background:CREAM,minHeight:"100vh",fontFamily:ff}}>
       {/* NAV */}
-      <div style={{background:NAVY,padding:"14px 32px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-        <Logo variant="light"/>
-        <span style={{fontSize:12,color:"rgba(255,255,255,0.5)",letterSpacing:.5}}>La plateforme juridique de recrutement</span>
-      </div>
+      <nav style={{background:NAVY,padding:"0 32px",display:"flex",justifyContent:"space-between",alignItems:"center",height:56}}>
+        <Logo variant="light" size="header"/>
+      </nav>
 
       {/* HERO */}
-      <div style={{background:`linear-gradient(160deg,${NAVY} 0%,${NAVY2} 100%)`,padding:"56px 24px 64px",textAlign:"center"}}>
-        <p style={{fontSize:11,fontWeight:500,color:GOLD,textTransform:"uppercase",letterSpacing:2,margin:"0 0 16px"}}>Recrutement juridique spécialisé</p>
-        <h1 style={{color:"#fff",fontSize:32,fontWeight:500,margin:"0 0 16px",lineHeight:1.3}}>Le talent juridique,<br/><span style={{color:GOLD}}>là où il faut, quand il faut.</span></h1>
-        <p style={{color:"rgba(255,255,255,0.65)",fontSize:15,maxWidth:480,margin:"0 auto 40px",lineHeight:1.7}}>JURIJOB connecte les professionnels du droit aux entreprises, cabinets d'avocats et études notariales via un système de mise en relation intelligent et supervisé.</p>
+      <section style={{background:NAVY,padding:"72px 32px 80px",textAlign:"center"}}>
+        <p style={{color:GOLD,fontSize:36,fontWeight:300,margin:0,lineHeight:1.4,letterSpacing:-.5,fontFamily:ff}}>Le talent juridique,</p>
+        <p style={{color:"#fff",fontSize:36,fontWeight:300,margin:"0 0 24px",lineHeight:1.4,letterSpacing:-.5,fontFamily:ff}}>au bon endroit.</p>
+        <div style={{width:32,height:1,background:GOLD,margin:"0 auto 24px",opacity:.6}}/>
+        <p style={{color:"rgba(255,255,255,0.4)",fontSize:14,maxWidth:380,margin:"0 auto",lineHeight:1.7,fontWeight:300,fontFamily:ff}}>Mise en relation entre professionnels du droit et recruteurs. Supervisée. Confidentielle.</p>
+      </section>
 
-        {/* CHOIX */}
-        <div style={{display:"flex",gap:16,justifyContent:"center",flexWrap:"wrap",maxWidth:540,margin:"0 auto"}}>
-          <button onClick={()=>onChoose("candidat")} style={{flex:1,minWidth:220,background:"#fff",border:"none",borderRadius:14,padding:"28px 20px",cursor:"pointer",transition:"transform .15s",textAlign:"left"}}>
-            <div style={{width:44,height:44,borderRadius:10,background:GOLD_LIGHT,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:14,fontSize:22}}>👤</div>
-            <p style={{margin:"0 0 6px",fontSize:16,fontWeight:500,color:NAVY}}>Je suis Candidat</p>
-            <p style={{margin:"0 0 16px",fontSize:13,color:"#718096",lineHeight:1.5}}>Juriste, avocat, notaire, compliance officer… Créez votre profil et accédez aux meilleures opportunités.</p>
-            <span style={{fontSize:13,fontWeight:500,color:GOLD}}>Créer mon profil →</span>
+      {/* CHOIX */}
+      <section style={{background:CREAM,padding:"48px 32px"}}>
+        <div style={{display:"flex",gap:16,maxWidth:520,margin:"0 auto"}}>
+          {/* Candidat */}
+          <button onClick={()=>onChoose("candidat")} onMouseEnter={()=>setHov("c")} onMouseLeave={()=>setHov(null)}
+            style={{flex:1,background:"#fff",borderRadius:12,padding:"28px 22px",border:"1px solid rgba(11,37,69,0.06)",cursor:"pointer",textAlign:"left",transition:"all .2s ease",transform:hov==="c"?"translateY(-3px)":"none",boxShadow:hov==="c"?"0 8px 24px rgba(11,37,69,0.1)":"none"}}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={NAVY} strokeWidth="1.5" strokeLinecap="round" style={{marginBottom:16,opacity:.5}}><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
+            <p style={{margin:"0 0 6px",fontSize:15,fontWeight:500,color:NAVY,fontFamily:ff}}>Candidat</p>
+            <p style={{margin:"0 0 20px",fontSize:12,color:"#94A3B8",lineHeight:1.6,fontFamily:ff}}>Créez votre profil. Soyez visible par les recruteurs.</p>
+            <span style={{fontSize:12,fontWeight:500,color:GOLD,fontFamily:ff,display:"flex",alignItems:"center",gap:4}}>Commencer <span style={{transition:"transform .2s",transform:hov==="c"?"translateX(3px)":"none"}}>→</span></span>
           </button>
-          <button onClick={()=>onChoose("recruteur")} style={{flex:1,minWidth:220,background:GOLD,border:"none",borderRadius:14,padding:"28px 20px",cursor:"pointer",transition:"transform .15s",textAlign:"left"}}>
-            <div style={{width:44,height:44,borderRadius:10,background:"rgba(255,255,255,0.35)",display:"flex",alignItems:"center",justifyContent:"center",marginBottom:14,fontSize:22}}>🏢</div>
-            <p style={{margin:"0 0 6px",fontSize:16,fontWeight:500,color:NAVY}}>Je suis Recruteur</p>
-            <p style={{margin:"0 0 16px",fontSize:13,color:NAVY,opacity:.75,lineHeight:1.5}}>Entreprise, cabinet ou étude notariale… Déposez vos critères et recevez une short-list sous 48h.</p>
-            <span style={{fontSize:13,fontWeight:500,color:NAVY}}>Se connecter →</span>
+
+          {/* Recruteur */}
+          <button onClick={()=>onChoose("recruteur")} onMouseEnter={()=>setHov("r")} onMouseLeave={()=>setHov(null)}
+            style={{flex:1,background:NAVY,borderRadius:12,padding:"28px 22px",border:"none",cursor:"pointer",textAlign:"left",transition:"all .2s ease",transform:hov==="r"?"translateY(-3px)":"none",boxShadow:hov==="r"?"0 8px 24px rgba(11,37,69,0.2)":"none"}}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="1.5" strokeLinecap="round" style={{marginBottom:16,opacity:.7}}><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M3 9h18"/></svg>
+            <p style={{margin:"0 0 6px",fontSize:15,fontWeight:500,color:"#fff",fontFamily:ff}}>Recruteur</p>
+            <p style={{margin:"0 0 20px",fontSize:12,color:"rgba(255,255,255,0.4)",lineHeight:1.6,fontFamily:ff}}>Déposez vos critères. Recevez une short-list sous 48h.</p>
+            <span style={{fontSize:12,fontWeight:500,color:GOLD,fontFamily:ff,display:"flex",alignItems:"center",gap:4}}>Se connecter <span style={{transition:"transform .2s",transform:hov==="r"?"translateX(3px)":"none"}}>→</span></span>
           </button>
         </div>
-      </div>
+      </section>
 
-      {/* COMMENT ÇA MARCHE */}
-      <div style={{padding:"48px 24px",maxWidth:680,margin:"0 auto"}}>
-        <p style={{fontSize:11,fontWeight:500,color:GOLD,textTransform:"uppercase",letterSpacing:2,textAlign:"center",margin:"0 0 8px"}}>Fonctionnement</p>
-        <h2 style={{color:NAVY,fontSize:22,fontWeight:500,textAlign:"center",margin:"0 0 36px"}}>Simple, rapide, fiable.</h2>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:24}}>
-          {[
-            {icon:"👤",titre:"Côté Candidat",etapes:["Créez votre profil complet en quelques minutes","Votre profil intègre la CVthèque sécurisée","Soyez contacté(e) dès qu'un poste correspond à votre profil"]},
-            {icon:"🏢",titre:"Côté Recruteur",etapes:["Saisissez vos critères via le module « Entrez vos critères »","L'équipe JURIJOB sélectionne les meilleurs profils","Recevez votre short-list sous 48h ouvrées"]},
-          ].map(({icon,titre,etapes})=>(
-            <div key={titre} style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:12,padding:"22px 20px"}}>
-              <p style={{margin:"0 0 12px",fontSize:15,fontWeight:500,color:NAVY}}>{icon} {titre}</p>
-              {etapes.map((e,i)=>(
-                <div key={i} style={{display:"flex",gap:12,marginBottom:12,alignItems:"flex-start"}}>
-                  <div style={{width:22,height:22,borderRadius:"50%",background:GOLD_LIGHT,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:600,color:NAVY,flexShrink:0}}>{i+1}</div>
-                  <p style={{margin:0,fontSize:13,color:"#4A5568",lineHeight:1.5}}>{e}</p>
-                </div>
-              ))}
+      {/* CHIFFRES */}
+      <section style={{background:CREAM,padding:"0 32px 48px"}}>
+        <div style={{maxWidth:520,margin:"0 auto",display:"flex",justifyContent:"center",gap:48,paddingTop:8,borderTop:"1px solid #E8E3D8"}}>
+          {[["48h","Délai"],["100%","Vérifiés"],["27","Profils"]].map(([val,lab])=>(
+            <div key={lab} style={{textAlign:"center",paddingTop:20}}>
+              <p style={{margin:0,fontSize:24,fontWeight:300,color:NAVY,fontFamily:ff}}>{val}</p>
+              <p style={{margin:"4px 0 0",fontSize:10,color:"#94A3B8",letterSpacing:.5,textTransform:"uppercase",fontFamily:ff}}>{lab}</p>
             </div>
           ))}
         </div>
-      </div>
-
-      {/* STATS */}
-      <div style={{background:NAVY,padding:"32px 24px"}}>
-        <div style={{maxWidth:580,margin:"0 auto",display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:20,textAlign:"center"}}>
-          {[["48h","Délai de short-list"],["100%","Profils vérifiés"],["3","Espaces dédiés"]].map(([val,lab])=>(
-            <div key={lab}>
-              <p style={{margin:"0 0 4px",fontSize:26,fontWeight:500,color:GOLD}}>{val}</p>
-              <p style={{margin:0,fontSize:12,color:"rgba(255,255,255,0.55)"}}>{lab}</p>
-            </div>
-          ))}
-        </div>
-      </div>
+      </section>
 
       {/* FOOTER */}
-      <div style={{padding:"20px 24px",textAlign:"center"}}>
-        <p style={{fontSize:12,color:"#A0AEC0",margin:0}}>© 2026 JURIJOB — Tous droits réservés</p> <button onClick={()=>onChoose("admin")} style={{background:"none",border:"none",color:"#CBD5E0",fontSize:11,cursor:"pointer",marginTop:8}}>
-  Accès Admin
-</button>
-      </div>
+      <footer style={{background:NAVY,padding:"16px 32px",textAlign:"center"}}>
+        <p style={{fontSize:10,color:"rgba(255,255,255,0.25)",margin:0,letterSpacing:.3,fontFamily:ff}}>© 2026 JURIJOB</p>
+        <button onClick={()=>onChoose("admin")} style={{background:"none",border:"none",color:"rgba(255,255,255,0.15)",fontSize:9,cursor:"pointer",marginTop:4,fontFamily:ff}}>Administration</button>
+      </footer>
     </div>
   );
 }

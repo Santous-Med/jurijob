@@ -181,21 +181,23 @@ function Landing({onChoose}){
             <p style={{fontSize:22,fontWeight:300,color:"#fff",margin:0,fontFamily:ff}}>Un processus <span style={{fontWeight:600}}>simple et supervisé</span></p>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
-            <div onMouseEnter={()=>setHov("cc")} onMouseLeave={()=>setHov(null)}
-              style={{background:hov==="cc"?"rgba(255,255,255,0.05)":"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:12,padding:"24px 18px",cursor:"default",transition:"background .2s"}}>
+            <div onClick={()=>onChoose("candidat")} onMouseEnter={()=>setHov("cc")} onMouseLeave={()=>setHov(null)}
+              style={{background:hov==="cc"?"rgba(255,255,255,0.05)":"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:12,padding:"24px 18px",cursor:"pointer",transition:"background .2s"}}>
               <div style={{width:32,height:32,borderRadius:8,background:"rgba(200,160,70,0.12)",display:"flex",alignItems:"center",justifyContent:"center",marginBottom:14}}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="1.5" strokeLinecap="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
               </div>
               <p style={{margin:"0 0 8px",fontSize:14,fontWeight:600,color:"#fff",fontFamily:ff}}>Candidat</p>
-              <p style={{margin:0,fontSize:11.5,color:"rgba(255,255,255,0.35)",lineHeight:1.6,fontFamily:ff}}>Créez votre profil en quelques minutes. Intégrez la CVthèque sécurisée. Soyez contacté dès qu'un poste correspond.</p>
+              <p style={{margin:"0 0 14px",fontSize:11.5,color:"rgba(255,255,255,0.35)",lineHeight:1.6,fontFamily:ff}}>Créez votre profil en quelques minutes. Intégrez la CVthèque sécurisée. Soyez contacté dès qu'un poste correspond.</p>
+              <span style={{fontSize:12,fontWeight:500,color:GOLD,fontFamily:ff}}>Créer mon profil →</span>
             </div>
-            <div onMouseEnter={()=>setHov("cr")} onMouseLeave={()=>setHov(null)}
-              style={{background:hov==="cr"?"rgba(200,160,70,0.12)":"rgba(200,160,70,0.08)",border:"1px solid rgba(200,160,70,0.15)",borderRadius:12,padding:"24px 18px",cursor:"default",transition:"background .2s"}}>
+            <div onClick={()=>onChoose("recruteur")} onMouseEnter={()=>setHov("cr")} onMouseLeave={()=>setHov(null)}
+              style={{background:hov==="cr"?"rgba(200,160,70,0.12)":"rgba(200,160,70,0.08)",border:"1px solid rgba(200,160,70,0.15)",borderRadius:12,padding:"24px 18px",cursor:"pointer",transition:"background .2s"}}>
               <div style={{width:32,height:32,borderRadius:8,background:"rgba(200,160,70,0.15)",display:"flex",alignItems:"center",justifyContent:"center",marginBottom:14}}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="1.5" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M3 9h18"/></svg>
               </div>
               <p style={{margin:"0 0 8px",fontSize:14,fontWeight:600,color:GOLD,fontFamily:ff}}>Recruteur</p>
-              <p style={{margin:0,fontSize:11.5,color:"rgba(255,255,255,0.35)",lineHeight:1.6,fontFamily:ff}}>Déposez vos critères. L'équipe JURIJOB sélectionne les meilleurs profils. Recevez votre short-list sous 48h.</p>
+              <p style={{margin:"0 0 14px",fontSize:11.5,color:"rgba(255,255,255,0.35)",lineHeight:1.6,fontFamily:ff}}>Déposez vos critères. L'équipe JURIJOB sélectionne les meilleurs profils. Recevez votre short-list sous 48h.</p>
+              <span style={{fontSize:12,fontWeight:500,color:GOLD,fontFamily:ff}}>Se connecter →</span>
             </div>
           </div>
         </div>

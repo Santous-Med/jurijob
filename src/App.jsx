@@ -836,6 +836,7 @@ function EspaceRecruteur({session,onLogout}){
   const [submitted,setSubmitted]=useState(false);
   const [f,setF]=useState(initialF);
   const [virementSignale,setVirementSignale]=useState(false);
+  const [signalantVirement,setSignalantVirement]=useState(false);
 
   const chargerMesDemandes = async () => {
     setChargement(true);
@@ -867,8 +868,45 @@ function EspaceRecruteur({session,onLogout}){
     setVue("shortlist");
   };
 
-  const PRIX_UNITAIRE = 1490;
+ const PRIX_UNITAIRE = 1490;
   const genRef = (id) => "JJ-" + new Date().getFullYear() + "-" + (id||"").substring(0,6).toUpperCase();
+
+  // Signale un virement (crée une ligne paiements en_attente)
+  const signalerVirement = async (dem, sl, nbProfils, total, ref) => {
+    if(!sl || !dem || signalantVirement) return;
+    setSignalantVirement(true);
+    // Anti-doublon : vérifier qu'aucun paiement n'existe déjà pour cette short-list
+    const { data:exist } = await supabase
+      .from('paiements')
+      .select('id,statut')
+      .eq('shortlist_id', sl.id)
+      .limit(1);
+    if(exist && exist.length>0){
+      setSignalantVirement(false);
+      setVirementSignale(true);
+      chargerMesDemandes();
+      return;
+    }
+    // Création de la ligne paiements en_attente
+    const { error } = await supabase.from('paiements').insert([{
+      shortlist_id: sl.id,
+      demande_id: dem.id,
+      recruteur_email: session?.user?.email,
+      nb_cv: nbProfils,
+      montant_unitaire: PRIX_UNITAIRE,
+      montant_total: total,
+      mode_paiement: 'virement',
+      statut: 'en_attente',
+      reference_virement: ref
+    }]);
+    setSignalantVirement(false);
+    if(error){
+      alert("Erreur lors du signalement du virement : " + error.message);
+      return;
+    }
+    setVirementSignale(true);
+    chargerMesDemandes();
+  };
 
   const sauvegarderDemande = async () => {
   const { error } = await supabase
@@ -1034,8 +1072,10 @@ budget: f.budgetConfidentiel ? "Confidentiel" : f.budget,
     const sl=mesShortlists.find(s=>s.demande_id===selectedDem.id);
     const nbProfils=sl?sl.candidat_ids.length:0;
     const paiement=mesPaiements.find(p=>p.demande_id===selectedDem.id && p.statut==="confirme");
+    const paiementEnAttente=mesPaiements.find(p=>p.demande_id===selectedDem.id && p.statut==="en_attente");
     const total=nbProfils*PRIX_UNITAIRE;
-    const ref=genRef(selectedDem.id);
+    const ref=paiementEnAttente?.reference_virement || genRef(selectedDem.id);
+    const dejaSignale=virementSignale||!!paiementEnAttente;
 
     // PAYÉ → afficher les profils
     if(paiement && profils.length>0) return(
@@ -1103,10 +1143,10 @@ budget: f.budgetConfidentiel ? "Confidentiel" : f.budget,
                   ))}
                 </div>
               </div>
-              {!virementSignale ? (
+              {!dejaSignale ? (
                 <div>
                   <p style={{fontSize:12,color:"#718096",lineHeight:1.6,margin:"0 0 16px"}}>Effectuez le virement avec la référence ci-dessus, puis cliquez pour nous prévenir. Vos profils seront débloqués sous 24h ouvrées après confirmation.</p>
-                  <button onClick={()=>setVirementSignale(true)} style={{width:"100%",padding:"12px",borderRadius:8,fontSize:14,cursor:"pointer",background:GOLD,color:NAVY,border:"none",fontWeight:600}}>J'ai effectué le virement</button>
+                  <button onClick={()=>signalerVirement(selectedDem, sl, nbProfils, total, ref)} disabled={signalantVirement} style={{width:"100%",padding:"12px",borderRadius:8,fontSize:14,cursor:signalantVirement?"default":"pointer",background:signalantVirement?"#E2E8F0":GOLD,color:signalantVirement?"#A0AEC0":NAVY,border:"none",fontWeight:600}}>{signalantVirement?"Enregistrement…":"J'ai effectué le virement"}</button>
                 </div>
               ) : (
                 <div style={{background:"#F0FDF4",border:"1px solid #BBF7D0",borderRadius:10,padding:"16px",textAlign:"center"}}>

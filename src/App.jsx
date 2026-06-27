@@ -1019,7 +1019,7 @@ budget: f.budgetConfidentiel ? "Confidentiel" : f.budget,
   );
 
   // TABLEAU DE BORD RECRUTEUR (vue par défaut)
-  if(vue!=="form")return(
+    if(vue==="dashboard")return(
     <div style={{background:CREAM,minHeight:"100vh",padding:"0 0 40px"}}>
       <div style={{background:NAVY,padding:"14px 24px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
         <Logo variant="light"/>

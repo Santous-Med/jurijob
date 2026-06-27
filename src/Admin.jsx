@@ -100,6 +100,8 @@ export default function AdminDashboard(){
   const [shortlistSent,setShortlistSent]=useState([]);
   const [expandedScore,setExpandedScore]=useState(null);
   const [loading,setLoading]=useState(true);
+  const [paiements,setPaiements]=useState([]);
+  const [confirmant,setConfirmant]=useState(null);
 
 // Si une session admin est déjà active (rechargement de page), on garde l'accès
 useEffect(()=>{
@@ -142,8 +144,10 @@ if(!auth) return(
     setLoading(true);
     const {data:d} = await supabase.from('demandes').select('*').order('created_at',{ascending:false});
     const {data:c} = await supabase.from('candidats').select('*').order('created_at',{ascending:false});
+    const {data:pmt} = await supabase.from('paiements').select('*').order('created_at',{ascending:false});
     if(d) setDemandes(d);
     if(c) setCandidats(c);
+    if(pmt) setPaiements(pmt);
     setLoading(false);
   };
 
@@ -155,9 +159,31 @@ if(!auth) return(
     try{ await supabase.functions.invoke('notify',{body:{to,subject,html}}); }
     catch(e){ console.error('Notification e-mail non envoyée :',e); }
   };
+const statP={
+    total:paiements.filter(p=>p.statut==="confirme").reduce((s,p)=>s+(p.montant_total||0),0),
+    confirme:paiements.filter(p=>p.statut==="confirme").length,
+    en_attente:paiements.filter(p=>p.statut==="en_attente").length
+  };
+
+  const confirmerPaiement = async (p) => {
+    if(!window.confirm(`Confirmer la réception du paiement de ${p.montant_total?.toLocaleString("fr-FR")} MAD de ${p.recruteur_email} ?\n\nUn e-mail sera envoyé au recruteur pour débloquer ses profils.`)) return;
+    setConfirmant(p.id);
+    const dateConf = new Date().toISOString();
+    const { error } = await supabase.from('paiements').update({statut:'confirme',date_confirmation:dateConf}).eq('id',p.id);
+    if(error){ setConfirmant(null); alert("Erreur lors de la confirmation : " + error.message); return; }
+    const dem = demandes.find(d=>d.id===p.demande_id);
+    const posteTxt = dem ? dem.poste : "votre demande";
+    const nb = p.nb_cv;
+    envoyerNotification(p.recruteur_email, `JURIJOB — Paiement confirmé, vos profils sont disponibles`,
+      emailShell("Votre paiement a été confirmé ✓",
+        `<p style="font-size:14px;line-height:1.6;margin:0 0 12px">Bonjour,</p><p style="font-size:14px;line-height:1.6;margin:0 0 12px">Nous avons bien reçu votre virement de <strong>${p.montant_total?.toLocaleString("fr-FR")} MAD</strong> pour le poste <strong>${posteTxt}</strong>.</p><p style="font-size:14px;line-height:1.6;margin:0 0 12px">Vos <strong>${nb} profil${nb>1?"s":""}</strong> sont désormais accessibles dans votre espace recruteur. Vous y trouverez les coordonnées complètes des candidats sélectionnés.</p><p style="margin:22px 0 0"><a href="https://www.jurijob.ma" style="background:#C8A046;color:#0B2545;text-decoration:none;font-weight:600;font-size:14px;padding:11px 22px;border-radius:8px;display:inline-block">Consulter mes profils</a></p><p style="font-size:12px;color:#718096;margin:18px 0 0">Référence : ${p.reference_virement || "—"}</p>`));
+    setPaiements(ps=>ps.map(x=>x.id===p.id?{...x,statut:'confirme',date_confirmation:dateConf}:x));
+    setConfirmant(null);
+  };
 
   const statD={
     en_cours:demandes.filter(d=>d.statut==="en_cours").length,
+  
     terminee:demandes.filter(d=>d.statut==="terminee").length,
     annulee:demandes.filter(d=>d.statut==="annulee").length
   };
@@ -236,6 +262,7 @@ if(!auth) return(
     {id:"demandes",icon:"📋",label:"Demandes"},
     {id:"cvtheque",icon:"👥",label:"CVthèque"},
     {id:"shortlists",icon:"📤",label:"Short-lists"},
+    {id:"paiements",icon:"💳",label:"Paiements"},
   ];
 
   const Header=()=>(
@@ -284,6 +311,14 @@ if(!auth) return(
           {[["Validés",statC.valide,"#166534","#F0FDF4"],["En attente",statC.en_attente,"#92400E",GOLD_LIGHT],["Refusés",statC.refuse,"#991B1B","#FEF2F2"]].map(([l,v,c,bg])=>(
             <div key={l} style={{background:bg,borderRadius:10,padding:"14px 16px"}}><p style={{margin:"0 0 4px",fontSize:11,color:c,opacity:.8}}>{l}</p><p style={{margin:0,fontSize:26,fontWeight:500,color:c}}>{v}</p></div>
           ))}
+        </div>
+      </div>
+      <div>
+        <p style={{fontSize:12,fontWeight:500,color:"#4A5568",margin:"0 0 8px"}}>💳 Paiements</p>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
+          <div style={{background:"#F0FDF4",borderRadius:10,padding:"14px 16px"}}><p style={{margin:"0 0 4px",fontSize:11,color:"#166534",opacity:.8}}>Encaissé (MAD)</p><p style={{margin:0,fontSize:22,fontWeight:500,color:"#166534"}}>{statP.total.toLocaleString("fr-FR")}</p></div>
+          <div style={{background:"#F0FDF4",borderRadius:10,padding:"14px 16px"}}><p style={{margin:"0 0 4px",fontSize:11,color:"#166534",opacity:.8}}>Confirmés</p><p style={{margin:0,fontSize:26,fontWeight:500,color:"#166534"}}>{statP.confirme}</p></div>
+          <div onClick={()=>setTab("paiements")} style={{background:GOLD_LIGHT,borderRadius:10,padding:"14px 16px",cursor:"pointer"}}><p style={{margin:"0 0 4px",fontSize:11,color:"#92400E",opacity:.8}}>En attente</p><p style={{margin:0,fontSize:26,fontWeight:500,color:"#92400E"}}>{statP.en_attente}</p></div>
         </div>
       </div>
       {demandes.filter(d=>d.statut==="en_cours"&&d.urgence!=="normal").length>0&&(
@@ -496,7 +531,46 @@ if(!auth) return(
     </div>
   );
 
-  const content=tab==="dashboard"?renderDashboard():tab==="demandes"?renderDemandes():tab==="cvtheque"?renderCvtheque():renderShortlists();
+  const renderPaiements = () => (
+    <div style={{padding:"20px"}}>
+      <p style={{fontSize:11,color:GOLD,fontWeight:500,textTransform:"uppercase",letterSpacing:.8,margin:"0 0 4px"}}>Trésorerie</p>
+      <h2 style={{color:NAVY,fontSize:19,fontWeight:500,margin:"0 0 18px"}}>Paiements — {paiements.length}</h2>
+      {paiements.length===0 && !loading && <p style={{color:"#A0AEC0",fontSize:13,textAlign:"center",padding:"32px 0"}}>Aucun paiement pour le moment.</p>}
+      {["en_attente","confirme"].map(statut=>{
+        const list = paiements.filter(p=>p.statut===statut);
+        if(!list.length) return null;
+        const styleSt = statut==="en_attente"
+          ? {bg:GOLD_LIGHT,color:"#92400E",label:"En attente de confirmation"}
+          : {bg:"#F0FDF4",color:"#166534",label:"Confirmé"};
+        return (
+          <div key={statut} style={{marginBottom:20}}>
+            <p style={{fontSize:12,fontWeight:500,color:"#4A5568",margin:"0 0 8px",display:"flex",alignItems:"center",gap:8}}><Badge {...styleSt}/><span>{list.length} paiement{list.length>1?"s":""}</span></p>
+            {list.map(p=>{
+              const dem = demandes.find(d=>d.id===p.demande_id);
+              const enCours = confirmant === p.id;
+              return (
+                <div key={p.id} style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:10,padding:"14px 16px",marginBottom:8}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10}}>
+                    <div style={{flex:1,minWidth:0}}>
+                      <p style={{margin:"0 0 2px",fontSize:15,fontWeight:600,color:NAVY}}>{p.montant_total?.toLocaleString("fr-FR")} MAD <span style={{fontSize:12,color:"#718096",fontWeight:400,marginLeft:6}}>({p.nb_cv} × {p.montant_unitaire?.toLocaleString("fr-FR")} MAD)</span></p>
+                      <p style={{margin:"0 0 2px",fontSize:12,color:NAVY}}>📧 {p.recruteur_email}</p>
+                      {dem && <p style={{margin:0,fontSize:12,color:"#718096"}}>📋 {dem.poste} — {dem.entreprise}</p>}
+                      <p style={{margin:"4px 0 0",fontSize:11,color:"#A0AEC0"}}>Réf. {p.reference_virement || "—"} · {p.mode_paiement} · Signalé le {new Date(p.created_at).toLocaleDateString("fr-FR")}{p.date_confirmation && <span> · Confirmé le {new Date(p.date_confirmation).toLocaleDateString("fr-FR")}</span>}</p>
+                    </div>
+                    {statut==="en_attente" && (
+                      <button onClick={()=>confirmerPaiement(p)} disabled={enCours} style={{padding:"8px 16px",borderRadius:7,background:enCours?"#E2E8F0":"#166534",color:enCours?"#A0AEC0":"#fff",border:"none",fontSize:12.5,cursor:enCours?"default":"pointer",fontWeight:600,whiteSpace:"nowrap"}}>{enCours ? "Confirmation…" : "✓ Confirmer"}</button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  const content=tab==="dashboard"?renderDashboard():tab==="demandes"?renderDemandes():tab==="cvtheque"?renderCvtheque():tab==="paiements"?renderPaiements():renderShortlists();
 
   return(
     <div style={{background:CREAM,minHeight:"100vh",display:"flex",flexDirection:"column"}}>

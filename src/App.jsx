@@ -2,6 +2,7 @@ import { supabase } from './supabase'
 import AdminDashboard from './Admin'
 import Logo from './Logo'
 import { useState, useEffect } from "react";
+import casaImage from './assets/casa-finance-city.jpg'
 
 const NAVY="#0B2545",GOLD="#C8A046",CREAM="#F8F5ED",GOLD_LIGHT="#F5EDD6",NAVY2="#1a3a6b";
 
@@ -151,24 +152,28 @@ function Landing({onChoose}){
         </div>
       </nav>
 
-      {/* HERO */}
-      <section style={{padding:"64px 32px 48px",maxWidth:1100,margin:"0 auto"}}>
-        <p style={{color:GOLD,fontSize:10.5,letterSpacing:2.5,textTransform:"uppercase",margin:"0 0 18px",fontWeight:500,fontFamily:ff}}>Recrutement juridique · Maroc & Afrique francophone</p>
-        <h1 style={{fontFamily:fs,fontSize:52,lineHeight:1.1,color:NAVY,fontWeight:500,margin:"0 0 18px",letterSpacing:-0.8,maxWidth:760}}>
-          Le recrutement juridique,<br/>à la hauteur de <em style={{color:GOLD,fontStyle:"italic",fontWeight:500}}>vos exigences.</em>
-        </h1>
-        <p style={{fontSize:15,lineHeight:1.7,color:"#4A5568",maxWidth:580,margin:"0 0 32px",fontWeight:300,fontFamily:ff}}>
-          JURIJOB identifie les meilleurs profils juridiques pour les directions juridiques et RH des grandes structures, au Maroc et en Afrique francophone. Discrétion, expertise, sélection sur mesure.
-        </p>
-        <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
-          <button onClick={()=>onChoose("recruteur")} onMouseEnter={()=>setHov("cta1")} onMouseLeave={()=>setHov(null)}
-            style={{background:hov==="cta1"?"#0a3a6e":NAVY,color:"#fff",fontWeight:500,fontSize:13.5,padding:"13px 28px",borderRadius:7,cursor:"pointer",border:"none",letterSpacing:.2,transition:"all .2s",fontFamily:ff}}>
-            Déposer une demande de recrutement
-          </button>
-          <button onClick={()=>onChoose("candidat")} onMouseEnter={()=>setHov("cta2")} onMouseLeave={()=>setHov(null)}
-            style={{background:"transparent",color:hov==="cta2"?GOLD:NAVY,fontWeight:500,fontSize:13.5,padding:"13px 28px",borderRadius:7,cursor:"pointer",border:`1.5px solid ${hov==="cta2"?GOLD:NAVY}`,letterSpacing:.2,transition:"all .2s",fontFamily:ff}}>
-            Créer mon profil juriste
-          </button>
+      {/* HERO avec photo Casa Finance City en arrière-plan */}
+      <section style={{position:"relative",overflow:"hidden",minHeight:"min(560px,75vh)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+        <div style={{position:"absolute",inset:0,backgroundImage:`url(${casaImage})`,backgroundSize:"cover",backgroundPosition:"center"}} aria-hidden="true"/>
+        <div style={{position:"absolute",inset:0,background:"linear-gradient(135deg, rgba(11,37,69,0.92) 0%, rgba(11,37,69,0.78) 50%, rgba(26,58,107,0.72) 100%)"}} aria-hidden="true"/>
+        <div style={{position:"relative",zIndex:2,padding:"80px 32px",maxWidth:900,margin:"0 auto",textAlign:"center"}}>
+          <p style={{color:GOLD,fontSize:10.5,letterSpacing:2.5,textTransform:"uppercase",margin:"0 0 18px",fontWeight:500,fontFamily:ff}}>Recrutement juridique · Maroc & Afrique francophone</p>
+          <h1 style={{fontFamily:fs,fontSize:52,lineHeight:1.15,color:"#fff",fontWeight:500,margin:"0 auto 18px",letterSpacing:-0.8,maxWidth:760,textShadow:"0 2px 12px rgba(0,0,0,0.25)"}}>
+            Le recrutement juridique,<br/>à la hauteur de <em style={{color:GOLD,fontStyle:"italic",fontWeight:500}}>vos exigences.</em>
+          </h1>
+          <p style={{fontSize:15,lineHeight:1.7,color:"rgba(255,255,255,0.82)",maxWidth:580,margin:"0 auto 36px",fontWeight:300,fontFamily:ff}}>
+            JURIJOB identifie les meilleurs profils juridiques pour les directions juridiques et RH des grandes structures, au Maroc et en Afrique francophone. Discrétion, expertise, sélection sur mesure.
+          </p>
+          <div style={{display:"flex",gap:12,flexWrap:"wrap",justifyContent:"center"}}>
+            <button onClick={()=>onChoose("recruteur")} onMouseEnter={()=>setHov("cta1")} onMouseLeave={()=>setHov(null)}
+              style={{background:hov==="cta1"?"#d4ad4f":GOLD,color:NAVY,fontWeight:600,fontSize:13.5,padding:"13px 28px",borderRadius:7,cursor:"pointer",border:"none",letterSpacing:.2,transition:"all .2s",transform:hov==="cta1"?"translateY(-2px)":"none",boxShadow:hov==="cta1"?"0 8px 20px rgba(200,160,70,0.3)":"none",fontFamily:ff}}>
+              Déposer une demande de recrutement
+            </button>
+            <button onClick={()=>onChoose("candidat")} onMouseEnter={()=>setHov("cta2")} onMouseLeave={()=>setHov(null)}
+              style={{background:"transparent",color:"#fff",fontWeight:500,fontSize:13.5,padding:"13px 28px",borderRadius:7,cursor:"pointer",border:`1.5px solid ${hov==="cta2"?"rgba(255,255,255,0.6)":"rgba(255,255,255,0.35)"}`,letterSpacing:.2,transition:"all .2s",fontFamily:ff}}>
+              Créer mon profil juriste
+            </button>
+          </div>
         </div>
       </section>
 

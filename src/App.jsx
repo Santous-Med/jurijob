@@ -195,10 +195,10 @@ function Landing({onChoose}){
 
       {/* POURQUOI JURIJOB */}
       <section style={{padding:"56px 32px",maxWidth:1100,margin:"0 auto"}}>
-        <div style={{marginBottom:36}}>
+        <div style={{marginBottom:36,textAlign:"center"}}>
           <p style={{color:GOLD,fontSize:10.5,letterSpacing:2.5,textTransform:"uppercase",margin:"0 0 10px",fontWeight:500,fontFamily:ff}}>Pourquoi JURIJOB</p>
           <h2 style={{fontFamily:fs,fontSize:32,color:NAVY,fontWeight:500,margin:"0 0 10px",letterSpacing:-0.4}}>Une alternative aux plateformes RH généralistes.</h2>
-          <p style={{fontSize:14,color:"#4A5568",margin:0,maxWidth:620,fontFamily:ff,fontWeight:300,lineHeight:1.6}}>Pensée par et pour les juristes, JURIJOB s'appuie sur 24 ans d'expérience en direction juridique et le réseau d'un président fondateur de l'Association marocaine des juristes d'entreprise.</p>
+          <p style={{fontSize:14,color:"#4A5568",margin:"0 auto",maxWidth:620,fontFamily:ff,fontWeight:300,lineHeight:1.6}}>Pensée par et pour les juristes, JURIJOB s'appuie sur 24 ans d'expérience en direction juridique et sur le réseau d'un leader des juristes d'entreprise au Maroc, riche de plusieurs dizaines de milliers de contacts professionnels.</p>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:16}}>
           <div onMouseEnter={()=>setHov("c1")} onMouseLeave={()=>setHov(null)} style={cardStyle("c1")}>

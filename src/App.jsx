@@ -261,7 +261,7 @@ function Landing({onChoose}){
           <div style={{flex:1,minWidth:280}}>
             <p style={{color:GOLD,fontSize:10.5,letterSpacing:2,textTransform:"uppercase",margin:"0 0 6px",fontWeight:500,fontFamily:ff}}>Fondateur</p>
             <h3 style={{fontFamily:fs,fontSize:22,color:NAVY,fontWeight:600,margin:"0 0 4px",letterSpacing:-0.2}}>Mohammed Sentissi</h3>
-            <p style={{fontSize:13,color:"#4A5568",margin:"0 0 12px",fontFamily:ff,lineHeight:1.5}}>Expert juridique, ex-Directeur juridique de holdings au Maroc et en Afrique. Président fondateur de l'Association marocaine des juristes d'entreprise (AMJE). Fondateur de Sentissi Legal Advisory.</p>
+            <p style={{fontSize:13,color:"#4A5568",margin:"0 0 12px",fontFamily:ff,lineHeight:1.5}}>Expert juridique, ex-Directeur juridique de holdings au Maroc et en Afrique. Président élu de l'Association marocaine des juristes d'entreprise — AMJE (en cours de constitution). Fondateur de Sentissi Legal Advisory.</p>
             <p style={{fontFamily:fs,fontSize:15,color:NAVY,fontStyle:"italic",fontWeight:500,margin:0,lineHeight:1.5,borderLeft:`2px solid ${GOLD}`,paddingLeft:14}}>« Recruter un juriste, ce n'est pas remplir un poste. C'est trouver la personne qui parlera la langue du droit et celle de votre entreprise. »</p>
           </div>
         </div>
@@ -1221,7 +1221,7 @@ budget: f.budgetConfidentiel ? "Confidentiel" : f.budget,
                   <p style={{fontSize:12,color:"#166534",margin:0,lineHeight:1.6}}>Merci ! L'équipe JURIJOB va vérifier la réception de votre virement. Vos profils seront débloqués sous 24h ouvrées. Vous recevrez un e-mail de confirmation.</p>
                 </div>
               )}
-              <p style={{fontSize:11,color:"#A0AEC0",margin:"16px 0 0"}}>Une question ? <span style={{color:GOLD}}>contact@jurijob.ma</span></p>
+              <p style={{fontSize:11,color:"#A0AEC0",margin:"16px 0 0"}}>Une question ? <span style={{color:GOLD}}>recrutement@sentissilegal.com</span></p>
             </div>
           </div>
         </div>
@@ -1307,7 +1307,7 @@ function ResetPassword({onDone}){
 }
 
 /* ═══════════════════════════════════════
-   FAQ — Accordéon, style dark premium
+   FAQ — Accordéon, en fond blanc
 ═══════════════════════════════════════ */
 function PageFAQ({onBack}){
   const ff="'Inter',system-ui,sans-serif";

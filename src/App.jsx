@@ -2,9 +2,16 @@ import { supabase } from './supabase'
 import AdminDashboard from './Admin'
 import Logo from './Logo'
 import { useState, useEffect } from "react";
-import casaImage from './assets/casa-finance-city.jpg'
 
-const NAVY="#0B2545",GOLD="#C8A046",CREAM="#F8F5ED",GOLD_LIGHT="#F5EDD6",NAVY2="#1a3a6b";
+// Assets
+import casaImage from './assets/casa-finance-city.jpg'
+import handshakeImage from './assets/handshake.jpg'
+
+const NAVY = "#0B2545";
+const GOLD = "#C8A046";
+const CREAM = "#F8F5ED";
+const GOLD_LIGHT = "#F5EDD6";
+const NAVY2 = "#1a3a6b";
 
 /* ───── DONNÉES COMMUNES ───── */
 const SPECS=[
@@ -1304,75 +1311,40 @@ function ResetPassword({onDone}){
 ═══════════════════════════════════════ */
 function PageFAQ({onBack}){
   const ff="'Inter',system-ui,sans-serif";
-  const DARK="#060e1a";
+  const fs="'Cormorant Garamond',Georgia,serif";
   const [open,setOpen]=useState(null);
   const toggle=i=>setOpen(o=>o===i?null:i);
 
-  const sections=[
-    {titre:"Questions générales",qs:[
-      {q:"Qu'est-ce que JURIJOB ?",a:"JURIJOB est une plateforme de mise en relation supervisée entre les professionnels du droit (juristes, avocats, notaires, compliance officers…) et les recruteurs (entreprises, cabinets, études notariales). Notre équipe sélectionne les profils les plus adaptés à chaque demande et les propose sous forme de short-list qualifiée."},
-      {q:"JURIJOB est-il réservé au Maroc ?",a:"Non. JURIJOB couvre le Maroc et l'ensemble de l'Afrique francophone. Les candidats et recruteurs de tous les pays francophones peuvent utiliser la plateforme."},
-      {q:"Mes données personnelles sont-elles protégées ?",a:"Oui. Vos données sont hébergées de manière sécurisée, protégées par des politiques d'accès strictes (Row Level Security), et ne sont jamais communiquées à des tiers sans votre consentement. JURIJOB respecte la loi marocaine 09-08 relative à la protection des personnes physiques à l'égard du traitement des données à caractère personnel."},
-    ]},
-    {titre:"Côté Candidat",qs:[
-      {q:"L'inscription est-elle gratuite ?",a:"Oui, totalement. La création de profil, l'intégration à la CVthèque et la mise en relation sont gratuites pour les candidats."},
-      {q:"Comment créer mon profil ?",a:"Cliquez sur « Créer mon profil » depuis la page d'accueil. Vous pouvez vous inscrire via votre compte Google ou par e-mail. Le formulaire vous guide en 7 étapes : identité, formation, expériences, spécialisations, langues, préférences et aperçu."},
-      {q:"Puis-je modifier ou supprimer mon profil ?",a:"Oui, à tout moment. Depuis votre espace candidat, vous pouvez consulter, modifier, compléter ou supprimer définitivement votre profil de la CVthèque."},
-      {q:"Qui peut voir mon profil ?",a:"Seul l'administrateur JURIJOB peut consulter les profils complets. Les recruteurs reçoivent uniquement les profils sélectionnés dans leur short-list, après validation par notre équipe."},
-      {q:"Comment suis-je contacté pour une opportunité ?",a:"Lorsque votre profil correspond à une demande de recruteur, vous recevez un e-mail de notification à l'adresse associée à votre compte. Vous restez libre d'accepter ou de décliner toute proposition."},
-    ]},
-    {titre:"Côté Recruteur",qs:[
-      {q:"Comment soumettre une demande de recrutement ?",a:"Connectez-vous à votre espace recruteur, puis cliquez sur « Nouvelle demande ». Remplissez vos critères (poste, spécialisations, langues, niveau d'expérience, diplôme…) et validez. Notre équipe prend en charge votre demande immédiatement."},
-      {q:"Combien coûte le service ?",a:"Le tarif est de 1 490 MAD HT par profil inclus dans la short-list. Ce montant couvre la recherche, la sélection et la mise en relation. Le paiement s'effectue par virement bancaire après réception de la short-list."},
-      {q:"En combien de temps reçois-je ma short-list ?",a:"Sous 48 heures ouvrées à compter de la validation de votre demande. Vous êtes notifié par e-mail dès que la short-list est prête."},
-      {q:"Que contient la short-list ?",a:"La short-list contient les profils les mieux classés par notre algorithme de matching, filtrés selon vos critères (spécialisations, langues, expérience, diplôme). Chaque profil inclut les coordonnées, les formations, les expériences détaillées et les compétences du candidat."},
-    ]},
+  const faqs = [
+    { q: "Comment JURIJOB sélectionne-t-il ses candidats ?", a: "Nous appliquons une méthodologie rigoureuse, mêlant expertise juridique pointue et analyse comportementale, pour garantir une adéquation parfaite avec la culture de votre entreprise." },
+    { q: "Quel est le délai moyen pour une mission de recrutement ?", a: "Grâce à notre vivier de talents qualifiés, nous réduisons le cycle de recrutement tout en maintenant un standard d'excellence élevé." },
+    { q: "Comment garantissez-vous la confidentialité ?", a: "La discrétion est au cœur de notre déontologie. Chaque dossier est traité avec une confidentialité absolue, conformément à nos engagements contractuels." }
   ];
 
-  let idx=0;
-
   return(
-    <div style={{background:DARK,minHeight:"100vh",fontFamily:ff}}>
-      <nav style={{background:NAVY,padding:"0 32px",display:"flex",justifyContent:"space-between",alignItems:"center",height:56}}>
-        <Logo variant="light" size="header"/>
-        <button onClick={onBack} style={{background:"none",border:"none",color:"rgba(255,255,255,0.5)",fontSize:13,cursor:"pointer",fontFamily:ff}}>← Accueil</button>
-      </nav>
-
-      <div style={{maxWidth:640,margin:"0 auto",padding:"48px 24px 64px"}}>
-        <div style={{marginBottom:40}}>
-          <div style={{width:40,height:3,background:GOLD,marginBottom:16,borderRadius:2}}/>
-          <h1 style={{color:"#fff",fontSize:28,fontWeight:300,margin:"0 0 8px",fontFamily:ff}}>Questions <span style={{fontWeight:600}}>fréquentes</span></h1>
-          <p style={{color:"rgba(255,255,255,0.35)",fontSize:14,margin:0,fontFamily:ff}}>Tout ce que vous devez savoir sur JURIJOB.</p>
+    <div style={{background:"#fff", minHeight:"100vh", fontFamily:ff}}>
+      {/* Hero Section */}
+      <section style={{position:"relative", width:"100%", height:"40vh", overflow:"hidden"}}>
+        <div style={{position:"absolute", inset:0, backgroundImage:`url(${handshakeImage})`, backgroundSize:"cover", backgroundPosition:"center"}}/>
+        <div style={{position:"absolute", inset:0, background:"rgba(11,37,69,0.85)"}}/>
+        <div style={{position:"relative", zIndex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", height:"100%", color:"white", textAlign:"center"}}>
+          <h1 style={{fontFamily:fs, fontSize:"3.5rem", fontWeight:700, margin:0}}>Questions Fréquentes</h1>
+          <button onClick={onBack} style={{marginTop:20, background:"transparent", border:"1px solid white", color:"white", padding:"8px 16px", cursor:"pointer", borderRadius:4}}>← Retour à l'accueil</button>
         </div>
+      </section>
 
-        {sections.map(sec=>(
-          <div key={sec.titre} style={{marginBottom:32}}>
-            <p style={{fontSize:10,color:GOLD,textTransform:"uppercase",letterSpacing:2,margin:"0 0 14px",fontFamily:ff}}>{sec.titre}</p>
-            {sec.qs.map(({q,a})=>{
-              const i=idx++;
-              const isOpen=open===i;
-              return(
-                <div key={i} style={{borderBottom:"1px solid rgba(255,255,255,0.06)",marginBottom:0}}>
-                  <button onClick={()=>toggle(i)} style={{width:"100%",background:"none",border:"none",padding:"16px 0",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,textAlign:"left"}}>
-                    <span style={{fontSize:14,fontWeight:isOpen?500:400,color:isOpen?"#fff":"rgba(255,255,255,0.65)",fontFamily:ff,lineHeight:1.5}}>{q}</span>
-                    <span style={{fontSize:18,color:GOLD,flexShrink:0,transition:"transform .2s",transform:isOpen?"rotate(45deg)":"none"}}>+</span>
-                  </button>
-                  {isOpen&&<div style={{padding:"0 0 18px 0"}}><p style={{margin:0,fontSize:13,color:"rgba(255,255,255,0.4)",lineHeight:1.7,fontFamily:ff}}>{a}</p></div>}
-                </div>
-              );
-            })}
+      {/* Content */}
+      <div style={{maxWidth:"800px", margin:"0 auto", padding:"60px 20px"}}>
+        {faqs.map((item, index) => (
+          <div key={index} style={{borderBottom:"1px solid #E2E8F0", padding:"24px 0"}}>
+            <button onClick={() => toggle(index)} style={{width:"100%", textAlign:"left", display:"flex", justifyContent:"space-between", alignItems:"center", background:"none", border:"none", cursor:"pointer"}}>
+              <span style={{fontSize:"1.25rem", fontWeight:500, color:"#0B2545", fontFamily:fs}}>{item.q}</span>
+              <span style={{fontSize:"1.5rem", color:"#C8A046"}}>{open===index ? '−' : '+'}</span>
+            </button>
+            {open===index && <p style={{marginTop:16, color:"#4A5568", lineHeight:1.7}}>{item.a}</p>}
           </div>
         ))}
-
-        <div style={{textAlign:"center",marginTop:40,padding:"32px 0",borderTop:"1px solid rgba(200,160,70,0.1)"}}>
-          <p style={{color:"rgba(255,255,255,0.35)",fontSize:13,margin:"0 0 16px",fontFamily:ff}}>Vous avez une autre question ?</p>
-          <p style={{color:GOLD,fontSize:14,fontWeight:500,margin:0,fontFamily:ff}}>contact@jurijob.ma</p>
-        </div>
       </div>
-
-      <footer style={{background:DARK,padding:"16px 32px",textAlign:"center",borderTop:"1px solid rgba(255,255,255,0.05)"}}>
-        <p style={{fontSize:10,color:"rgba(255,255,255,0.2)",margin:0,fontFamily:ff}}>© 2026 JURIJOB — Smart Recrutement Juridique</p>
-      </footer>
     </div>
   );
 }

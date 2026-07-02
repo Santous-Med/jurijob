@@ -1307,44 +1307,152 @@ function ResetPassword({onDone}){
 }
 
 /* ═══════════════════════════════════════
-   FAQ — Accordéon, en fond blanc
+   FAQ — Accordéon, style clair institutionnel
 ═══════════════════════════════════════ */
 function PageFAQ({onBack}){
+  useEffect(()=>{
+    if(!document.getElementById('gfont-jurijob-landing')){
+      const l=document.createElement('link'); l.id='gfont-jurijob-landing'; l.rel='stylesheet';
+      l.href='https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap';
+      document.head.appendChild(l);
+    }
+  },[]);
   const ff="'Inter',system-ui,sans-serif";
   const fs="'Cormorant Garamond',Georgia,serif";
   const [open,setOpen]=useState(null);
   const toggle=i=>setOpen(o=>o===i?null:i);
 
-  const faqs = [
-    { q: "Comment JURIJOB sélectionne-t-il ses candidats ?", a: "Nous appliquons une méthodologie rigoureuse, mêlant expertise juridique pointue et analyse comportementale, pour garantir une adéquation parfaite avec la culture de votre entreprise." },
-    { q: "Quel est le délai moyen pour une mission de recrutement ?", a: "Grâce à notre vivier de talents qualifiés, nous réduisons le cycle de recrutement tout en maintenant un standard d'excellence élevé." },
-    { q: "Comment garantissez-vous la confidentialité ?", a: "La discrétion est au cœur de notre déontologie. Chaque dossier est traité avec une confidentialité absolue, conformément à nos engagements contractuels." }
+  const sections = [
+    {
+      titre: "Comprendre JURIJOB",
+      faqs: [
+        {
+          q: "Qu'est-ce que JURIJOB, exactement ?",
+          a: "JURIJOB est une plateforme de sélection de profils juridiques au Maroc et en Afrique francophone. Notre rôle est de vous livrer une short-list qualifiée qui correspond à vos critères — spécialisation, langues, expérience, diplôme. L'entretien, l'appréciation et la décision finale restent entre vos mains : nous vous faisons gagner un temps considérable en identifiant les profils pertinents."
+        },
+        {
+          q: "En quoi JURIJOB diffère d'un cabinet de recrutement classique ?",
+          a: "Un cabinet de recrutement facture au succès de l'embauche, souvent 15 à 25 % du salaire annuel du candidat recruté. JURIJOB facture un tarif fixe et transparent par profil livré, communiqué directement au recruteur lors de sa demande. Nous ne sommes pas rémunérés au succès de votre embauche, mais à la qualité de la sélection — cela nous permet de rester objectifs et de proposer un service à coût maîtrisé, même pour des besoins récurrents."
+        },
+        {
+          q: "Qui est derrière JURIJOB ?",
+          a: "JURIJOB est portée par Sentissi Legal Advisory (SLA), cabinet fondé par Mohammed Sentissi — expert juridique, ex-Directeur juridique de holdings au Maroc et en Afrique, et Président élu de l'Association marocaine des juristes d'entreprise — AMJE (en cours de constitution). Le service s'appuie sur 24 ans d'expérience en direction juridique et sur un réseau de plusieurs dizaines de milliers de contacts professionnels."
+        }
+      ]
+    },
+    {
+      titre: "Pour les recruteurs",
+      faqs: [
+        {
+          q: "Comment JURIJOB sélectionne-t-il ses candidats ?",
+          a: "Nous appliquons une méthodologie rigoureuse fondée sur une expertise juridique de terrain. Notre algorithme de scoring évalue chaque profil sur quatre dimensions clés : spécialisations juridiques, langues, expérience et diplôme. Chaque short-list est ensuite validée manuellement par un ex-Directeur juridique, avant envoi au recruteur."
+        },
+        {
+          q: "Quel est le délai pour recevoir ma short-list ?",
+          a: "Sous 48 heures ouvrées après validation de votre demande. Ce délai couvre l'ensemble du travail : analyse de vos critères, recherche dans la CVthèque et le réseau professionnel, évaluation manuelle des profils, puis composition d'une short-list courte et qualifiée."
+        },
+        {
+          q: "Que se passe-t-il si aucun profil de la short-list ne me convient ?",
+          a: "Écrivez-nous à recrutement@sentissilegal.com. Selon la nature du besoin, nous pouvons vous orienter vers un service complémentaire de chasse de tête, avec une tarification adaptée. Nous restons à votre écoute pour affiner la recherche."
+        },
+        {
+          q: "Proposez-vous des tarifs pour des besoins récurrents ?",
+          a: "Oui. Pour les entreprises et cabinets ayant plusieurs recrutements juridiques par an, nous appliquons une tarification dégressive. Contactez-nous à recrutement@sentissilegal.com pour un devis personnalisé."
+        }
+      ]
+    },
+    {
+      titre: "Candidats & services complémentaires",
+      faqs: [
+        {
+          q: "Comment garantissez-vous la confidentialité ?",
+          a: "La discrétion est au cœur de notre déontologie. Chaque profil candidat est hébergé de manière sécurisée et n'est accessible qu'aux recruteurs dont le paiement est confirmé — aucune diffusion publique. Notre plateforme est conforme à la loi marocaine 09-08 relative à la protection des données personnelles."
+        },
+        {
+          q: "JURIJOB propose-t-il d'autres services que la short-list ?",
+          a: "Oui. En complément, SLA peut prendre en charge des entretiens de pré-qualification (service payant) permettant d'évaluer les candidats avant vos propres entretiens. D'autres prestations sont disponibles à la demande : chasse de tête, rédaction de contrats de travail, audit RH juridique. Écrivez à recrutement@sentissilegal.com pour toute demande spécifique."
+        }
+      ]
+    }
   ];
 
+  // Aplatissement pour l'index global (pour éviter les doublons d'open)
+  let globalIdx = 0;
+
   return(
-    <div style={{background:"#fff", minHeight:"100vh", fontFamily:ff}}>
-      {/* Hero Section */}
-      <section style={{position:"relative", width:"100%", height:"40vh", overflow:"hidden"}}>
-        <div style={{position:"absolute", inset:0, backgroundImage:`url(${handshakeImage})`, backgroundSize:"cover", backgroundPosition:"center"}}/>
-        <div style={{position:"absolute", inset:0, background:"rgba(11,37,69,0.85)"}}/>
-        <div style={{position:"relative", zIndex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", height:"100%", color:"white", textAlign:"center"}}>
-          <h1 style={{fontFamily:fs, fontSize:"3.5rem", fontWeight:700, margin:0}}>Questions Fréquentes</h1>
-          <button onClick={onBack} style={{marginTop:20, background:"transparent", border:"1px solid white", color:"white", padding:"8px 16px", cursor:"pointer", borderRadius:4}}>← Retour à l'accueil</button>
+    <div style={{background:"#fff",minHeight:"100vh",fontFamily:ff,color:"#1a202c"}}>
+      {/* NAV */}
+      <nav style={{background:"#fff",borderBottom:"1px solid #E2E8F0",padding:"0 32px",display:"flex",justifyContent:"space-between",alignItems:"center",height:64,position:"sticky",top:0,zIndex:10}}>
+        <Logo size="header"/>
+        <button onClick={onBack} style={{background:"none",border:"none",color:"#4A5568",fontSize:13,cursor:"pointer",fontFamily:ff}}>← Retour à l'accueil</button>
+      </nav>
+
+      {/* HERO avec photo poignée de main en arrière-plan */}
+      <section style={{position:"relative",overflow:"hidden",minHeight:"min(340px,45vh)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+        <div style={{position:"absolute",inset:0,backgroundImage:`url(${handshakeImage})`,backgroundSize:"cover",backgroundPosition:"center"}} aria-hidden="true"/>
+        <div style={{position:"absolute",inset:0,background:"linear-gradient(135deg, rgba(11,37,69,0.92) 0%, rgba(11,37,69,0.78) 50%, rgba(26,58,107,0.72) 100%)"}} aria-hidden="true"/>
+        <div style={{position:"relative",zIndex:2,padding:"60px 32px",maxWidth:900,margin:"0 auto",textAlign:"center"}}>
+          <p style={{color:GOLD,fontSize:10.5,letterSpacing:2.5,textTransform:"uppercase",margin:"0 0 14px",fontWeight:500,fontFamily:ff}}>Foire aux questions</p>
+          <h1 style={{fontFamily:fs,fontSize:42,lineHeight:1.15,color:"#fff",fontWeight:500,margin:"0 auto 12px",letterSpacing:-0.6,maxWidth:640,textShadow:"0 2px 12px rgba(0,0,0,0.25)"}}>
+            Questions <em style={{color:GOLD,fontStyle:"italic",fontWeight:500}}>Fréquentes</em>
+          </h1>
+          <p style={{fontSize:14,lineHeight:1.6,color:"rgba(255,255,255,0.75)",maxWidth:520,margin:"0 auto",fontWeight:300,fontFamily:ff}}>
+            Tout ce que vous devez savoir sur JURIJOB : notre approche, nos tarifs, nos délais et nos garanties.
+          </p>
         </div>
       </section>
 
-      {/* Content */}
-      <div style={{maxWidth:"800px", margin:"0 auto", padding:"60px 20px"}}>
-        {faqs.map((item, index) => (
-          <div key={index} style={{borderBottom:"1px solid #E2E8F0", padding:"24px 0"}}>
-            <button onClick={() => toggle(index)} style={{width:"100%", textAlign:"left", display:"flex", justifyContent:"space-between", alignItems:"center", background:"none", border:"none", cursor:"pointer"}}>
-              <span style={{fontSize:"1.25rem", fontWeight:500, color:"#0B2545", fontFamily:fs}}>{item.q}</span>
-              <span style={{fontSize:"1.5rem", color:"#C8A046"}}>{open===index ? '−' : '+'}</span>
-            </button>
-            {open===index && <p style={{marginTop:16, color:"#4A5568", lineHeight:1.7}}>{item.a}</p>}
+      {/* SECTIONS FAQ */}
+      <section style={{padding:"56px 32px",maxWidth:820,margin:"0 auto"}}>
+        {sections.map((sec, si) => (
+          <div key={si} style={{marginBottom:si<sections.length-1?44:0}}>
+            <div style={{textAlign:"center",marginBottom:24}}>
+              <p style={{color:GOLD,fontSize:10.5,letterSpacing:2.5,textTransform:"uppercase",margin:"0 0 6px",fontWeight:500,fontFamily:ff}}>Section {si+1}</p>
+              <h2 style={{fontFamily:fs,fontSize:26,color:NAVY,fontWeight:500,margin:0,letterSpacing:-0.3}}>{sec.titre}</h2>
+            </div>
+            {sec.faqs.map((item) => {
+              const currentIdx = globalIdx++;
+              const isOpen = open === currentIdx;
+              return (
+                <div key={currentIdx} style={{borderBottom:"1px solid #E2E8F0"}}>
+                  <button onClick={() => toggle(currentIdx)} style={{width:"100%",textAlign:"left",display:"flex",justifyContent:"space-between",alignItems:"center",background:"none",border:"none",cursor:"pointer",padding:"22px 0",fontFamily:ff}}>
+                    <span style={{fontSize:16,fontWeight:500,color:NAVY,fontFamily:fs,paddingRight:16,lineHeight:1.4}}>{item.q}</span>
+                    <span style={{fontSize:24,color:GOLD,fontWeight:300,lineHeight:1,transition:"transform .2s",transform:isOpen?"rotate(45deg)":"none",flexShrink:0}}>+</span>
+                  </button>
+                  {isOpen && (
+                    <div style={{paddingBottom:22,paddingRight:32}}>
+                      <p style={{margin:0,fontSize:14,color:"#4A5568",lineHeight:1.7,fontWeight:300,fontFamily:ff}}>{item.a}</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         ))}
-      </div>
+      </section>
+
+      {/* CTA CONTACT */}
+      <section style={{padding:"48px 32px",background:"#F8F5ED",borderTop:"1px solid #E2E8F0"}}>
+        <div style={{maxWidth:640,margin:"0 auto",textAlign:"center"}}>
+          <h2 style={{fontFamily:fs,fontSize:24,color:NAVY,fontWeight:500,margin:"0 0 10px",letterSpacing:-0.3}}>Une autre question ?</h2>
+          <p style={{fontSize:14,color:"#4A5568",margin:"0 0 20px",lineHeight:1.6,fontFamily:ff,fontWeight:300}}>Notre équipe reste à votre disposition pour toute demande spécifique.</p>
+          <a href="mailto:recrutement@sentissilegal.com" style={{display:"inline-block",background:NAVY,color:"#fff",fontWeight:500,fontSize:13.5,padding:"12px 26px",borderRadius:7,textDecoration:"none",fontFamily:ff}}>recrutement@sentissilegal.com</a>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer style={{background:"#fff",padding:"24px 32px",borderTop:"1px solid #E2E8F0"}}>
+        <div style={{maxWidth:1100,margin:"0 auto",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:16}}>
+          <div style={{display:"flex",alignItems:"center",gap:14}}>
+            <Logo size="compact"/>
+            <span style={{fontSize:11,color:"#A0AEC0",fontFamily:ff}}>© 2026 — Smart Recrutement Juridique</span>
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:18}}>
+            <button onClick={onBack} style={{background:"none",border:"none",color:"#4A5568",fontSize:12,cursor:"pointer",fontFamily:ff}}>Accueil</button>
+            <span style={{fontSize:12,color:"#4A5568",fontFamily:ff}}>recrutement@sentissilegal.com</span>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

@@ -102,6 +102,7 @@ export default function AdminDashboard(){
   const [loading,setLoading]=useState(true);
   const [paiements,setPaiements]=useState([]);
   const [confirmant,setConfirmant]=useState(null);
+  const [relance,setRelance]=useState(null); // null | "encours" | "termine"
 
 // Si une session admin est déjà active (rechargement de page), on garde l'accès
 useEffect(()=>{
@@ -179,6 +180,55 @@ const statP={
         `<p style="font-size:14px;line-height:1.6;margin:0 0 12px">Bonjour,</p><p style="font-size:14px;line-height:1.6;margin:0 0 12px">Nous avons bien reçu votre virement de <strong>${p.montant_total?.toLocaleString("fr-FR")} MAD</strong> pour le poste <strong>${posteTxt}</strong>.</p><p style="font-size:14px;line-height:1.6;margin:0 0 12px">Vos <strong>${nb} profil${nb>1?"s":""}</strong> sont désormais accessibles dans votre espace recruteur. Vous y trouverez les coordonnées complètes des candidats sélectionnés.</p><p style="margin:22px 0 0"><a href="https://www.jurijob.ma" style="background:#C8A046;color:#0B2545;text-decoration:none;font-weight:600;font-size:14px;padding:11px 22px;border-radius:8px;display:inline-block">Consulter mes profils</a></p><p style="font-size:12px;color:#718096;margin:18px 0 0">Référence : ${p.reference_virement || "—"}</p>`));
     setPaiements(ps=>ps.map(x=>x.id===p.id?{...x,statut:'confirme',date_confirmation:dateConf}:x));
     setConfirmant(null);
+  };
+
+  // Liste des candidats à relancer : validés + niveau ou diplôme manquant + pas relancés depuis 7 jours
+  const candidatsARelancer = candidats.filter(c=>{
+    if(c.statut !== 'valide') return false;
+    const niveauVide = !c.niveau || c.niveau === '';
+    const diplomeVide = !c.diplome || c.diplome === '';
+    if(!niveauVide && !diplomeVide) return false; // profil complet, on ne relance pas
+    // Vérifier anti-doublon 7 jours
+    if(c.date_derniere_relance){
+      const j7 = 7 * 24 * 60 * 60 * 1000; // 7 jours en ms
+      const ecart = Date.now() - new Date(c.date_derniere_relance).getTime();
+      if(ecart < j7) return false; // relancé il y a moins de 7 jours
+    }
+    return true;
+  });
+
+  const relancerProfilsIncomplets = async () => {
+    const nb = candidatsARelancer.length;
+    if(nb === 0){ alert("Aucun candidat à relancer pour le moment."); return; }
+    if(!window.confirm(`Envoyer un e-mail de relance à ${nb} candidat${nb>1?"s":""} au profil incomplet ?\n\nLes candidats déjà relancés dans les 7 derniers jours sont automatiquement exclus.`)) return;
+    setRelance("encours");
+    let ok = 0, ko = 0;
+    const dateNow = new Date().toISOString();
+    for(const c of candidatsARelancer){
+      try{
+        const sujet = "JURIJOB — Complétez votre profil pour maximiser vos chances";
+        const corps = `<p style="font-size:14px;line-height:1.6;margin:0 0 12px">Bonjour,</p>
+<p style="font-size:14px;line-height:1.6;margin:0 0 12px">Merci d'avoir créé votre profil sur <strong>JURIJOB</strong>, la plateforme de sélection de profils juridiques au Maroc et en Afrique francophone.</p>
+<p style="font-size:14px;line-height:1.6;margin:0 0 12px">Nous avons constaté qu'il manque encore quelques informations à votre profil, notamment votre <strong>niveau d'expérience</strong> et/ou votre <strong>diplôme le plus élevé</strong>.</p>
+<p style="font-size:14px;line-height:1.6;margin:0 0 12px">Ces informations sont essentielles pour que notre algorithme puisse vous proposer aux recruteurs qui recherchent votre profil. Sans elles, vous risquez de manquer des opportunités.</p>
+<p style="font-size:14px;line-height:1.6;margin:0 0 12px">Compléter votre profil ne prend que quelques minutes :</p>
+<p style="margin:22px 0"><a href="https://www.jurijob.ma" style="background:#C8A046;color:#0B2545;text-decoration:none;font-weight:600;font-size:14px;padding:11px 22px;border-radius:8px;display:inline-block">Compléter mon profil</a></p>
+<p style="font-size:12px;color:#718096;margin:18px 0 0">Une question ? Écrivez-nous à recrutement@sentissilegal.com</p>`;
+        await envoyerNotification(c.email, sujet, emailShell("Complétez votre profil ✍️", corps));
+        // Envoi réussi → mise à jour date_derniere_relance
+        const { error } = await supabase.from('candidats').update({date_derniere_relance: dateNow}).eq('id', c.id);
+        if(!error) ok++;
+        else ko++;
+      } catch(e){ ko++; }
+    }
+    // Refresh local
+    setCandidats(prev=>prev.map(c=>{
+      if(candidatsARelancer.find(x=>x.id===c.id)) return {...c, date_derniere_relance: dateNow};
+      return c;
+    }));
+    setRelance("termine");
+    setTimeout(()=>setRelance(null), 5000);
+    alert(`Relance terminée.\n\n✓ ${ok} envoi${ok>1?"s":""} réussi${ok>1?"s":""}\n${ko>0?`✗ ${ko} échec${ko>1?"s":""}`:""}`);
   };
 
   const statD={
@@ -474,6 +524,17 @@ const statP={
     <div style={{padding:"20px"}}>
       <p style={{fontSize:11,color:GOLD,fontWeight:500,textTransform:"uppercase",letterSpacing:.8,margin:"0 0 4px"}}>Modération</p>
       <h2 style={{color:NAVY,fontSize:19,fontWeight:500,margin:"0 0 18px"}}>CVthèque — {candidats.length} profils</h2>
+      {candidatsARelancer.length > 0 && (
+        <div style={{background:GOLD_LIGHT,border:`1px solid ${GOLD}`,borderRadius:10,padding:"12px 16px",marginBottom:16,display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap"}}>
+          <div style={{flex:1,minWidth:200}}>
+            <p style={{margin:"0 0 3px",fontSize:13,fontWeight:600,color:NAVY}}>📧 Profils incomplets à relancer : {candidatsARelancer.length}</p>
+            <p style={{margin:0,fontSize:11.5,color:"#92400E"}}>Candidats validés dont le niveau ou le diplôme n'est pas renseigné (exclus : relancés dans les 7 derniers jours).</p>
+          </div>
+          <button onClick={relancerProfilsIncomplets} disabled={relance==="encours"} style={{padding:"9px 16px",borderRadius:7,background:relance==="encours"?"#E2E8F0":NAVY,color:relance==="encours"?"#A0AEC0":"#fff",border:"none",fontSize:12.5,cursor:relance==="encours"?"default":"pointer",fontWeight:600,whiteSpace:"nowrap"}}>
+            {relance==="encours" ? "Envoi en cours…" : `Relancer les ${candidatsARelancer.length} profils`}
+          </button>
+        </div>
+      )}
       {candidats.length===0&&!loading&&<p style={{color:"#A0AEC0",fontSize:13,textAlign:"center",padding:"32px 0"}}>Aucun candidat pour le moment.</p>}
       {["en_attente","valide","refuse"].map(statut=>{
         const list=candidats.filter(c=>c.statut===statut);

@@ -288,6 +288,7 @@ function Landing({onChoose}){
           </div>
           <div style={{display:"flex",alignItems:"center",gap:18}}>
             <button onClick={()=>onChoose("faq")} style={{background:"none",border:"none",color:"#4A5568",fontSize:12,cursor:"pointer",fontFamily:ff}}>FAQ</button>
+            <button onClick={()=>onChoose("legal")} style={{background:"none",border:"none",color:"#4A5568",fontSize:12,cursor:"pointer",fontFamily:ff}}>Mentions légales</button>
             <span style={{fontSize:12,color:"#4A5568",fontFamily:ff}}>recrutement@sentissilegal.com</span>
             <button onClick={()=>onChoose("admin")} style={{background:"none",border:"none",color:"#A0AEC0",fontSize:10.5,cursor:"pointer",fontFamily:ff}}>Admin</button>
           </div>
@@ -1307,9 +1308,78 @@ function ResetPassword({onDone}){
 }
 
 /* ═══════════════════════════════════════
+   MENTIONS LÉGALES — Style clair institutionnel
+═══════════════════════════════════════ */
+function PageMentionsLegales({onBack}){
+  useEffect(()=>{
+    if(!document.getElementById('gfont-jurijob-landing')){
+      const l=document.createElement('link'); l.id='gfont-jurijob-landing'; l.rel='stylesheet';
+      l.href='https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap';
+      document.head.appendChild(l);
+    }
+  },[]);
+  const ff="'Inter',system-ui,sans-serif";
+  const fs="'Cormorant Garamond',Georgia,serif";
+
+  return(
+    <div style={{background:"#fff",minHeight:"100vh",fontFamily:ff,color:"#1a202c"}}>
+      {/* NAV */}
+      <nav style={{background:"#fff",borderBottom:"1px solid #E2E8F0",padding:"0 32px",display:"flex",justifyContent:"space-between",alignItems:"center",height:64,position:"sticky",top:0,zIndex:10}}>
+        <Logo size="header"/>
+        <button onClick={onBack} style={{background:"none",border:"none",color:"#4A5568",fontSize:13,cursor:"pointer",fontFamily:ff}}>← Retour à l'accueil</button>
+      </nav>
+
+      {/* HERO */}
+      <section style={{background:NAVY,padding:"64px 32px",textAlign:"center"}}>
+        <div style={{maxWidth:900,margin:"0 auto"}}>
+          <p style={{color:GOLD,fontSize:10.5,letterSpacing:2.5,textTransform:"uppercase",margin:"0 0 14px",fontWeight:500,fontFamily:ff}}>Informations juridiques</p>
+          <h1 style={{fontFamily:fs,fontSize:42,lineHeight:1.15,color:"#fff",fontWeight:500,margin:"0 auto 12px",letterSpacing:-0.6}}>
+            Mentions <em style={{color:GOLD,fontStyle:"italic",fontWeight:500}}>légales</em>
+          </h1>
+          <p style={{fontSize:14,lineHeight:1.6,color:"rgba(255,255,255,0.75)",maxWidth:520,margin:"0 auto",fontWeight:300,fontFamily:ff}}>
+            Informations relatives à l'éditeur, à l'hébergement et au traitement des données personnelles.
+          </p>
+        </div>
+      </section>
+
+      {/* SECTION — Traitement des données personnelles (CNDP) */}
+      <section style={{padding:"56px 32px",maxWidth:820,margin:"0 auto"}}>
+        <div style={{marginBottom:36}}>
+          <p style={{color:GOLD,fontSize:10.5,letterSpacing:2.5,textTransform:"uppercase",margin:"0 0 8px",fontWeight:500,fontFamily:ff}}>Protection des données personnelles</p>
+          <h2 style={{fontFamily:fs,fontSize:26,color:NAVY,fontWeight:500,margin:"0 0 20px",letterSpacing:-0.3}}>Traitement des données personnelles</h2>
+          <p style={{fontSize:14,color:"#4A5568",lineHeight:1.75,fontFamily:ff,fontWeight:300,margin:"0 0 14px"}}>
+            Par le biais de ce formulaire, Mohammed Sentissi collecte vos données personnelles en vue de leur inscription dans la CVthèque JURIJOB, plateforme de sélection de profils juridiques destinée à mettre les candidats en relation avec des recruteurs identifiés au Maroc et en Afrique francophone.
+          </p>
+          <p style={{fontSize:14,color:"#4A5568",lineHeight:1.75,fontFamily:ff,fontWeight:300,margin:"0 0 14px"}}>
+            Ce traitement a fait l'objet d'une déclaration auprès de la CNDP sous le numéro <strong style={{color:NAVY}}>en cours de traitement par la CNDP</strong>. Les données personnelles collectées peuvent être transmises à tous les recruteurs potentiels au Maroc conformément à la demande de transfert déposée auprès de la CNDP.
+          </p>
+          <p style={{fontSize:14,color:"#4A5568",lineHeight:1.75,fontFamily:ff,fontWeight:300,margin:0}}>
+            Vous pouvez vous adresser à <a href="mailto:recrutement@sentissilegal.com" style={{color:GOLD,textDecoration:"none",fontWeight:500}}>recrutement@sentissilegal.com</a> pour exercer vos droits d'accès, de rectification et d'opposition conformément aux dispositions de la loi 09-08.
+          </p>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer style={{background:"#fff",padding:"24px 32px",borderTop:"1px solid #E2E8F0"}}>
+        <div style={{maxWidth:1100,margin:"0 auto",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:16}}>
+          <div style={{display:"flex",alignItems:"center",gap:14}}>
+            <Logo size="compact"/>
+            <span style={{fontSize:11,color:"#A0AEC0",fontFamily:ff}}>© 2026 — Smart Recrutement Juridique</span>
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:18}}>
+            <button onClick={onBack} style={{background:"none",border:"none",color:"#4A5568",fontSize:12,cursor:"pointer",fontFamily:ff}}>Accueil</button>
+            <span style={{fontSize:12,color:"#4A5568",fontFamily:ff}}>recrutement@sentissilegal.com</span>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════
    FAQ — Accordéon, style clair institutionnel
 ═══════════════════════════════════════ */
-function PageFAQ({onBack}){
+function PageFAQ({onBack,onNavigate}){
   useEffect(()=>{
     if(!document.getElementById('gfont-jurijob-landing')){
       const l=document.createElement('link'); l.id='gfont-jurijob-landing'; l.rel='stylesheet';
@@ -1449,6 +1519,7 @@ function PageFAQ({onBack}){
           </div>
           <div style={{display:"flex",alignItems:"center",gap:18}}>
             <button onClick={onBack} style={{background:"none",border:"none",color:"#4A5568",fontSize:12,cursor:"pointer",fontFamily:ff}}>Accueil</button>
+            <button onClick={()=>onNavigate&&onNavigate("legal")} style={{background:"none",border:"none",color:"#4A5568",fontSize:12,cursor:"pointer",fontFamily:ff}}>Mentions légales</button>
             <span style={{fontSize:12,color:"#4A5568",fontFamily:ff}}>recrutement@sentissilegal.com</span>
           </div>
         </div>
@@ -1511,7 +1582,8 @@ export default function App(){
   }
 
   // Pas de session : écrans de connexion selon le choix
-  if(view==="faq") return <PageFAQ onBack={()=>setView("landing")}/>;
+  if(view==="faq") return <PageFAQ onBack={()=>setView("landing")} onNavigate={(v)=>setView(v)}/>;
+  if(view==="legal") return <PageMentionsLegales onBack={()=>setView("landing")}/>;
   if(view==="candidat-auth") return <AuthCandidat onBack={()=>setView("landing")} onGoogle={loginGoogle}/>;
   if(view==="recruteur-auth") return <AuthRecruteur onBack={()=>setView("landing")}/>;
 

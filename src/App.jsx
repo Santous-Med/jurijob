@@ -590,8 +590,8 @@ salaire_actuel: f.salaireActuel,
   const updLg=(id,k,v)=>upd("langues",f.langues.map(x=>x.id===id?{...x,[k]:v}:x));
   const delLg=id=>upd("langues",f.langues.filter(x=>x.id!==id));
   const ok=()=>{
-    if(formMode==='edit') return step===0 ? (f.prenom.trim()&&f.nom.trim()) : true;
-    if(step===0)return f.prenom.trim()&&f.nom.trim()&&f.email.trim();
+    if(formMode==='edit') return step===0 ? (f.prenom.trim()&&f.nom.trim()&&f.ville.trim()&&f.pays.trim()) : true;
+    if(step===0)return f.prenom.trim()&&f.nom.trim()&&f.email.trim()&&f.ville.trim()&&f.pays.trim();
     if(step===1)return f.formations.length>0&&f.formations.some(x=>x.diplome.trim());
     if(step===2)return true;
     if(step===3)return f.specs.length>0;
@@ -610,12 +610,12 @@ salaire_actuel: f.salaireActuel,
         <div><Lbl t="E-mail (compte Google)" r/><input value={f.email} readOnly style={{...iSt,background:"#F0F4F8",color:"#718096",cursor:"not-allowed"}}/></div>
         <div><Lbl t="Téléphone"/><Inp val={f.tel} onChange={v=>upd("tel",v)} ph="+212 6XX XXX XXX" filter={v=>v.replace(/[^0-9+\s()-]/g,'')}/></div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-          <div><Lbl t="Pays"/>
+          <div><Lbl t="Pays" r/>
             <select value={f.pays} onChange={e=>setF(x=>({...x,pays:e.target.value,ville:""}))} style={{...iSt,cursor:"pointer"}}>
               {PAYS.map(p=><option key={p} value={p}>{p}</option>)}
             </select>
           </div>
-          <div><Lbl t="Ville"/>
+          <div><Lbl t="Ville" r/>
             {VILLES[f.pays]
               ? <SelectOuAutre key={f.pays} value={f.ville} options={VILLES[f.pays]} onChange={v=>upd("ville",v)} ph="Votre ville"/>
               : <Inp val={f.ville} onChange={v=>upd("ville",v)} ph="Votre ville"/>}

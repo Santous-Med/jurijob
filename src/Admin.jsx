@@ -222,20 +222,27 @@ const statP={
     setConfirmant(null);
   };
 
-  // Liste des candidats à relancer : validés + niveau ou diplôme manquant + pas relancés depuis 7 jours
-  const candidatsARelancer = candidats.filter(c=>{
-    if(c.statut !== 'valide') return false;
-    const niveauVide = !c.niveau || c.niveau === '';
-    const diplomeVide = !c.diplome || c.diplome === '';
-    if(!niveauVide && !diplomeVide) return false; // profil complet, on ne relance pas
-    // Vérifier anti-doublon 7 jours
-    if(c.date_derniere_relance){
-      const j7 = 7 * 24 * 60 * 60 * 1000; // 7 jours en ms
-      const ecart = Date.now() - new Date(c.date_derniere_relance).getTime();
-      if(ecart < j7) return false; // relancé il y a moins de 7 jours
-    }
-    return true;
-  });
+  // Liste des candidats à relancer : validés + (niveau, diplôme, ville ou pays) manquant + pas relancés depuis 7 jours
+  const candidatsARelancer = candidats
+    .filter(c=>c.statut==='valide')
+    .map(c=>{
+      const champsManquants=[];
+      if(!c.niveau) champsManquants.push("votre niveau d'expérience");
+      if(!c.diplome) champsManquants.push("votre diplôme le plus élevé");
+      if(!c.ville) champsManquants.push("votre ville");
+      if(!c.pays) champsManquants.push("votre pays");
+      return {...c, champsManquants};
+    })
+    .filter(c=>{
+      if(c.champsManquants.length===0) return false; // profil complet, on ne relance pas
+      // Vérifier anti-doublon 7 jours
+      if(c.date_derniere_relance){
+        const j7 = 7 * 24 * 60 * 60 * 1000; // 7 jours en ms
+        const ecart = Date.now() - new Date(c.date_derniere_relance).getTime();
+        if(ecart < j7) return false; // relancé il y a moins de 7 jours
+      }
+      return true;
+    });
 
   const relancerProfilsIncomplets = async () => {
     const nb = candidatsARelancer.length;
@@ -247,9 +254,12 @@ const statP={
     for(const c of candidatsARelancer){
       try{
         const sujet = "JURIJOB — Complétez votre profil pour maximiser vos chances";
+        const listeChamps = c.champsManquants.length>1
+          ? c.champsManquants.slice(0,-1).join(", ") + " et " + c.champsManquants[c.champsManquants.length-1]
+          : c.champsManquants[0];
         const corps = `<p style="font-size:14px;line-height:1.6;margin:0 0 12px">Bonjour,</p>
 <p style="font-size:14px;line-height:1.6;margin:0 0 12px">Merci d'avoir créé votre profil sur <strong>JURIJOB</strong>, la plateforme de sélection de profils juridiques au Maroc et en Afrique francophone.</p>
-<p style="font-size:14px;line-height:1.6;margin:0 0 12px">Nous avons constaté qu'il manque encore quelques informations à votre profil, notamment votre <strong>niveau d'expérience</strong> et/ou votre <strong>diplôme le plus élevé</strong>.</p>
+<p style="font-size:14px;line-height:1.6;margin:0 0 12px">Nous avons constaté qu'il manque encore <strong>${listeChamps}</strong> à votre profil.</p>
 <p style="font-size:14px;line-height:1.6;margin:0 0 12px">Ces informations sont essentielles pour que notre algorithme puisse vous proposer aux recruteurs qui recherchent votre profil. Sans elles, vous risquez de manquer des opportunités.</p>
 <p style="font-size:14px;line-height:1.6;margin:0 0 12px">Compléter votre profil ne prend que quelques minutes :</p>
 <p style="margin:22px 0"><a href="https://www.jurijob.ma" style="background:#C8A046;color:#0B2545;text-decoration:none;font-weight:600;font-size:14px;padding:11px 22px;border-radius:8px;display:inline-block">Compléter mon profil</a></p>
@@ -681,7 +691,7 @@ const statP={
         <div style={{background:GOLD_LIGHT,border:`1px solid ${GOLD}`,borderRadius:10,padding:"12px 16px",marginBottom:16,display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap"}}>
           <div style={{flex:1,minWidth:200}}>
             <p style={{margin:"0 0 3px",fontSize:13,fontWeight:600,color:NAVY}}>📧 Profils incomplets à relancer : {candidatsARelancer.length}</p>
-            <p style={{margin:0,fontSize:11.5,color:"#92400E"}}>Candidats validés dont le niveau ou le diplôme n'est pas renseigné (exclus : relancés dans les 7 derniers jours).</p>
+            <p style={{margin:0,fontSize:11.5,color:"#92400E"}}>Candidats validés dont le niveau, le diplôme, la ville ou le pays n'est pas renseigné (exclus : relancés dans les 7 derniers jours).</p>
           </div>
           <button onClick={relancerProfilsIncomplets} disabled={relance==="encours"} style={{padding:"9px 16px",borderRadius:7,background:relance==="encours"?"#E2E8F0":NAVY,color:relance==="encours"?"#A0AEC0":"#fff",border:"none",fontSize:12.5,cursor:relance==="encours"?"default":"pointer",fontWeight:600,whiteSpace:"nowrap"}}>
             {relance==="encours" ? "Envoi en cours…" : `Relancer les ${candidatsARelancer.length} profils`}

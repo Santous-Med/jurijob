@@ -138,6 +138,7 @@ export default function AdminDashboard(){
   const [expandedScore,setExpandedScore]=useState(null);
   const [loading,setLoading]=useState(true);
   const [paiements,setPaiements]=useState([]);
+  const [shortlists,setShortlists]=useState([]);
   const [confirmant,setConfirmant]=useState(null);
   const [relance,setRelance]=useState(null); // null | "encours" | "termine"
 
@@ -183,9 +184,11 @@ if(!auth) return(
     const {data:d} = await supabase.from('demandes').select('*').order('created_at',{ascending:false});
     const {data:c} = await supabase.from('candidats').select('*').order('created_at',{ascending:false});
     const {data:pmt} = await supabase.from('paiements').select('*').order('created_at',{ascending:false});
+    const {data:sl} = await supabase.from('shortlists').select('*');
     if(d) setDemandes(d);
     if(c) setCandidats(c);
     if(pmt) setPaiements(pmt);
+    if(sl) setShortlists(sl);
     setLoading(false);
   };
 
@@ -299,10 +302,29 @@ const statP={
   demandes.forEach(d=>{ (d.specs||[]).forEach(s=>{ if(demandeParSpec[s]!==undefined) demandeParSpec[s]++; }); });
   const specGap=ALL_SPECS
     .map(s=>({spec:s,demande:demandeParSpec[s],offre:offreParSpec[s],gap:demandeParSpec[s]-offreParSpec[s]}))
-    .filter(x=>x.demande>0||x.offre>0)
-    .sort((a,b)=>Math.abs(b.gap)-Math.abs(a.gap))
+    .filter(x=>x.demande>0)
+    .sort((a,b)=>b.demande-a.demande||a.gap-b.gap)
     .slice(0,8);
   const specGapMax=specGap.length?Math.max(1,...specGap.map(x=>Math.max(x.demande,x.offre))):1;
+
+  // ── Tunnel de conversion : demandes reçues → short-lists envoyées → payées ──
+  const demandesTotal=demandes.length;
+  const demandeIdsAvecShortlist=new Set(shortlists.map(s=>s.demande_id));
+  const nbShortlistsEnvoyees=demandeIdsAvecShortlist.size;
+  const demandeIdsPayees=new Set(paiements.filter(p=>p.statut==="confirme").map(p=>p.demande_id));
+  const nbPayees=demandeIdsPayees.size;
+  const tauxShortlist=demandesTotal>0?Math.round((nbShortlistsEnvoyees/demandesTotal)*100):0;
+  const tauxPaiement=nbShortlistsEnvoyees>0?Math.round((nbPayees/nbShortlistsEnvoyees)*100):0;
+  const tunnelMax=Math.max(demandesTotal,1);
+
+  // ── Qualité des profils : part des candidats validés avec un profil de matching complet ──
+  const profilsCompletsCount=candidats.filter(c=>c.statut==="valide"&&c.niveau&&c.diplome).length;
+  const qualitePct=statC.valide>0?Math.round((profilsCompletsCount/statC.valide)*100):0;
+
+  // ── Alertes opérationnelles ──
+  const UN_JOUR=24*60*60*1000;
+  const paiementsEnRetard=paiements.filter(p=>p.statut==="en_attente"&&(Date.now()-new Date(p.created_at).getTime())>2*UN_JOUR);
+  const demandesStagnantes=demandes.filter(d=>d.statut==="en_cours"&&(Date.now()-new Date(d.created_at).getTime())>5*UN_JOUR);
 
   const validerCandidat = async (id,s) => {
     const{error}=await supabase.from('candidats').update({statut:s}).eq('id',id);
@@ -444,9 +466,64 @@ const statP={
         <div style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:10,padding:"14px 16px"}}>
           {specGap.length===0&&<p style={{fontSize:12,color:"#A0AEC0"}}>Pas encore assez de demandes ou de profils validés pour calculer les écarts.</p>}
           {specGap.map(x=><GapBar key={x.spec} {...x} max={specGapMax}/>)}
-          {specGap.length>0&&<p style={{fontSize:10.5,color:"#A0AEC0",margin:"8px 0 0"}}>Demande = total des demandes reçues sur cette spécialisation · Offre = profils validés dans la CVthèque</p>}
+          {specGap.length>0&&<p style={{fontSize:10.5,color:"#A0AEC0",margin:"8px 0 0"}}>Spécialisations effectivement demandées, triées par fréquence · Demande = total des demandes reçues · Offre = profils validés dans la CVthèque</p>}
         </div>
       </div>
+      <div>
+        <p style={{fontSize:12,fontWeight:500,color:"#4A5568",margin:"0 0 8px"}}>📊 Tunnel de conversion</p>
+        <div style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:10,padding:"14px 16px"}}>
+          {[["Demandes reçues",demandesTotal,null],["Short-lists envoyées",nbShortlistsEnvoyees,tauxShortlist],["Payées",nbPayees,tauxPaiement]].map(([label,val,taux],i)=>(
+            <div key={label} style={{marginBottom:i<2?10:0}}>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+                <span style={{fontSize:12,color:"#4A5568"}}>{label}</span>
+                <span style={{fontSize:12,fontWeight:500,color:NAVY}}>{val}{taux!==null&&<span style={{color:"#A0AEC0",marginLeft:6}}>({taux}%)</span>}</span>
+              </div>
+              <div style={{height:10,background:"#E2E8F0",borderRadius:5,overflow:"hidden"}}>
+                <div style={{height:"100%",width:`${(val/tunnelMax)*100}%`,background:i===2?"#166534":i===1?GOLD:NAVY,borderRadius:5}}/>
+              </div>
+            </div>
+          ))}
+          <p style={{fontSize:10.5,color:"#A0AEC0",margin:"10px 0 0"}}>Les pourcentages sont calculés par rapport à l'étape précédente. Ne mesure pas si le recruteur a finalisé une embauche — cette information n'est pas suivie par JURIJOB.</p>
+        </div>
+      </div>
+      <div>
+        <p style={{fontSize:12,fontWeight:500,color:"#4A5568",margin:"0 0 8px"}}>✅ Qualité des profils</p>
+        <div style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:10,padding:"14px 16px"}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+            <span style={{fontSize:12,color:"#4A5568"}}>Profils validés avec matching complet (niveau + diplôme)</span>
+            <span style={{fontSize:12,fontWeight:500,color:NAVY}}>{profilsCompletsCount}/{statC.valide} ({qualitePct}%)</span>
+          </div>
+          <div style={{height:10,background:"#E2E8F0",borderRadius:5,overflow:"hidden"}}>
+            <div style={{height:"100%",width:`${qualitePct}%`,background:qualitePct>=70?"#166534":qualitePct>=40?GOLD:"#991B1B",borderRadius:5}}/>
+          </div>
+          <p style={{fontSize:10.5,color:"#A0AEC0",margin:"8px 0 0"}}>Un profil incomplet perd jusqu'à 35 points sur 100 dans l'algorithme de scoring (niveau + diplôme).</p>
+        </div>
+      </div>
+      {(paiementsEnRetard.length>0||demandesStagnantes.length>0||candidatsARelancer.length>0)&&(
+        <div>
+          <p style={{fontSize:12,fontWeight:500,color:"#4A5568",margin:"0 0 8px"}}>🔔 Alertes</p>
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {paiementsEnRetard.length>0&&(
+              <div onClick={()=>setTab("paiements")} style={{background:"#FEF2F2",borderRadius:10,padding:"10px 14px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <span style={{fontSize:12.5,color:"#991B1B"}}>💳 {paiementsEnRetard.length} paiement{paiementsEnRetard.length>1?"s":""} en attente depuis plus de 48h</span>
+                <span style={{fontSize:11,color:"#991B1B"}}>Voir →</span>
+              </div>
+            )}
+            {demandesStagnantes.length>0&&(
+              <div onClick={()=>setTab("demandes")} style={{background:GOLD_LIGHT,borderRadius:10,padding:"10px 14px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <span style={{fontSize:12.5,color:"#92400E"}}>📋 {demandesStagnantes.length} demande{demandesStagnantes.length>1?"s":""} en cours depuis plus de 5 jours sans short-list</span>
+                <span style={{fontSize:11,color:"#92400E"}}>Voir →</span>
+              </div>
+            )}
+            {candidatsARelancer.length>0&&(
+              <div onClick={()=>setTab("cvtheque")} style={{background:"#EFF6FF",borderRadius:10,padding:"10px 14px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <span style={{fontSize:12.5,color:"#1D4ED8"}}>📧 {candidatsARelancer.length} profil{candidatsARelancer.length>1?"s":""} incomplet{candidatsARelancer.length>1?"s":""} à relancer</span>
+                <span style={{fontSize:11,color:"#1D4ED8"}}>Voir →</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       {demandes.filter(d=>d.statut==="en_cours"&&d.urgence!=="normal").length>0&&(
         <div style={{background:"#FFF7ED",border:"1px solid #FCD34D",borderRadius:12,padding:"14px 18px"}}>
           <p style={{margin:"0 0 10px",fontSize:13,fontWeight:500,color:"#92400E"}}>⚡ Demandes urgentes à traiter</p>

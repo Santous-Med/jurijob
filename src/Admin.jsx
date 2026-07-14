@@ -88,6 +88,43 @@ const ScoreBar=({label,score,max,note})=>(
   </div>
 );
 
+// Barre horizontale simple — répartition géographique
+const GeoBar=({label,value,max})=>(
+  <div style={{marginBottom:8}}>
+    <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+      <span style={{fontSize:12,color:"#4A5568"}}>{label}</span>
+      <span style={{fontSize:12,fontWeight:500,color:NAVY}}>{value}</span>
+    </div>
+    <div style={{height:8,background:"#E2E8F0",borderRadius:4,overflow:"hidden"}}>
+      <div style={{height:"100%",width:`${max>0?(value/max)*100:0}%`,background:NAVY,borderRadius:4}}/>
+    </div>
+  </div>
+);
+
+// Double barre demande/offre + badge pénurie/excédent — écart par spécialisation
+const GapBar=({spec,demande,offre,gap,max})=>{
+  const penurie=gap>0, excedent=gap<0;
+  const color=penurie?"#991B1B":excedent?"#166534":"#64748B";
+  const bg=penurie?"#FEF2F2":excedent?"#F0FDF4":"#F1F5F9";
+  const label=penurie?`Pénurie de ${gap}`:excedent?`Excédent de ${-gap}`:"Équilibré";
+  return(
+    <div style={{marginBottom:12}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+        <span style={{fontSize:12,color:"#4A5568"}}>{spec}</span>
+        <Badge bg={bg} color={color} label={label}/>
+      </div>
+      <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:2}}>
+        <span style={{fontSize:10,color:"#A0AEC0",width:56,flexShrink:0}}>Demande {demande}</span>
+        <div style={{flex:1,height:6,background:"#E2E8F0",borderRadius:3,overflow:"hidden"}}><div style={{height:"100%",width:`${max>0?(demande/max)*100:0}%`,background:GOLD,borderRadius:3}}/></div>
+      </div>
+      <div style={{display:"flex",gap:6,alignItems:"center"}}>
+        <span style={{fontSize:10,color:"#A0AEC0",width:56,flexShrink:0}}>Offre {offre}</span>
+        <div style={{flex:1,height:6,background:"#E2E8F0",borderRadius:3,overflow:"hidden"}}><div style={{height:"100%",width:`${max>0?(offre/max)*100:0}%`,background:NAVY,borderRadius:3}}/></div>
+      </div>
+    </div>
+  );
+};
+
 export default function AdminDashboard(){
   const [auth,setAuth]=useState(false);
   const [mdp,setMdp]=useState("");
@@ -243,6 +280,30 @@ const statP={
     refuse:candidats.filter(c=>c.statut==="refuse").length
   };
 
+  // ── Répartition géographique (tous statuts, pour photographier l'ensemble de la CVthèque) ──
+  const geoCounts={};
+  candidats.forEach(c=>{ const p=c.pays||"Non renseigné"; geoCounts[p]=(geoCounts[p]||0)+1; });
+  const geoSorted=Object.entries(geoCounts).sort((a,b)=>b[1]-a[1]);
+  const geoTop=geoSorted.slice(0,6);
+  const geoAutres=geoSorted.slice(6).reduce((s,[,v])=>s+v,0);
+  const geoData=geoAutres>0?[...geoTop,["Autres",geoAutres]]:geoTop;
+  const geoMax=geoData.length?Math.max(...geoData.map(([,v])=>v)):1;
+
+  // ── Écart offre / demande par spécialisation ──
+  // Offre = candidats VALIDÉS uniquement (seuls profils réellement exploitables en short-list)
+  // Demande = toutes les demandes reçues (y compris terminées), signal cumulé du marché
+  const ALL_SPECS=SPECS.flatMap(s=>s.items);
+  const offreParSpec={},demandeParSpec={};
+  ALL_SPECS.forEach(s=>{ offreParSpec[s]=0; demandeParSpec[s]=0; });
+  candidats.filter(c=>c.statut==="valide").forEach(c=>{ (c.specs||[]).forEach(s=>{ if(offreParSpec[s]!==undefined) offreParSpec[s]++; }); });
+  demandes.forEach(d=>{ (d.specs||[]).forEach(s=>{ if(demandeParSpec[s]!==undefined) demandeParSpec[s]++; }); });
+  const specGap=ALL_SPECS
+    .map(s=>({spec:s,demande:demandeParSpec[s],offre:offreParSpec[s],gap:demandeParSpec[s]-offreParSpec[s]}))
+    .filter(x=>x.demande>0||x.offre>0)
+    .sort((a,b)=>Math.abs(b.gap)-Math.abs(a.gap))
+    .slice(0,8);
+  const specGapMax=specGap.length?Math.max(1,...specGap.map(x=>Math.max(x.demande,x.offre))):1;
+
   const validerCandidat = async (id,s) => {
     const{error}=await supabase.from('candidats').update({statut:s}).eq('id',id);
     if(!error){
@@ -369,6 +430,21 @@ const statP={
           <div style={{background:"#F0FDF4",borderRadius:10,padding:"14px 16px"}}><p style={{margin:"0 0 4px",fontSize:11,color:"#166534",opacity:.8}}>Encaissé (MAD)</p><p style={{margin:0,fontSize:22,fontWeight:500,color:"#166534"}}>{statP.total.toLocaleString("fr-FR")}</p></div>
           <div style={{background:"#F0FDF4",borderRadius:10,padding:"14px 16px"}}><p style={{margin:"0 0 4px",fontSize:11,color:"#166534",opacity:.8}}>Confirmés</p><p style={{margin:0,fontSize:26,fontWeight:500,color:"#166534"}}>{statP.confirme}</p></div>
           <div onClick={()=>setTab("paiements")} style={{background:GOLD_LIGHT,borderRadius:10,padding:"14px 16px",cursor:"pointer"}}><p style={{margin:"0 0 4px",fontSize:11,color:"#92400E",opacity:.8}}>En attente</p><p style={{margin:0,fontSize:26,fontWeight:500,color:"#92400E"}}>{statP.en_attente}</p></div>
+        </div>
+      </div>
+      <div>
+        <p style={{fontSize:12,fontWeight:500,color:"#4A5568",margin:"0 0 8px"}}>🌍 Répartition géographique — {candidats.length} profils</p>
+        <div style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:10,padding:"14px 16px"}}>
+          {geoData.length===0&&<p style={{fontSize:12,color:"#A0AEC0"}}>Aucun profil pour le moment.</p>}
+          {geoData.map(([pays,count])=><GeoBar key={pays} label={pays} value={count} max={geoMax}/>)}
+        </div>
+      </div>
+      <div>
+        <p style={{fontSize:12,fontWeight:500,color:"#4A5568",margin:"0 0 8px"}}>⚖️ Écart offre / demande par spécialisation</p>
+        <div style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:10,padding:"14px 16px"}}>
+          {specGap.length===0&&<p style={{fontSize:12,color:"#A0AEC0"}}>Pas encore assez de demandes ou de profils validés pour calculer les écarts.</p>}
+          {specGap.map(x=><GapBar key={x.spec} {...x} max={specGapMax}/>)}
+          {specGap.length>0&&<p style={{fontSize:10.5,color:"#A0AEC0",margin:"8px 0 0"}}>Demande = total des demandes reçues sur cette spécialisation · Offre = profils validés dans la CVthèque</p>}
         </div>
       </div>
       {demandes.filter(d=>d.statut==="en_cours"&&d.urgence!=="normal").length>0&&(

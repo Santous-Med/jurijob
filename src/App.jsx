@@ -15,16 +15,18 @@ const NAVY2 = "#1a3a6b";
 
 /* ───── DONNÉES COMMUNES ───── */
 const SPECS=[
-  {cat:"Droit des entreprises",items:["Droit des sociétés","Droit commercial","Droit des contrats","Droit fiscal","Droit social / RH","Droit bancaire & financier","Droit de la propriété intellectuelle","Droit de la concurrence","Compliance & conformité","Droit numérique & IT","Droit des assurances","Droit des procédures collectives","Droit des sûretés"]},
-  {cat:"Droit du contentieux",items:["Droit pénal des affaires","Droit pénal général","Arbitrage & MARD","Droit de l'exécution forcée","Recouvrement de créances","Droit administratif"]},
+  {cat:"Droit des entreprises",items:["Droit des sociétés","Droit commercial","Droit des contrats","Droit fiscal","Droit social / RH","Droit bancaire & financier","Droit de la propriété intellectuelle","Droit de la concurrence","Compliance & conformité","Droit numérique & IT","Droit des données personnelles","Droit des assurances","Droit des procédures collectives","Droit des sûretés","Droit boursier & marchés financiers","Finance islamique / Banque participative","Droit des télécommunications","Droit de la sécurité sociale"]},
+  {cat:"Droit du contentieux",items:["Droit pénal des affaires","Droit pénal général","Arbitrage & MARD","Droit de l'exécution forcée","Recouvrement de créances","Droit administratif","Droit public"]},
   {cat:"Droit notarial & immobilier",items:["Droit notarial","Droit immobilier","Droit de l'urbanisme","Droit de la famille","Droit des successions"]},
-  {cat:"Droit international & spécialisé",items:["Droit international des affaires","Droit OHADA","Droit du sport","Droit maritime","Droit de l'environnement","Droit de la consommation"]},
+  {cat:"Droit sectoriel",items:["Droit de l'énergie","Droit minier","Droit des transports & logistique","Droit de la santé & bioéthique","Droit rural & agricole","Droit du tourisme & de l'hôtellerie"]},
+  {cat:"Droit international & spécialisé",items:["Droit international des affaires","Droit OHADA","Droit du sport","Droit maritime","Droit de l'environnement","Droit de la consommation","Droit humanitaire","Droit du travail international & mobilité"]},
 ];
 const LGLIST=["Arabe","Français","Anglais","Espagnol","Allemand","Italien","Portugais","Amazigh","Mandarin"];
 const NIVLG=["Notions","Intermédiaire","Courant","Bilingue","Langue maternelle"];
 const FOURCH=["Moins de 5 000 MAD/mois","5 000 – 8 000 MAD/mois","8 000 – 12 000 MAD/mois","12 000 – 18 000 MAD/mois","18 000 – 25 000 MAD/mois","25 000 – 35 000 MAD/mois","Plus de 35 000 MAD/mois"];
 const CONTRATS=["CDI","CDD","Stage","Freelance / Consulting","Associé(e)","Collaborateur libéral"];
 const DISPOS=["Immédiatement","Sous 1 mois","Sous 3 mois","En veille passive"];
+const MODALITES=["Présentiel","Hybride","Télétravail"];
 const NIVEAUX_RH=[{val:"stagiaire",label:"Stagiaire",sub:"0 an"},{val:"junior",label:"Junior",sub:"1 – 3 ans"},{val:"confirme",label:"Confirmé",sub:"3 – 7 ans"},{val:"senior",label:"Senior",sub:"7 – 12 ans"},{val:"directeur",label:"Directeur juridique",sub:"12 ans +"}];
 const DIPLOMES_RH=[{val:"licence",label:"Licence en droit"},{val:"master1",label:"Master I"},{val:"master2",label:"Master II / DESA"},{val:"doctorat",label:"Doctorat"},{val:"barreau",label:"Diplôme du Barreau"},{val:"notariat",label:"Notariat"},{val:"indifferent",label:"Indifférent"}];
 const LANGUES_RH=["Arabe","Français","Anglais","Espagnol","Allemand","Italien","Mandarin"];
@@ -53,7 +55,7 @@ const VILLES={
   "Mauritanie":["Nouakchott"],
   "Madagascar":["Antananarivo"],
 };
-const TITRES=["Étudiant(e) en droit","Stagiaire juridique","Juriste junior","Juriste","Juriste d'entreprise","Juriste d'affaires","Juriste contentieux","Juriste senior","Avocat(e)","Avocat(e) stagiaire","Élève-avocat(e)","Notaire","Notaire stagiaire","Clerc de notaire","Assistant(e) juridique / Paralegal","Compliance Officer / Conformité","Fiscaliste","Responsable juridique","Directeur(trice) juridique","Magistrat(e)","Huissier de justice","Enseignant(e)-chercheur(se) en droit"];
+const TITRES=["Étudiant(e) en droit","Stagiaire juridique","Juriste junior","Juriste","Juriste d'entreprise","Juriste d'affaires","Juriste contentieux","Juriste senior","Juriste contrats / Contract Manager","Juriste corporate","Juriste droit social / RH","Juriste bancaire","Juriste assurance","Juriste immobilier","Juriste propriété intellectuelle","Juriste compliance","Juriste & Gestionnaire de sinistres","Juriste transport & logistique","Juriste recouvrement","Juriste données personnelles / DPO","Avocat(e)","Avocat(e) stagiaire","Élève-avocat(e)","Notaire","Notaire stagiaire","Clerc de notaire","Assistant(e) juridique / Paralegal","Compliance Officer / Conformité","Risk & Compliance Manager","Fiscaliste","Responsable juridique","Directeur(trice) juridique","Secrétaire général(e)","Consultant(e) juridique","Arbitre / Médiateur(trice)","Magistrat(e)","Huissier de justice","Enseignant(e)-chercheur(se) en droit"];
 const DIPLOMES_CAND=[
   {val:"bac",label:"Baccalauréat"},
   {val:"deug",label:"DEUG / Bac+2"},
@@ -499,7 +501,7 @@ function EspaceCandidat({session,onLogout}){
   const [deleted,setDeleted]=useState(false);
   const [savedMsg,setSavedMsg]=useState("");
   const [saving,setSaving]=useState(false);
-  const [f,setF]=useState({prenom:initPrenom,nom:initNom,email:authEmail,tel:"",ville:"",titre:"",pays:"Maroc",niveau:"",diplome:"",formations:[],experiences:[],specs:[],langues:[{id:1,langue:"Français",niveau:"Courant"}],contrats:[],dispo:"",salaire:"",salaireNote:"",salaireActuel:""});
+  const [f,setF]=useState({prenom:initPrenom,nom:initNom,email:authEmail,tel:"",ville:"",titre:"",pays:"Maroc",niveau:"",diplome:"",formations:[],experiences:[],specs:[],langues:[{id:1,langue:"Français",niveau:"Courant"}],contrats:[],modalites:[],dispo:"",salaire:"",salaireNote:"",salaireActuel:""});
 
   // Vérifie si un profil existe déjà pour cet e-mail Google
   useEffect(()=>{
@@ -525,7 +527,7 @@ function EspaceCandidat({session,onLogout}){
       pays: f.pays, niveau: f.niveau, diplome: f.diplome,
       formations: f.formations, experiences: f.experiences,
       specs: f.specs, langues: f.langues,
-      contrats: f.contrats, disponibilite: f.dispo,
+      contrats: f.contrats, modalites: f.modalites, disponibilite: f.dispo,
       salaire: f.salaire, salaire_note: f.salaireNote,
 salaire_actuel: f.salaireActuel,
       statut: 'en_attente'
@@ -546,6 +548,7 @@ salaire_actuel: f.salaireActuel,
       specs:e.specs||[],
       langues:(e.langues&&e.langues.length>0?e.langues:[{langue:"Français",niveau:"Courant"}]).map((x,i)=>({id:x.id||i+1,langue:x.langue||"",niveau:x.niveau||"Courant"})),
       contrats:e.contrats||[],
+      modalites:e.modalites||[],
       dispo:e.disponibilite||"", salaire:e.salaire||"", salaireNote:e.salaire_note||"", salaireActuel:e.salaire_actuel||""
     });
     setStep(0); setSavedMsg(""); setFormMode('edit');
@@ -559,7 +562,7 @@ salaire_actuel: f.salaireActuel,
       pays:f.pays, niveau:f.niveau, diplome:f.diplome,
       formations:f.formations.map(({editing,...r})=>r),
       experiences:f.experiences.map(({editing,...r})=>r),
-      specs:f.specs, langues:f.langues, contrats:f.contrats,
+      specs:f.specs, langues:f.langues, contrats:f.contrats, modalites:f.modalites,
       disponibilite:f.dispo, salaire:f.salaire, salaire_note:f.salaireNote, salaire_actuel:f.salaireActuel
     };
     const { error } = await supabase.from('candidats').update(payload).eq('email',authEmail);
@@ -580,6 +583,7 @@ salaire_actuel: f.salaireActuel,
   const upd=(k,v)=>setF(x=>({...x,[k]:v}));
   const togSpec=s=>upd("specs",f.specs.includes(s)?f.specs.filter(x=>x!==s):[...f.specs,s]);
   const togCtx=c=>upd("contrats",f.contrats.includes(c)?f.contrats.filter(x=>x!==c):[...f.contrats,c]);
+  const togMod=m=>upd("modalites",f.modalites.includes(m)?f.modalites.filter(x=>x!==m):[...f.modalites,m]);
   const addFo=()=>upd("formations",[...f.formations,{id:nid(),type:"Diplôme",diplome:"",etab:"",annee:"",spec:"",editing:true}]);
   const updFo=(id,k,v)=>upd("formations",f.formations.map(x=>x.id===id?{...x,[k]:v}:x));
   const delFo=id=>upd("formations",f.formations.filter(x=>x.id!==id));
@@ -596,7 +600,7 @@ salaire_actuel: f.salaireActuel,
     if(step===2)return true;
     if(step===3)return f.specs.length>0;
     if(step===4)return f.langues.length>0&&f.langues.every(l=>l.langue);
-    if(step===5)return f.salaire&&f.contrats.length>0&&f.dispo;
+    if(step===5)return f.salaire&&f.contrats.length>0&&f.modalites.length>0&&f.dispo;
     return true;
   };
   const renderStep=()=>{
@@ -606,7 +610,11 @@ salaire_actuel: f.salaireActuel,
           <div><Lbl t="Prénom" r/><Inp val={f.prenom} onChange={v=>upd("prenom",v)} ph="Votre prénom"/></div>
           <div><Lbl t="Nom" r/><Inp val={f.nom} onChange={v=>upd("nom",v)} ph="Votre nom"/></div>
         </div>
-        <div><Lbl t="Titre professionnel"/><SelectOuAutre value={f.titre} options={TITRES} onChange={v=>upd("titre",v)} ph="Précisez votre titre"/></div>
+        <div><Lbl t="Titre professionnel"/>
+          <datalist id="titres-list">{TITRES.map(t=><option key={t} value={t}/>)}</datalist>
+          <input value={f.titre} onChange={e=>upd("titre",e.target.value)} placeholder="Ex. : Juriste d'affaires, Juriste & Gestionnaire de sinistres…" list="titres-list" style={iSt}/>
+          <p style={{fontSize:11,color:"#A0AEC0",margin:"5px 0 0"}}>Saisie libre — des suggestions apparaissent pendant la saisie.</p>
+        </div>
         <div><Lbl t="E-mail (compte Google)" r/><input value={f.email} readOnly style={{...iSt,background:"#F0F4F8",color:"#718096",cursor:"not-allowed"}}/></div>
         <div><Lbl t="Téléphone"/><Inp val={f.tel} onChange={v=>upd("tel",v)} ph="+212 6XX XXX XXX" filter={v=>v.replace(/[^0-9+\s()-]/g,'')}/></div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
@@ -737,6 +745,7 @@ salaire_actuel: f.salaireActuel,
     if(step===5)return(
       <div style={{display:"flex",flexDirection:"column",gap:20}}>
         <div><Lbl t="Type(s) de contrat recherché(s)" r/><div style={{display:"flex",flexWrap:"wrap",gap:8}}>{CONTRATS.map(c=><Pill key={c} active={f.contrats.includes(c)} onClick={()=>togCtx(c)}>{c}</Pill>)}</div></div>
+        <div><Lbl t="Modalité(s) de travail acceptée(s)" r/><div style={{display:"flex",flexWrap:"wrap",gap:8}}>{MODALITES.map(m=><Pill key={m} active={f.modalites.includes(m)} onClick={()=>togMod(m)}>{m}</Pill>)}</div></div>
         <div><Lbl t="Disponibilité" r/><div style={{display:"flex",flexWrap:"wrap",gap:8}}>{DISPOS.map(d=><Pill key={d} active={f.dispo===d} onClick={()=>upd("dispo",d)}>{d}</Pill>)}</div></div>
         <div>
           <Lbl t="Salaire actuel (optionnel)"/><div style={{display:"flex",flexDirection:"column",gap:7,marginBottom:16}}>{FOURCH.map(fo=>(<button key={fo} onClick={()=>upd("salaireActuel",fo)} style={{padding:"8px 14px",borderRadius:8,fontSize:13,cursor:"pointer",textAlign:"left",background:f.salaireActuel===fo?NAVY:"transparent",color:f.salaireActuel===fo?"#fff":NAVY,border:`1.5px solid ${f.salaireActuel===fo?NAVY:"#CBD5E0"}`,fontWeight:f.salaireActuel===fo?500:400}}>{fo}</button>))}</div><Lbl t="Prétentions salariales — Net mensuel" r/>
@@ -766,7 +775,7 @@ salaire_actuel: f.salaireActuel,
             {f.experiences.length>0&&<div><SecTitle t="Expériences professionnelles"/>{f.experiences.map(e=><div key={e.id} style={{marginBottom:10}}><p style={{margin:0,fontSize:13,fontWeight:500,color:NAVY}}>{e.poste}{e.org?` — ${e.org}`:""}</p><p style={{margin:"2px 0 3px",fontSize:12,color:"#718096"}}>{e.debut}{e.encours?" – En cours":e.fin?` – ${e.fin}`:""}{(()=>{const dur=calcDuree(e.debut,e.fin,e.encours);return dur?` · ${dur}`:""})()}</p>{e.missions&&<p style={{margin:0,fontSize:12,color:"#4A5568",lineHeight:1.5}}>{e.missions}</p>}</div>)}</div>}
             {f.specs.length>0&&<div><SecTitle t="Spécialisations"/><div style={{display:"flex",flexWrap:"wrap",gap:6}}>{f.specs.map(s=><span key={s} style={{background:CREAM,color:NAVY,fontSize:12,padding:"4px 10px",borderRadius:20,border:"1px solid #E2E8F0"}}>{s}</span>)}</div></div>}
             {f.langues.filter(l=>l.langue).length>0&&<div><SecTitle t="Langues"/><div style={{display:"flex",flexWrap:"wrap",gap:12}}>{f.langues.filter(l=>l.langue).map(l=><span key={l.id} style={{fontSize:13,color:NAVY}}><strong>{l.langue}</strong> <span style={{color:"#718096",fontSize:12}}>— {l.niveau}</span></span>)}</div></div>}
-            <div><SecTitle t="Préférences"/><div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:9}}>{[["Contrat(s)",f.contrats.join(", ")],["Disponibilité",f.dispo],["Salaire actuel",f.salaireActuel||"—"],["Prétentions",f.salaire]].map(([k,v])=>v?<div key={k} style={{background:CREAM,borderRadius:8,padding:"10px 12px"}}><p style={{margin:"0 0 3px",fontSize:11,color:"#A0AEC0"}}>{k}</p><p style={{margin:0,fontSize:12,fontWeight:500,color:NAVY}}>{v}</p></div>:null)}</div></div>
+            <div><SecTitle t="Préférences"/><div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:9}}>{[["Contrat(s)",f.contrats.join(", ")],["Modalité(s)",f.modalites.join(", ")],["Disponibilité",f.dispo],["Salaire actuel",f.salaireActuel||"—"],["Prétentions",f.salaire]].map(([k,v])=>v?<div key={k} style={{background:CREAM,borderRadius:8,padding:"10px 12px"}}><p style={{margin:"0 0 3px",fontSize:11,color:"#A0AEC0"}}>{k}</p><p style={{margin:0,fontSize:12,fontWeight:500,color:NAVY}}>{v}</p></div>:null)}</div></div>
             <div style={{background:GOLD_LIGHT,borderRadius:8,padding:"12px 16px",display:"flex",alignItems:"center",gap:10}}>
               <span style={{fontSize:20}}>⏳</span>
               <div><p style={{margin:0,fontSize:13,fontWeight:500,color:NAVY}}>Profil en attente de validation</p><p style={{margin:"2px 0 0",fontSize:12,color:"#718096"}}>L'équipe JURIJOB vérifiera et activera votre profil sous 24h.</p></div>
@@ -793,7 +802,7 @@ salaire_actuel: f.salaireActuel,
           <h2 style={{color:NAVY,fontSize:20,fontWeight:500,margin:"0 0 8px"}}>Profil supprimé</h2>
           <p style={{color:"#718096",fontSize:14,margin:"0 0 22px",lineHeight:1.6}}>Votre profil a été définitivement supprimé de la CVthèque JURIJOB. Vous pouvez en créer un nouveau quand vous le souhaitez.</p>
           <div style={{display:"flex",flexDirection:"column",gap:10}}>
-            <button onClick={()=>{setDeleted(false);setF({prenom:initPrenom,nom:initNom,email:authEmail,tel:"",ville:"",titre:"",pays:"Maroc",niveau:"",diplome:"",formations:[],experiences:[],specs:[],langues:[{id:1,langue:"Français",niveau:"Courant"}],contrats:[],dispo:"",salaire:"",salaireNote:"",salaireActuel:""});setStep(0);setFormMode(null);}} style={{padding:"11px",borderRadius:8,fontSize:14,cursor:"pointer",background:NAVY,color:"#fff",border:"none",fontWeight:500}}>Créer un nouveau profil</button>
+            <button onClick={()=>{setDeleted(false);setF({prenom:initPrenom,nom:initNom,email:authEmail,tel:"",ville:"",titre:"",pays:"Maroc",niveau:"",diplome:"",formations:[],experiences:[],specs:[],langues:[{id:1,langue:"Français",niveau:"Courant"}],contrats:[],modalites:[],dispo:"",salaire:"",salaireNote:"",salaireActuel:""});setStep(0);setFormMode(null);}} style={{padding:"11px",borderRadius:8,fontSize:14,cursor:"pointer",background:NAVY,color:"#fff",border:"none",fontWeight:500}}>Créer un nouveau profil</button>
             <button onClick={onLogout} style={{padding:"10px",borderRadius:8,fontSize:13,cursor:"pointer",background:"transparent",color:NAVY,border:"1.5px solid #CBD5E0"}}>Se déconnecter</button>
           </div>
         </div>
@@ -824,6 +833,7 @@ salaire_actuel: f.salaireActuel,
             <span style={{fontSize:12.5,color:NAVY,fontWeight:500,background:GOLD_LIGHT,padding:"4px 12px",borderRadius:20}}>Statut : {existing.statut==='valide'?'Validé ✔':existing.statut==='refuse'?'Non retenu':'En attente de validation ⏳'}</span>
             {existing.niveau&&<span style={{fontSize:12.5,color:"#4A5568",background:CREAM,padding:"4px 12px",borderRadius:20,border:"1px solid #E2E8F0"}}>{NIVEAUX_RH.find(n=>n.val===existing.niveau)?.label||existing.niveau}</span>}
             {existing.diplome&&<span style={{fontSize:12.5,color:"#4A5568",background:CREAM,padding:"4px 12px",borderRadius:20,border:"1px solid #E2E8F0"}}>{DIPLOMES_CAND.find(d=>d.val===existing.diplome)?.label||existing.diplome}</span>}
+            {(existing.modalites||[]).length>0&&<span style={{fontSize:12.5,color:"#4A5568",background:CREAM,padding:"4px 12px",borderRadius:20,border:"1px solid #E2E8F0"}}>🏢 {(existing.modalites||[]).join(" / ")}</span>}
           </div>
           <div style={{padding:"18px 24px",display:"flex",flexDirection:"column",gap:16}}>
             {(existing.formations||[]).length>0&&<div><SecTitle t="Formation & certifications"/>{(existing.formations||[]).map((fo,i)=><div key={i} style={{marginBottom:8}}><p style={{margin:0,fontSize:13,fontWeight:500,color:NAVY}}>{fo.diplome}</p><p style={{margin:"2px 0 0",fontSize:12,color:"#718096"}}>{fo.etab}{fo.annee?` · ${fo.annee}`:""}{fo.spec?` · ${fo.spec}`:""}</p></div>)}</div>}
@@ -892,7 +902,7 @@ const STAT_R={en_cours:{bg:"#EFF6FF",color:"#1D4ED8",label:"En cours d'analyse"}
 
 function EspaceRecruteur({session,onLogout}){
   const rmeta=session?.user?.user_metadata||{};
-  const initialF={entreprise:rmeta.entreprise||"",contact:rmeta.contact||"",poste:"",genre:"",langues:[],niveau:"",diplome:"",specs:[],nbCv:3,urgence:"normal",notes:"",budget:"",budgetConfidentiel:false};
+  const initialF={entreprise:rmeta.entreprise||"",contact:rmeta.contact||"",poste:"",genre:"",langues:[],niveau:"",diplome:"",specs:[],nbCv:3,urgence:"normal",modalite:"Indifférent",notes:"",budget:"",budgetConfidentiel:false};
   const [vue,setVue]=useState("dashboard"); // "dashboard" | "form" | "shortlist"
   const [mesDemandes,setMesDemandes]=useState([]);
   const [mesShortlists,setMesShortlists]=useState([]);
@@ -989,6 +999,7 @@ function EspaceRecruteur({session,onLogout}){
       langues: f.langues,
       nb_cv: f.nbCv,
       urgence: f.urgence,
+      modalite: f.modalite,
       notes: f.notes,
 budget: f.budgetConfidentiel ? "Confidentiel" : f.budget,
       recruteur_email: session?.user?.email,
@@ -1019,6 +1030,10 @@ budget: f.budgetConfidentiel ? "Confidentiel" : f.budget,
         <div>
           <Lbl t="Degré d'urgence"/>
           <div style={{display:"flex",gap:10}}>{[["normal","Normal (2–4 sem.)"],["urgent","Urgent (< 1 sem.)"],["immediat","Immédiat"]].map(([v,l])=><button key={v} onClick={()=>set("urgence",v)} style={{flex:1,padding:"8px 6px",borderRadius:8,fontSize:12,cursor:"pointer",background:f.urgence===v?NAVY:"transparent",color:f.urgence===v?"#fff":NAVY,border:`1.5px solid ${f.urgence===v?NAVY:"#CBD5E0"}`,fontWeight:f.urgence===v?500:400}}>{l}</button>)}</div>
+        </div>
+        <div>
+          <Lbl t="Modalité de travail proposée"/>
+          <div style={{display:"flex",gap:10}}>{[...MODALITES,"Indifférent"].map(m=><button key={m} onClick={()=>set("modalite",m)} style={{flex:1,padding:"8px 6px",borderRadius:8,fontSize:12,cursor:"pointer",background:f.modalite===m?NAVY:"transparent",color:f.modalite===m?"#fff":NAVY,border:`1.5px solid ${f.modalite===m?NAVY:"#CBD5E0"}`,fontWeight:f.modalite===m?500:400}}>{m}</button>)}</div>
         </div>
       </div>
     );
@@ -1063,7 +1078,7 @@ budget: f.budgetConfidentiel ? "Confidentiel" : f.budget,
     );
     if(step===4)return(
       <div style={{display:"flex",flexDirection:"column",gap:10}}>
-        {[["Entreprise",f.entreprise],["Contact RH",f.contact||"—"],["Poste",f.poste],["CV demandés",f.nbCv],["Urgence",f.urgence==="normal"?"Normal":f.urgence==="urgent"?"Urgent":"Immédiat"],["Genre",f.genre==="H"?"Homme":f.genre==="F"?"Femme":"Indifférent"],["Langues",f.langues.join(", ")],["Niveau",NIVEAUX_RH.find(n=>n.val===f.niveau)?.label],["Diplôme",DIPLOMES_RH.find(d=>d.val===f.diplome)?.label],["Spécialisations",f.specs.join(" · ")],["Budget",f.budgetConfidentiel?"Confidentiel":f.budget||"—"],["Notes",f.notes||"—"]].map(([k,v])=>(
+        {[["Entreprise",f.entreprise],["Contact RH",f.contact||"—"],["Poste",f.poste],["CV demandés",f.nbCv],["Urgence",f.urgence==="normal"?"Normal":f.urgence==="urgent"?"Urgent":"Immédiat"],["Modalité",f.modalite],["Genre",f.genre==="H"?"Homme":f.genre==="F"?"Femme":"Indifférent"],["Langues",f.langues.join(", ")],["Niveau",NIVEAUX_RH.find(n=>n.val===f.niveau)?.label],["Diplôme",DIPLOMES_RH.find(d=>d.val===f.diplome)?.label],["Spécialisations",f.specs.join(" · ")],["Budget",f.budgetConfidentiel?"Confidentiel":f.budget||"—"],["Notes",f.notes||"—"]].map(([k,v])=>(
           <div key={k} style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"9px 13px",background:CREAM,borderRadius:8,gap:12}}>
             <span style={{fontSize:13,color:"#718096",flexShrink:0}}>{k}</span>
             <span style={{fontSize:13,color:NAVY,fontWeight:500,textAlign:"right"}}>{v}</span>
@@ -1121,7 +1136,7 @@ budget: f.budgetConfidentiel ? "Confidentiel" : f.budget,
                 <div style={{flex:1,minWidth:0}}>
                   <p style={{margin:"0 0 2px",fontSize:14,fontWeight:500,color:NAVY}}>{d.poste}</p>
                   <p style={{margin:0,fontSize:12,color:"#718096"}}>{d.entreprise}{d.created_at?` · ${new Date(d.created_at).toLocaleDateString("fr-FR")}`:""}</p>
-                  <p style={{margin:"4px 0 0",fontSize:12,color:"#718096"}}>📁 {d.nb_cv} CV demandé{d.nb_cv>1?"s":""}{(d.langues&&d.langues.length)?` · 🌍 ${d.langues.join(", ")}`:""}</p>
+                  <p style={{margin:"4px 0 0",fontSize:12,color:"#718096"}}>📁 {d.nb_cv} CV demandé{d.nb_cv>1?"s":""}{(d.langues&&d.langues.length)?` · 🌍 ${d.langues.join(", ")}`:""}{d.modalite&&d.modalite!=="Indifférent"?` · 🏢 ${d.modalite}`:""}</p>
                 </div>
                 <div style={{textAlign:"right",flexShrink:0}}>
                   <span style={{background:st.bg,color:st.color,fontSize:11,fontWeight:500,padding:"4px 10px",borderRadius:20,whiteSpace:"nowrap",display:"inline-block"}}>{st.label}</span>
@@ -1173,6 +1188,7 @@ budget: f.budgetConfidentiel ? "Confidentiel" : f.budget,
               {(c.experiences||[]).length>0&&<div style={{marginBottom:8}}><p style={{margin:"0 0 4px",fontSize:11,fontWeight:500,color:"#4A5568"}}>💼 Expérience</p>{(c.experiences||[]).map((e,i)=><p key={i} style={{margin:"0 0 2px",fontSize:12,color:"#718096"}}>{e.poste}{e.org?` — ${e.org}`:""}{e.debut?` (${e.debut}${e.encours?" – en cours":e.fin?` – ${e.fin}`:""})`:""}{(()=>{const dur=calcDuree(e.debut,e.fin,e.encours);return dur?` · ${dur}`:""})()}</p>)}</div>}
               {(c.specs||[]).length>0&&<div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:6}}>{(c.specs||[]).map(s=><span key={s} style={{background:CREAM,color:NAVY,fontSize:11,padding:"2px 8px",borderRadius:20}}>{s}</span>)}</div>}
               {(c.langues||[]).filter(l=>l&&l.langue).length>0&&<p style={{margin:0,fontSize:12,color:"#718096"}}>🌍 {(c.langues||[]).map(l=>typeof l==="string"?l:`${l.langue} (${l.niveau})`).join(", ")}</p>}
+              {(c.modalites||[]).length>0&&<p style={{margin:"4px 0 0",fontSize:12,color:"#718096"}}>🏢 {(c.modalites||[]).join(" / ")}</p>}
             </div>
           ))}
         </div>

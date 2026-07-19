@@ -14,6 +14,33 @@ const SPECS=[
   {cat:"Droit international & spécialisé",items:["Droit international des affaires","Droit OHADA","Droit du sport","Droit maritime","Droit de l'environnement","Droit de la consommation"]},
 ];
 
+// Durée d'une expérience — accepte "AAAA-MM" (input month) ou "AAAA" ; renvoie "" si dates illisibles
+function calcDuree(debut,fin,encours){
+  const parse=(v)=>{
+    if(!v) return null;
+    const s=String(v).trim();
+    let m=s.match(/^(\d{4})-(\d{1,2})/);
+    if(m) return {y:+m[1],mo:+m[2]};
+    m=s.match(/^(\d{4})$/);
+    if(m) return {y:+m[1],mo:1};
+    const d=new Date(s);
+    if(!isNaN(d.getTime())) return {y:d.getFullYear(),mo:d.getMonth()+1};
+    return null;
+  };
+  const d1=parse(debut);
+  if(!d1) return "";
+  const now=new Date();
+  const d2=encours?{y:now.getFullYear(),mo:now.getMonth()+1}:parse(fin);
+  if(!d2) return "";
+  let mois=(d2.y-d1.y)*12+(d2.mo-d1.mo);
+  if(mois<0) return "";
+  if(mois===0) mois=1;
+  const ans=Math.floor(mois/12),reste=mois%12;
+  if(ans===0) return `${reste} mois`;
+  if(reste===0) return `${ans} an${ans>1?"s":""}`;
+  return `${ans} an${ans>1?"s":""} ${reste} mois`;
+}
+
 const NIV_ORDER=["stagiaire","junior","confirme","senior","directeur"];
 const DIPL_ORDER=["bac","deug","licence","master1","master2","barreau","notariat","doctorat"];
 
@@ -668,7 +695,7 @@ const statP={
                       <ScoreRing score={c.score}/>
                     </div>
                     {(c.formations||[]).length>0&&<div style={{margin:"6px 0 0"}}><p style={{margin:"0 0 2px",fontSize:10,fontWeight:500,color:"#4A5568"}}>🎓 Formation</p>{(c.formations||[]).slice(0,2).map((fo,i)=><p key={i} style={{margin:"0 0 1px",fontSize:10,color:"#718096"}}>{fo.diplome}{fo.etab?` — ${fo.etab}`:""}{fo.annee?` (${fo.annee})`:""}</p>)}{(c.formations||[]).length>2&&<p style={{margin:0,fontSize:9,color:"#A0AEC0"}}>+ {(c.formations||[]).length-2} autre(s)</p>}</div>}
-                    {(c.experiences||[]).length>0&&<div style={{margin:"4px 0 0"}}><p style={{margin:"0 0 2px",fontSize:10,fontWeight:500,color:"#4A5568"}}>💼 Expérience</p>{(c.experiences||[]).slice(0,2).map((e,i)=><p key={i} style={{margin:"0 0 1px",fontSize:10,color:"#718096"}}>{e.poste}{e.org?` — ${e.org}`:""}{e.debut?` (${e.debut}${e.encours?" – en cours":e.fin?` – ${e.fin}`:""})`:""}</p>)}{(c.experiences||[]).length>2&&<p style={{margin:0,fontSize:9,color:"#A0AEC0"}}>+ {(c.experiences||[]).length-2} autre(s)</p>}</div>}
+                    {(c.experiences||[]).length>0&&<div style={{margin:"4px 0 0"}}><p style={{margin:"0 0 2px",fontSize:10,fontWeight:500,color:"#4A5568"}}>💼 Expérience</p>{(c.experiences||[]).slice(0,2).map((e,i)=>{const du=calcDuree(e.debut,e.fin,e.encours);return <p key={i} style={{margin:"0 0 1px",fontSize:10,color:"#718096"}}>{e.poste}{e.org?` — ${e.org}`:""}{e.debut?` (${e.debut}${e.encours?" – en cours":e.fin?` – ${e.fin}`:""}${du?` · ${du}`:""})`:""}</p>;})}{(c.experiences||[]).length>2&&<p style={{margin:0,fontSize:9,color:"#A0AEC0"}}>+ {(c.experiences||[]).length-2} autre(s)</p>}</div>}
                     <div style={{display:"flex",flexWrap:"wrap",gap:5,margin:"8px 0 6px"}}>
                       {(c.specs||[]).filter(s=>(selectedDem.specs||[]).includes(s)).map(s=><span key={s} style={{background:GOLD_LIGHT,color:NAVY,fontSize:11,padding:"2px 8px",borderRadius:20,fontWeight:500}}>✓ {s}</span>)}
                       {(c.specs||[]).filter(s=>!(selectedDem.specs||[]).includes(s)).map(s=><span key={s} style={{background:CREAM,color:"#718096",fontSize:11,padding:"2px 8px",borderRadius:20}}>{s}</span>)}
@@ -768,9 +795,10 @@ const statP={
                     <p style={{margin:"0 0 2px",fontSize:14,fontWeight:500,color:NAVY}}>{c.prenom} {c.nom}</p>
                     <p style={{margin:"0 0 6px",fontSize:12,color:"#718096"}}>{c.titre} · {c.ville}{c.pays&&c.pays!=="Maroc"?`, ${c.pays}`:""}{c.diplome?` · ${DIPLOMES_CAND_LABELS[c.diplome]||c.diplome}`:""}{c.niveau?` · ${NIVEAUX_LABELS[c.niveau]||c.niveau}`:""}</p>
                     {(c.formations||[]).length>0&&<div style={{margin:"0 0 6px"}}><p style={{margin:"0 0 3px",fontSize:11,fontWeight:500,color:"#4A5568"}}>🎓 Formation</p>{(c.formations||[]).slice(0,3).map((fo,i)=><p key={i} style={{margin:"0 0 2px",fontSize:11,color:"#718096"}}>{fo.diplome}{fo.etab?` — ${fo.etab}`:""}{fo.annee?` (${fo.annee})`:""}</p>)}{(c.formations||[]).length>3&&<p style={{margin:0,fontSize:10,color:"#A0AEC0"}}>+ {(c.formations||[]).length-3} autre(s)</p>}</div>}
-                    {(c.experiences||[]).length>0&&<div style={{margin:"0 0 6px"}}><p style={{margin:"0 0 3px",fontSize:11,fontWeight:500,color:"#4A5568"}}>💼 Expérience</p>{(c.experiences||[]).slice(0,3).map((e,i)=><p key={i} style={{margin:"0 0 2px",fontSize:11,color:"#718096"}}>{e.poste}{e.org?` — ${e.org}`:""}{e.debut?` (${e.debut}${e.encours?" – en cours":e.fin?` – ${e.fin}`:""})`:""}</p>)}{(c.experiences||[]).length>3&&<p style={{margin:0,fontSize:10,color:"#A0AEC0"}}>+ {(c.experiences||[]).length-3} autre(s)</p>}</div>}
+                    {(c.experiences||[]).length>0&&<div style={{margin:"0 0 6px"}}><p style={{margin:"0 0 3px",fontSize:11,fontWeight:500,color:"#4A5568"}}>💼 Expérience</p>{(c.experiences||[]).slice(0,3).map((e,i)=>{const du=calcDuree(e.debut,e.fin,e.encours);return <p key={i} style={{margin:"0 0 2px",fontSize:11,color:"#718096"}}>{e.poste}{e.org?` — ${e.org}`:""}{e.debut?` (${e.debut}${e.encours?" – en cours":e.fin?` – ${e.fin}`:""}${du?` · ${du}`:""})`:""}</p>;})}{(c.experiences||[]).length>3&&<p style={{margin:0,fontSize:10,color:"#A0AEC0"}}>+ {(c.experiences||[]).length-3} autre(s)</p>}</div>}
                     <div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:5}}>{(c.specs||[]).map(s=><span key={s} style={{background:CREAM,color:NAVY,fontSize:11,padding:"2px 8px",borderRadius:20}}>{s}</span>)}</div>
                     <p style={{margin:0,fontSize:12,color:"#718096"}}>🌍 {(c.langues||[]).map(l=>typeof l==="string"?l:l.langue).filter(Boolean).join(", ")} · 💰 {c.salaire} · 📅 {c.disponibilite}</p>
+                    <p style={{margin:"5px 0 0",fontSize:12,color:NAVY,fontWeight:500}}>📞 {c.tel||"non renseigné"} · ✉️ {c.email||"non renseigné"}</p>
                   </div>
                   <div style={{display:"flex",flexDirection:"column",gap:6,flexShrink:0}}>
                     {statut==="en_attente"&&<><button onClick={()=>validerCandidat(c.id,"valide")} style={{padding:"6px 12px",borderRadius:7,background:"#F0FDF4",color:"#166534",border:"1px solid #BBF7D0",fontSize:12,cursor:"pointer",fontWeight:500}}>✓ Valider</button><button onClick={()=>validerCandidat(c.id,"refuse")} style={{padding:"6px 12px",borderRadius:7,background:"#FEF2F2",color:"#991B1B",border:"1px solid #FECACA",fontSize:12,cursor:"pointer"}}>✕ Refuser</button></>}

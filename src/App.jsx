@@ -156,7 +156,7 @@ function Landing({onChoose}){
         <Logo size="header"/>
         <div style={{display:"flex",alignItems:"center",gap:24}}>
           <button onClick={()=>onChoose("faq")} style={{background:"none",border:"none",color:"#4A5568",fontSize:13,cursor:"pointer",fontFamily:ff}}>FAQ</button>
-          <button onClick={()=>onChoose("candidat")} style={{background:"none",border:"none",color:"#4A5568",fontSize:13,cursor:"pointer",fontFamily:ff}}>Espace Candidat</button>
+          <button onClick={()=>onChoose("candidat")} style={{background:"transparent",color:NAVY,border:`1.5px solid ${NAVY}`,borderRadius:6,padding:"8px 17px",fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:ff}}>Espace Candidat</button>
           <button onClick={()=>onChoose("recruteur")} style={{background:NAVY,color:"#fff",border:"none",borderRadius:6,padding:"9px 18px",fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:ff}}>Espace Recruteur</button>
         </div>
       </nav>
@@ -176,11 +176,11 @@ function Landing({onChoose}){
           <div style={{display:"flex",gap:12,flexWrap:"wrap",justifyContent:"center"}}>
             <button onClick={()=>onChoose("recruteur")} onMouseEnter={()=>setHov("cta1")} onMouseLeave={()=>setHov(null)}
               style={{background:hov==="cta1"?"#d4ad4f":GOLD,color:NAVY,fontWeight:600,fontSize:13.5,padding:"13px 28px",borderRadius:7,cursor:"pointer",border:"none",letterSpacing:.2,transition:"all .2s",transform:hov==="cta1"?"translateY(-2px)":"none",boxShadow:hov==="cta1"?"0 8px 20px rgba(200,160,70,0.3)":"none",fontFamily:ff}}>
-              Déposer une demande de recrutement
+              Je recrute un juriste → Déposer une demande
             </button>
             <button onClick={()=>onChoose("candidat")} onMouseEnter={()=>setHov("cta2")} onMouseLeave={()=>setHov(null)}
-              style={{background:"transparent",color:"#fff",fontWeight:500,fontSize:13.5,padding:"13px 28px",borderRadius:7,cursor:"pointer",border:`1.5px solid ${hov==="cta2"?"rgba(255,255,255,0.6)":"rgba(255,255,255,0.35)"}`,letterSpacing:.2,transition:"all .2s",fontFamily:ff}}>
-              Créer mon profil juriste
+              style={{background:hov==="cta2"?"#F1F5F9":"#fff",color:NAVY,fontWeight:600,fontSize:13.5,padding:"13px 28px",borderRadius:7,cursor:"pointer",border:"none",letterSpacing:.2,transition:"all .2s",transform:hov==="cta2"?"translateY(-2px)":"none",boxShadow:hov==="cta2"?"0 8px 20px rgba(255,255,255,0.25)":"none",fontFamily:ff}}>
+              Je suis juriste → Créer mon profil
             </button>
           </div>
         </div>
@@ -316,7 +316,7 @@ const frMsg = m => FR_ERR[m] || m;
 /* ═══════════════════════════════════════
    CONNEXION RECRUTEUR (e-mail / mot de passe)
 ═══════════════════════════════════════ */
-function AuthRecruteur({onBack}){
+function AuthRecruteur({onBack,onSwitch}){
   const [mode,setMode]=useState("login"); // "login" | "signup" | "reset"
   const [email,setEmail]=useState("");
   const [pwd,setPwd]=useState("");
@@ -377,6 +377,11 @@ function AuthRecruteur({onBack}){
                     {mode==="login"?"Créer un compte":"Se connecter"}
                   </button></>}
           </p>
+          <div style={{borderTop:"1px solid #F0F4F8",marginTop:16,paddingTop:14,textAlign:"center"}}>
+            <p style={{fontSize:12.5,color:"#718096",margin:0}}>Vous êtes juriste et cherchez un poste ?{" "}
+              <button onClick={onSwitch} style={{background:"none",border:"none",color:NAVY,fontWeight:600,cursor:"pointer",fontSize:12.5,textDecoration:"underline"}}>Créer mon profil candidat →</button>
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -406,7 +411,7 @@ function RoleMismatch({email,actualLabel,intendedLabel,onContinue,onLogout}){
 /* ═══════════════════════════════════════
    CONNEXION CANDIDAT (Google OU e-mail/mot de passe)
 ═══════════════════════════════════════ */
-function AuthCandidat({onBack,onGoogle}){
+function AuthCandidat({onBack,onGoogle,onSwitch}){
   const [mode,setMode]=useState("login"); // "login" | "signup"
   const [email,setEmail]=useState("");
   const [pwd,setPwd]=useState("");
@@ -477,6 +482,11 @@ function AuthCandidat({onBack,onGoogle}){
                     {mode==="login"?"Créer un compte":"Se connecter"}
                   </button></>}
           </p>
+          <div style={{borderTop:"1px solid #F0F4F8",marginTop:16,paddingTop:14,textAlign:"center"}}>
+            <p style={{fontSize:12.5,color:"#718096",margin:0}}>Vous recrutez un juriste ?{" "}
+              <button onClick={onSwitch} style={{background:"none",border:"none",color:NAVY,fontWeight:600,cursor:"pointer",fontSize:12.5,textDecoration:"underline"}}>Accéder à l'espace recruteur →</button>
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -1600,8 +1610,8 @@ export default function App(){
   // Pas de session : écrans de connexion selon le choix
   if(view==="faq") return <PageFAQ onBack={()=>setView("landing")} onNavigate={(v)=>setView(v)}/>;
   if(view==="legal") return <PageMentionsLegales onBack={()=>setView("landing")}/>;
-  if(view==="candidat-auth") return <AuthCandidat onBack={()=>setView("landing")} onGoogle={loginGoogle}/>;
-  if(view==="recruteur-auth") return <AuthRecruteur onBack={()=>setView("landing")}/>;
+  if(view==="candidat-auth") return <AuthCandidat onBack={()=>setView("landing")} onGoogle={loginGoogle} onSwitch={()=>{setIntendedRole("recruteur");setView("recruteur-auth");}}/>;
+  if(view==="recruteur-auth") return <AuthRecruteur onBack={()=>setView("landing")} onSwitch={()=>{setIntendedRole("candidat");setView("candidat-auth");}}/>;
 
   // Sinon, page d'accueil
   return <Landing onChoose={(v)=>{

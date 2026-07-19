@@ -14,31 +14,21 @@ const SPECS=[
   {cat:"Droit international & spécialisé",items:["Droit international des affaires","Droit OHADA","Droit du sport","Droit maritime","Droit de l'environnement","Droit de la consommation"]},
 ];
 
-// Durée d'une expérience — accepte "AAAA-MM" (input month) ou "AAAA" ; renvoie "" si dates illisibles
+// Durée d'une expérience — même logique que calcDuree d'App.jsx (format MM/AAAA) ; renvoie "" si dates illisibles
 function calcDuree(debut,fin,encours){
-  const parse=(v)=>{
-    if(!v) return null;
-    const s=String(v).trim();
-    let m=s.match(/^(\d{4})-(\d{1,2})/);
-    if(m) return {y:+m[1],mo:+m[2]};
-    m=s.match(/^(\d{4})$/);
-    if(m) return {y:+m[1],mo:1};
-    const d=new Date(s);
-    if(!isNaN(d.getTime())) return {y:d.getFullYear(),mo:d.getMonth()+1};
-    return null;
-  };
-  const d1=parse(debut);
-  if(!d1) return "";
-  const now=new Date();
-  const d2=encours?{y:now.getFullYear(),mo:now.getMonth()+1}:parse(fin);
-  if(!d2) return "";
-  let mois=(d2.y-d1.y)*12+(d2.mo-d1.mo);
+  if(!debut) return "";
+  const p=s=>{const a=(s||"").split("/");return a.length===2?{m:parseInt(a[0],10),y:parseInt(a[1],10)}:null;};
+  const d=p(debut); if(!d||!d.y) return "";
+  let fObj;
+  if(encours||!fin){ const n=new Date(); fObj={m:n.getMonth()+1,y:n.getFullYear()}; }
+  else { fObj=p(fin); if(!fObj||!fObj.y) return ""; }
+  let mois=(fObj.y-d.y)*12+(fObj.m-d.m);
   if(mois<0) return "";
-  if(mois===0) mois=1;
-  const ans=Math.floor(mois/12),reste=mois%12;
-  if(ans===0) return `${reste} mois`;
-  if(reste===0) return `${ans} an${ans>1?"s":""}`;
-  return `${ans} an${ans>1?"s":""} ${reste} mois`;
+  const ans=Math.floor(mois/12); mois=mois%12;
+  if(ans>0&&mois>0) return `${ans} an${ans>1?"s":""} ${mois} mois`;
+  if(ans>0) return `${ans} an${ans>1?"s":""}`;
+  if(mois>0) return `${mois} mois`;
+  return "< 1 mois";
 }
 
 const NIV_ORDER=["stagiaire","junior","confirme","senior","directeur"];

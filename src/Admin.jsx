@@ -8,10 +8,11 @@ const DIPLOMES_CAND_LABELS={bac:"Bac",deug:"DEUG",licence:"Licence",master1:"Mas
 const NIVEAUX_LABELS={stagiaire:"Stagiaire",junior:"Junior",confirme:"Confirmé",senior:"Senior",directeur:"Directeur juridique"};
 
 const SPECS=[
-  {cat:"Droit des entreprises",items:["Droit des sociétés","Droit commercial","Droit des contrats","Droit fiscal","Droit social / RH","Droit bancaire & financier","Droit de la propriété intellectuelle","Droit de la concurrence","Compliance & conformité","Droit numérique & IT","Droit des assurances","Droit des procédures collectives","Droit des sûretés"]},
-  {cat:"Droit du contentieux",items:["Droit pénal des affaires","Droit pénal général","Arbitrage & MARD","Droit de l'exécution forcée","Recouvrement de créances","Droit administratif"]},
+  {cat:"Droit des entreprises",items:["Droit des sociétés","Droit commercial","Droit des contrats","Droit fiscal","Droit social / RH","Droit bancaire & financier","Droit de la propriété intellectuelle","Droit de la concurrence","Compliance & conformité","Droit numérique & IT","Droit des données personnelles","Droit des assurances","Droit des procédures collectives","Droit des sûretés","Droit boursier & marchés financiers","Finance islamique / Banque participative","Droit des télécommunications","Droit de la sécurité sociale"]},
+  {cat:"Droit du contentieux",items:["Droit pénal des affaires","Droit pénal général","Arbitrage & MARD","Droit de l'exécution forcée","Recouvrement de créances","Droit administratif","Droit public"]},
   {cat:"Droit notarial & immobilier",items:["Droit notarial","Droit immobilier","Droit de l'urbanisme","Droit de la famille","Droit des successions"]},
-  {cat:"Droit international & spécialisé",items:["Droit international des affaires","Droit OHADA","Droit du sport","Droit maritime","Droit de l'environnement","Droit de la consommation"]},
+  {cat:"Droit sectoriel",items:["Droit de l'énergie","Droit minier","Droit des transports & logistique","Droit de la santé & bioéthique","Droit rural & agricole","Droit du tourisme & de l'hôtellerie"]},
+  {cat:"Droit international & spécialisé",items:["Droit international des affaires","Droit OHADA","Droit du sport","Droit maritime","Droit de l'environnement","Droit de la consommation","Droit humanitaire","Droit du travail international & mobilité"]},
 ];
 
 // Durée d'une expérience — même logique que calcDuree d'App.jsx (format MM/AAAA) ; renvoie "" si dates illisibles
@@ -645,7 +646,7 @@ const statP={
               {URGENCE_STYLE[selectedDem.urgence]&&<Badge {...URGENCE_STYLE[selectedDem.urgence]}/>}
             </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-              {[["Niveau",selectedDem.niveau],["Diplôme",selectedDem.diplome],["Langues",(selectedDem.langues||[]).join(", ")],["CV demandés",`${nbCv} profils`]].map(([k,v])=>(
+              {[["Niveau",selectedDem.niveau],["Diplôme",selectedDem.diplome],["Langues",(selectedDem.langues||[]).join(", ")],["CV demandés",`${nbCv} profils`],["Modalité",selectedDem.modalite||"—"]].map(([k,v])=>(
                 <div key={k} style={{background:CREAM,borderRadius:8,padding:"8px 12px"}}><p style={{margin:"0 0 2px",fontSize:11,color:"#A0AEC0"}}>{k}</p><p style={{margin:0,fontSize:13,fontWeight:500,color:NAVY}}>{v}</p></div>
               ))}
             </div>
@@ -690,7 +691,7 @@ const statP={
                       {(c.specs||[]).filter(s=>(selectedDem.specs||[]).includes(s)).map(s=><span key={s} style={{background:GOLD_LIGHT,color:NAVY,fontSize:11,padding:"2px 8px",borderRadius:20,fontWeight:500}}>✓ {s}</span>)}
                       {(c.specs||[]).filter(s=>!(selectedDem.specs||[]).includes(s)).map(s=><span key={s} style={{background:CREAM,color:"#718096",fontSize:11,padding:"2px 8px",borderRadius:20}}>{s}</span>)}
                     </div>
-                    <p style={{margin:"0 0 6px",fontSize:12,color:"#718096"}}>🌍 {(c.langues||[]).map(l=>typeof l==="string"?l:l.langue).filter(Boolean).join(", ")} · 💰 {c.salaire} · 📅 {c.disponibilite}</p>
+                    <p style={{margin:"0 0 6px",fontSize:12,color:"#718096"}}>🌍 {(c.langues||[]).map(l=>typeof l==="string"?l:l.langue).filter(Boolean).join(", ")} · 💰 {c.salaire} · 📅 {c.disponibilite}{(c.modalites||[]).length>0?` · 🏢 ${(c.modalites||[]).join(" / ")}`:""}</p>
                     <button onClick={()=>setExpandedScore(expanded?null:c.id)} style={{background:"none",border:"none",fontSize:12,color:"#718096",cursor:"pointer",padding:0,textDecoration:"underline"}}>
                       {expanded?"Masquer le détail":"Voir le détail du score →"}
                     </button>
@@ -787,7 +788,7 @@ const statP={
                     {(c.formations||[]).length>0&&<div style={{margin:"0 0 6px"}}><p style={{margin:"0 0 3px",fontSize:11,fontWeight:500,color:"#4A5568"}}>🎓 Formation</p>{(c.formations||[]).slice(0,3).map((fo,i)=><p key={i} style={{margin:"0 0 2px",fontSize:11,color:"#718096"}}>{fo.diplome}{fo.etab?` — ${fo.etab}`:""}{fo.annee?` (${fo.annee})`:""}</p>)}{(c.formations||[]).length>3&&<p style={{margin:0,fontSize:10,color:"#A0AEC0"}}>+ {(c.formations||[]).length-3} autre(s)</p>}</div>}
                     {(c.experiences||[]).length>0&&<div style={{margin:"0 0 6px"}}><p style={{margin:"0 0 3px",fontSize:11,fontWeight:500,color:"#4A5568"}}>💼 Expérience</p>{(c.experiences||[]).slice(0,3).map((e,i)=>{const du=calcDuree(e.debut,e.fin,e.encours);return <p key={i} style={{margin:"0 0 2px",fontSize:11,color:"#718096"}}>{e.poste}{e.org?` — ${e.org}`:""}{e.debut?` (${e.debut}${e.encours?" – en cours":e.fin?` – ${e.fin}`:""}${du?` · ${du}`:""})`:""}</p>;})}{(c.experiences||[]).length>3&&<p style={{margin:0,fontSize:10,color:"#A0AEC0"}}>+ {(c.experiences||[]).length-3} autre(s)</p>}</div>}
                     <div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:5}}>{(c.specs||[]).map(s=><span key={s} style={{background:CREAM,color:NAVY,fontSize:11,padding:"2px 8px",borderRadius:20}}>{s}</span>)}</div>
-                    <p style={{margin:0,fontSize:12,color:"#718096"}}>🌍 {(c.langues||[]).map(l=>typeof l==="string"?l:l.langue).filter(Boolean).join(", ")} · 💰 {c.salaire} · 📅 {c.disponibilite}</p>
+                    <p style={{margin:0,fontSize:12,color:"#718096"}}>🌍 {(c.langues||[]).map(l=>typeof l==="string"?l:l.langue).filter(Boolean).join(", ")} · 💰 {c.salaire} · 📅 {c.disponibilite}{(c.modalites||[]).length>0?` · 🏢 ${(c.modalites||[]).join(" / ")}`:""}</p>
                     <p style={{margin:"5px 0 0",fontSize:12,color:NAVY,fontWeight:500}}>📞 {c.tel||"non renseigné"} · ✉️ {c.email||"non renseigné"}</p>
                   </div>
                   <div style={{display:"flex",flexDirection:"column",gap:6,flexShrink:0}}>

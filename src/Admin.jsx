@@ -101,6 +101,46 @@ const GeoBar=({label,value,max})=>(
   </div>
 );
 
+// Donut SVG sans dépendance — répartition géographique
+const DONUT_COLORS=[NAVY,GOLD,"#5F6C7B","#9E8F5C","#8FA3BF","#D3D1C7"];
+const GeoDonut=({data})=>{
+  const total=data.reduce((s,[,v])=>s+v,0);
+  if(total===0) return null;
+  const R=54,C=2*Math.PI*R;
+  let acc=0;
+  const segs=data.map(([label,value],i)=>{
+    const frac=value/total;
+    const seg={label,value,frac,offset:acc,color:DONUT_COLORS[i%DONUT_COLORS.length]};
+    acc+=frac;
+    return seg;
+  });
+  return(
+    <div style={{display:"flex",alignItems:"center",gap:18,flexWrap:"wrap"}}>
+      <svg width="132" height="132" viewBox="0 0 132 132" style={{flexShrink:0}}>
+        <circle cx="66" cy="66" r={R} fill="none" stroke="#E2E8F0" strokeWidth="16"/>
+        {segs.map((s,i)=>(
+          <circle key={i} cx="66" cy="66" r={R} fill="none" stroke={s.color} strokeWidth="16"
+            strokeDasharray={`${Math.max(s.frac*C-1.5,0)} ${C}`}
+            strokeDashoffset={-s.offset*C}
+            transform="rotate(-90 66 66)"/>
+        ))}
+        <text x="66" y="62" textAnchor="middle" style={{fontSize:22,fontWeight:600,fill:NAVY}}>{total}</text>
+        <text x="66" y="80" textAnchor="middle" style={{fontSize:10,fill:"#A0AEC0"}}>profils</text>
+      </svg>
+      <div style={{flex:1,minWidth:140}}>
+        {segs.map((s,i)=>(
+          <div key={i} style={{display:"flex",alignItems:"center",gap:7,marginBottom:5}}>
+            <span style={{width:10,height:10,borderRadius:3,background:s.color,flexShrink:0}}/>
+            <span style={{fontSize:12,color:"#4A5568",flex:1}}>{s.label}</span>
+            <span style={{fontSize:12,fontWeight:500,color:NAVY}}>{s.value}</span>
+            <span style={{fontSize:11,color:"#A0AEC0",width:36,textAlign:"right"}}>{Math.round(s.frac*100)}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 // Double barre demande/offre + badge pénurie/excédent — écart par spécialisation
 const GapBar=({spec,demande,offre,gap,max})=>{
   const penurie=gap>0, excedent=gap<0;
@@ -124,6 +164,26 @@ const GapBar=({spec,demande,offre,gap,max})=>{
     </div>
   );
 };
+
+// Carte de synthèse (KPI) du tableau de bord
+const KpiCard=({label,value,unit,sub,dark,accent,onClick})=>(
+  <div onClick={onClick} style={{background:dark?NAVY:"#fff",border:dark?"none":"1px solid #E2E8F0",borderRadius:14,padding:"16px 18px",cursor:onClick?"pointer":"default",minWidth:0}}>
+    <p style={{margin:"0 0 6px",fontSize:11.5,color:dark?GOLD:"#8a7a4a",fontWeight:500,textTransform:"uppercase",letterSpacing:.5}}>{label}</p>
+    <p style={{margin:0,fontSize:26,fontWeight:600,color:dark?CREAM:accent||NAVY,lineHeight:1.1}}>
+      {value}{unit&&<span style={{fontSize:13,fontWeight:400,marginLeft:5,color:dark?"rgba(248,245,237,0.7)":"#718096"}}>{unit}</span>}
+    </p>
+    {sub&&<p style={{margin:"5px 0 0",fontSize:11,color:dark?"rgba(248,245,237,0.55)":"#A0AEC0"}}>{sub}</p>}
+  </div>
+);
+
+// Enveloppe de carte du tableau de bord
+const DashCard=({title,children,footnote,style})=>(
+  <div style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:14,padding:"16px 18px",minWidth:0,...style}}>
+    <p style={{fontSize:12.5,fontWeight:500,color:"#4A5568",margin:"0 0 12px"}}>{title}</p>
+    {children}
+    {footnote&&<p style={{fontSize:10.5,color:"#A0AEC0",margin:"10px 0 0"}}>{footnote}</p>}
+  </div>
+);
 
 export default function AdminDashboard(){
   const [auth,setAuth]=useState(false);
@@ -297,8 +357,8 @@ const statP={
   const geoCounts={};
   candidats.forEach(c=>{ const p=c.pays||"Non renseigné"; geoCounts[p]=(geoCounts[p]||0)+1; });
   const geoSorted=Object.entries(geoCounts).sort((a,b)=>b[1]-a[1]);
-  const geoTop=geoSorted.slice(0,6);
-  const geoAutres=geoSorted.slice(6).reduce((s,[,v])=>s+v,0);
+  const geoTop=geoSorted.slice(0,5);
+  const geoAutres=geoSorted.slice(5).reduce((s,[,v])=>s+v,0);
   const geoData=geoAutres>0?[...geoTop,["Autres",geoAutres]]:geoTop;
   const geoMax=geoData.length?Math.max(...geoData.map(([,v])=>v)):1;
 
@@ -335,6 +395,7 @@ const statP={
   const UN_JOUR=24*60*60*1000;
   const paiementsEnRetard=paiements.filter(p=>p.statut==="en_attente"&&(Date.now()-new Date(p.created_at).getTime())>2*UN_JOUR);
   const demandesStagnantes=demandes.filter(d=>d.statut==="en_cours"&&(Date.now()-new Date(d.created_at).getTime())>5*UN_JOUR);
+  const nbAlertes=(paiementsEnRetard.length>0?1:0)+(demandesStagnantes.length>0?1:0)+(candidatsARelancer.length>0?1:0);
 
   const validerCandidat = async (id,s) => {
     const{error}=await supabase.from('candidats').update({statut:s}).eq('id',id);
@@ -416,7 +477,7 @@ const statP={
       </div>
       <div style={{display:"flex",alignItems:"center",gap:8}}>
         <div style={{width:30,height:30,borderRadius:"50%",background:GOLD,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:600,color:NAVY}}>MS</div>
-        <span style={{fontSize:13,color:"rgba(255,255,255,0.75)"}}>Me Sentissi</span>
+        <span style={{fontSize:13,color:"rgba(255,255,255,0.75)"}}>M. Sentissi</span>
         <button onClick={deconnexion} style={{marginLeft:8,background:"rgba(255,255,255,0.1)",border:"none",color:"rgba(255,255,255,0.75)",fontSize:12,padding:"5px 11px",borderRadius:6,cursor:"pointer"}}>Déconnexion</button>
       </div>
     </div>
@@ -433,55 +494,49 @@ const statP={
   );
 
   const renderDashboard=()=>(
-    <div style={{padding:"20px",display:"flex",flexDirection:"column",gap:18}}>
+    <div style={{padding:"20px",display:"flex",flexDirection:"column",gap:16,maxWidth:1100,margin:"0 auto",width:"100%",boxSizing:"border-box"}}>
       <div>
         <p style={{fontSize:11,color:GOLD,fontWeight:500,textTransform:"uppercase",letterSpacing:.8,margin:"0 0 4px"}}>Tableau de bord</p>
-        <h2 style={{color:NAVY,fontSize:19,fontWeight:500,margin:0}}>Bonjour, Maître Sentissi 👋</h2>
+        <h2 style={{color:NAVY,fontSize:19,fontWeight:500,margin:0}}>Bonjour, M. Sentissi 👋</h2>
         <p style={{fontSize:13,color:"#718096",margin:"4px 0 0"}}>{new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</p>
       </div>
       {loading&&<p style={{color:"#718096",fontSize:13}}>Chargement des données...</p>}
-      <div>
-        <p style={{fontSize:12,fontWeight:500,color:"#4A5568",margin:"0 0 8px"}}>Demandes recruteurs</p>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
-          {[["En cours",statD.en_cours,"#1D4ED8","#EFF6FF"],["Terminées",statD.terminee,"#166534","#F0FDF4"],["Annulées",statD.annulee,"#64748B","#F1F5F9"]].map(([l,v,c,bg])=>(
-            <div key={l} style={{background:bg,borderRadius:10,padding:"14px 16px"}}><p style={{margin:"0 0 4px",fontSize:11,color:c,opacity:.8}}>{l}</p><p style={{margin:0,fontSize:26,fontWeight:500,color:c}}>{v}</p></div>
-          ))}
-        </div>
+
+      {/* ── Ligne de KPI ── */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:12}}>
+        <KpiCard dark label="CVthèque" value={candidats.length}
+          sub={`${statC.valide} validé${statC.valide>1?"s":""} · ${statC.en_attente} en attente`}/>
+        <KpiCard label="Demandes en cours" value={statD.en_cours}
+          sub={`${statD.terminee} terminée${statD.terminee>1?"s":""} · ${statD.annulee} annulée${statD.annulee>1?"s":""}`}/>
+        <KpiCard label="Encaissé" value={statP.total.toLocaleString("fr-FR")} unit="MAD"
+          sub={`${statP.confirme} paiement${statP.confirme>1?"s":""} confirmé${statP.confirme>1?"s":""}`}
+          accent="#166534"/>
+        <KpiCard label="Alertes actives" value={nbAlertes}
+          sub={statP.en_attente>0?`dont ${statP.en_attente} paiement${statP.en_attente>1?"s":""} en attente`:"tout est à jour"}
+          accent={nbAlertes>0?GOLD:"#166534"}
+          onClick={nbAlertes>0?()=>{const el=document.getElementById("bloc-alertes");if(el) el.scrollIntoView({behavior:"smooth"});}:undefined}/>
       </div>
-      <div>
-        <p style={{fontSize:12,fontWeight:500,color:"#4A5568",margin:"0 0 8px"}}>CVthèque</p>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
-          {[["Validés",statC.valide,"#166534","#F0FDF4"],["En attente",statC.en_attente,"#92400E",GOLD_LIGHT],["Refusés",statC.refuse,"#991B1B","#FEF2F2"]].map(([l,v,c,bg])=>(
-            <div key={l} style={{background:bg,borderRadius:10,padding:"14px 16px"}}><p style={{margin:"0 0 4px",fontSize:11,color:c,opacity:.8}}>{l}</p><p style={{margin:0,fontSize:26,fontWeight:500,color:c}}>{v}</p></div>
-          ))}
-        </div>
-      </div>
-      <div>
-        <p style={{fontSize:12,fontWeight:500,color:"#4A5568",margin:"0 0 8px"}}>💳 Paiements</p>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
-          <div style={{background:"#F0FDF4",borderRadius:10,padding:"14px 16px"}}><p style={{margin:"0 0 4px",fontSize:11,color:"#166534",opacity:.8}}>Encaissé (MAD)</p><p style={{margin:0,fontSize:22,fontWeight:500,color:"#166534"}}>{statP.total.toLocaleString("fr-FR")}</p></div>
-          <div style={{background:"#F0FDF4",borderRadius:10,padding:"14px 16px"}}><p style={{margin:"0 0 4px",fontSize:11,color:"#166534",opacity:.8}}>Confirmés</p><p style={{margin:0,fontSize:26,fontWeight:500,color:"#166534"}}>{statP.confirme}</p></div>
-          <div onClick={()=>setTab("paiements")} style={{background:GOLD_LIGHT,borderRadius:10,padding:"14px 16px",cursor:"pointer"}}><p style={{margin:"0 0 4px",fontSize:11,color:"#92400E",opacity:.8}}>En attente</p><p style={{margin:0,fontSize:26,fontWeight:500,color:"#92400E"}}>{statP.en_attente}</p></div>
-        </div>
-      </div>
-      <div>
-        <p style={{fontSize:12,fontWeight:500,color:"#4A5568",margin:"0 0 8px"}}>🌍 Répartition géographique — {candidats.length} profils</p>
-        <div style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:10,padding:"14px 16px"}}>
-          {geoData.length===0&&<p style={{fontSize:12,color:"#A0AEC0"}}>Aucun profil pour le moment.</p>}
-          {geoData.map(([pays,count])=><GeoBar key={pays} label={pays} value={count} max={geoMax}/>)}
-        </div>
-      </div>
-      <div>
-        <p style={{fontSize:12,fontWeight:500,color:"#4A5568",margin:"0 0 8px"}}>⚖️ Écart offre / demande par spécialisation</p>
-        <div style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:10,padding:"14px 16px"}}>
-          {specGap.length===0&&<p style={{fontSize:12,color:"#A0AEC0"}}>Pas encore assez de demandes ou de profils validés pour calculer les écarts.</p>}
+
+      {/* ── Graphiques : écart offre/demande + répartition géographique ── */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(320px,1fr))",gap:16}}>
+        <DashCard title="⚖️ Écart offre / demande par spécialisation"
+          footnote={specGap.length>0?"Spécialisations effectivement demandées, triées par fréquence · Demande = total des demandes reçues · Offre = profils validés dans la CVthèque":null}>
+          {specGap.length===0&&<p style={{fontSize:12,color:"#A0AEC0",margin:0}}>Pas encore assez de demandes ou de profils validés pour calculer les écarts.</p>}
           {specGap.map(x=><GapBar key={x.spec} {...x} max={specGapMax}/>)}
-          {specGap.length>0&&<p style={{fontSize:10.5,color:"#A0AEC0",margin:"8px 0 0"}}>Spécialisations effectivement demandées, triées par fréquence · Demande = total des demandes reçues · Offre = profils validés dans la CVthèque</p>}
-        </div>
+        </DashCard>
+        <DashCard title={`🌍 Répartition géographique — ${candidats.length} profils`}>
+          {geoData.length===0&&<p style={{fontSize:12,color:"#A0AEC0",margin:0}}>Aucun profil pour le moment.</p>}
+          {geoData.length>0&&<GeoDonut data={geoData}/>}
+          <div style={{marginTop:14}}>
+            {geoData.map(([pays,count])=><GeoBar key={pays} label={pays} value={count} max={geoMax}/>)}
+          </div>
+        </DashCard>
       </div>
-      <div>
-        <p style={{fontSize:12,fontWeight:500,color:"#4A5568",margin:"0 0 8px"}}>📊 Tunnel de conversion</p>
-        <div style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:10,padding:"14px 16px"}}>
+
+      {/* ── Tunnel de conversion + qualité des profils ── */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(320px,1fr))",gap:16}}>
+        <DashCard title="📊 Tunnel de conversion"
+          footnote="Les pourcentages sont calculés par rapport à l'étape précédente. Ne mesure pas si le recruteur a finalisé une embauche — cette information n'est pas suivie par JURIJOB.">
           {[["Demandes reçues",demandesTotal,null],["Short-lists envoyées",nbShortlistsEnvoyees,tauxShortlist],["Payées",nbPayees,tauxPaiement]].map(([label,val,taux],i)=>(
             <div key={label} style={{marginBottom:i<2?10:0}}>
               <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
@@ -493,26 +548,23 @@ const statP={
               </div>
             </div>
           ))}
-          <p style={{fontSize:10.5,color:"#A0AEC0",margin:"10px 0 0"}}>Les pourcentages sont calculés par rapport à l'étape précédente. Ne mesure pas si le recruteur a finalisé une embauche — cette information n'est pas suivie par JURIJOB.</p>
-        </div>
-      </div>
-      <div>
-        <p style={{fontSize:12,fontWeight:500,color:"#4A5568",margin:"0 0 8px"}}>✅ Qualité des profils</p>
-        <div style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:10,padding:"14px 16px"}}>
+        </DashCard>
+        <DashCard title="✅ Qualité des profils"
+          footnote="Un profil incomplet perd jusqu'à 35 points sur 100 dans l'algorithme de scoring (niveau + diplôme).">
           <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
             <span style={{fontSize:12,color:"#4A5568"}}>Profils validés avec matching complet (niveau + diplôme)</span>
-            <span style={{fontSize:12,fontWeight:500,color:NAVY}}>{profilsCompletsCount}/{statC.valide} ({qualitePct}%)</span>
+            <span style={{fontSize:12,fontWeight:500,color:NAVY,whiteSpace:"nowrap",marginLeft:8}}>{profilsCompletsCount}/{statC.valide} ({qualitePct}%)</span>
           </div>
           <div style={{height:10,background:"#E2E8F0",borderRadius:5,overflow:"hidden"}}>
             <div style={{height:"100%",width:`${qualitePct}%`,background:qualitePct>=70?"#166534":qualitePct>=40?GOLD:"#991B1B",borderRadius:5}}/>
           </div>
-          <p style={{fontSize:10.5,color:"#A0AEC0",margin:"8px 0 0"}}>Un profil incomplet perd jusqu'à 35 points sur 100 dans l'algorithme de scoring (niveau + diplôme).</p>
-        </div>
+        </DashCard>
       </div>
+
+      {/* ── Alertes opérationnelles ── */}
       {(paiementsEnRetard.length>0||demandesStagnantes.length>0||candidatsARelancer.length>0)&&(
-        <div>
-          <p style={{fontSize:12,fontWeight:500,color:"#4A5568",margin:"0 0 8px"}}>🔔 Alertes</p>
-          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+        <DashCard title="🔔 Alertes opérationnelles" style={{scrollMarginTop:16}}>
+          <div id="bloc-alertes" style={{display:"flex",flexDirection:"column",gap:8}}>
             {paiementsEnRetard.length>0&&(
               <div onClick={()=>setTab("paiements")} style={{background:"#FEF2F2",borderRadius:10,padding:"10px 14px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 <span style={{fontSize:12.5,color:"#991B1B"}}>💳 {paiementsEnRetard.length} paiement{paiementsEnRetard.length>1?"s":""} en attente depuis plus de 48h</span>
@@ -532,10 +584,12 @@ const statP={
               </div>
             )}
           </div>
-        </div>
+        </DashCard>
       )}
+
+      {/* ── Demandes urgentes ── */}
       {demandes.filter(d=>d.statut==="en_cours"&&d.urgence!=="normal").length>0&&(
-        <div style={{background:"#FFF7ED",border:"1px solid #FCD34D",borderRadius:12,padding:"14px 18px"}}>
+        <div style={{background:"#FFF7ED",border:"1px solid #FCD34D",borderRadius:14,padding:"14px 18px"}}>
           <p style={{margin:"0 0 10px",fontSize:13,fontWeight:500,color:"#92400E"}}>⚡ Demandes urgentes à traiter</p>
           {demandes.filter(d=>d.statut==="en_cours"&&d.urgence!=="normal").map(d=>(
             <div key={d.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
@@ -545,16 +599,17 @@ const statP={
           ))}
         </div>
       )}
+
+      {/* ── Short-lists récentes ── */}
       {shortlistSent.length>0&&(
-        <div style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:12,padding:"16px 18px"}}>
-          <p style={{margin:"0 0 10px",fontSize:13,fontWeight:500,color:NAVY}}>Short-lists récentes</p>
+        <DashCard title="Short-lists récentes">
           {shortlistSent.slice(-3).reverse().map((sl,i)=>(
             <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:i<Math.min(shortlistSent.length,3)-1?"1px solid #F0F4F8":"none"}}>
               <div><p style={{margin:0,fontSize:13,fontWeight:500,color:NAVY}}>{sl.poste}</p><p style={{margin:"2px 0 0",fontSize:12,color:"#718096"}}>{sl.entreprise} · {sl.candidats.length} profils · {sl.date}</p></div>
               <Badge bg="#F0FDF4" color="#166534" label="Envoyée"/>
             </div>
           ))}
-        </div>
+        </DashCard>
       )}
     </div>
   );

@@ -75,6 +75,19 @@ const ECOLES=[
 ];
 
 let uid=50; const nid=()=>++uid;
+
+/* Détecte les écrans étroits (mobile) pour adapter les styles inline.
+   Seuil 768px = tablette/mobile. Écoute le redimensionnement de la fenêtre. */
+function useIsMobile(breakpoint=768){
+  const [isMobile,setIsMobile]=useState(typeof window!=="undefined"?window.innerWidth<=breakpoint:false);
+  useEffect(()=>{
+    const onResize=()=>setIsMobile(window.innerWidth<=breakpoint);
+    window.addEventListener("resize",onResize);
+    onResize();
+    return ()=>window.removeEventListener("resize",onResize);
+  },[breakpoint]);
+  return isMobile;
+}
 const iSt={padding:"8px 11px",borderRadius:7,fontSize:13,border:"1.5px solid #CBD5E0",background:"#fff",color:NAVY,outline:"none",width:"100%",boxSizing:"border-box"};
 const Inp=({val,onChange,ph,style,filter})=><input value={val} onChange={e=>onChange(filter?filter(e.target.value):e.target.value)} placeholder={ph} style={{...iSt,...style}}/>;
 const Lbl=({t,r})=><label style={{fontSize:12,fontWeight:500,color:"#4A5568",display:"block",marginBottom:5}}>{t}{r&&<span style={{color:GOLD,marginLeft:3}}>*</span>}</label>;
@@ -143,6 +156,7 @@ function Landing({onChoose}){
   const ff = "'Inter',system-ui,sans-serif";
   const fs = "'Cormorant Garamond',Georgia,serif";
   const [hov,setHov] = useState(null);
+  const isMobile = useIsMobile();
 
   const cardStyle = (key) => ({
     background:"#fff",
@@ -158,13 +172,13 @@ function Landing({onChoose}){
   return(
     <div style={{background:"#fff",minHeight:"100vh",fontFamily:ff,color:"#1a202c"}}>
       {/* NAV */}
-      <nav style={{background:"#fff",borderBottom:"1px solid #E2E8F0",padding:"0 32px",display:"flex",justifyContent:"space-between",alignItems:"center",height:64,position:"sticky",top:0,zIndex:10}}>
+      <nav style={{background:"#fff",borderBottom:"1px solid #E2E8F0",padding:isMobile?"0 16px":"0 32px",display:"flex",justifyContent:"space-between",alignItems:"center",height:64,position:"sticky",top:0,zIndex:10}}>
         <Logo size="header"/>
-        <div style={{display:"flex",alignItems:"center",gap:24}}>
-          <button onClick={()=>onChoose("services")} style={{background:"none",border:"none",color:"#4A5568",fontSize:13,cursor:"pointer",fontFamily:ff}}>Services</button>
-          <button onClick={()=>onChoose("faq")} style={{background:"none",border:"none",color:"#4A5568",fontSize:13,cursor:"pointer",fontFamily:ff}}>FAQ</button>
-          <button onClick={()=>onChoose("candidat")} style={{background:"transparent",color:NAVY,border:`1.5px solid ${NAVY}`,borderRadius:6,padding:"8px 17px",fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:ff}}>Espace Candidat</button>
-          <button onClick={()=>onChoose("recruteur")} style={{background:NAVY,color:"#fff",border:"none",borderRadius:6,padding:"9px 18px",fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:ff}}>Espace Recruteur</button>
+        <div style={{display:"flex",alignItems:"center",gap:isMobile?10:24}}>
+          {!isMobile&&<button onClick={()=>onChoose("services")} style={{background:"none",border:"none",color:"#4A5568",fontSize:13,cursor:"pointer",fontFamily:ff}}>Services</button>}
+          {!isMobile&&<button onClick={()=>onChoose("faq")} style={{background:"none",border:"none",color:"#4A5568",fontSize:13,cursor:"pointer",fontFamily:ff}}>FAQ</button>}
+          <button onClick={()=>onChoose("candidat")} style={{background:"transparent",color:NAVY,border:`1.5px solid ${NAVY}`,borderRadius:6,padding:isMobile?"7px 12px":"8px 17px",fontSize:isMobile?12:13,fontWeight:500,cursor:"pointer",fontFamily:ff}}>{isMobile?"Candidat":"Espace Candidat"}</button>
+          <button onClick={()=>onChoose("recruteur")} style={{background:NAVY,color:"#fff",border:"none",borderRadius:6,padding:isMobile?"8px 13px":"9px 18px",fontSize:isMobile?12:13,fontWeight:500,cursor:"pointer",fontFamily:ff}}>{isMobile?"Recruteur":"Espace Recruteur"}</button>
         </div>
       </nav>
 
@@ -172,21 +186,21 @@ function Landing({onChoose}){
       <section style={{position:"relative",overflow:"hidden",minHeight:"min(560px,75vh)",display:"flex",alignItems:"center",justifyContent:"center"}}>
         <div style={{position:"absolute",inset:0,backgroundImage:`url(${casaImage})`,backgroundSize:"cover",backgroundPosition:"center"}} aria-hidden="true"/>
         <div style={{position:"absolute",inset:0,background:"linear-gradient(135deg, rgba(11,37,69,0.92) 0%, rgba(11,37,69,0.78) 50%, rgba(26,58,107,0.72) 100%)"}} aria-hidden="true"/>
-        <div style={{position:"relative",zIndex:2,padding:"80px 32px",maxWidth:900,margin:"0 auto",textAlign:"center"}}>
+        <div style={{position:"relative",zIndex:2,padding:isMobile?"56px 20px":"80px 32px",maxWidth:900,margin:"0 auto",textAlign:"center"}}>
           <p style={{color:GOLD,fontSize:10.5,letterSpacing:2.5,textTransform:"uppercase",margin:"0 0 18px",fontWeight:500,fontFamily:ff}}>Recrutement juridique · Maroc & Afrique francophone</p>
-          <h1 style={{fontFamily:fs,fontSize:52,lineHeight:1.15,color:"#fff",fontWeight:500,margin:"0 auto 18px",letterSpacing:-0.8,maxWidth:760,textShadow:"0 2px 12px rgba(0,0,0,0.25)"}}>
+          <h1 style={{fontFamily:fs,fontSize:isMobile?32:52,lineHeight:1.15,color:"#fff",fontWeight:500,margin:"0 auto 18px",letterSpacing:isMobile?-0.5:-0.8,maxWidth:760,textShadow:"0 2px 12px rgba(0,0,0,0.25)"}}>
             Le recrutement juridique,<br/>à la hauteur de <em style={{color:GOLD,fontStyle:"italic",fontWeight:500}}>vos exigences.</em>
           </h1>
           <p style={{fontSize:15,lineHeight:1.7,color:"rgba(255,255,255,0.82)",maxWidth:580,margin:"0 auto 36px",fontWeight:300,fontFamily:ff}}>
             JURIJOB identifie les meilleurs profils juridiques pour les directions juridiques et RH des grandes structures, au Maroc et en Afrique francophone. Discrétion, expertise, sélection sur mesure.
           </p>
-          <div style={{display:"flex",gap:12,flexWrap:"wrap",justifyContent:"center"}}>
+          <div style={{display:"flex",gap:12,flexWrap:"wrap",justifyContent:"center",flexDirection:isMobile?"column":"row",alignItems:"center"}}>
             <button onClick={()=>onChoose("recruteur")} onMouseEnter={()=>setHov("cta1")} onMouseLeave={()=>setHov(null)}
-              style={{background:hov==="cta1"?"#d4ad4f":GOLD,color:NAVY,fontWeight:600,fontSize:13.5,padding:"13px 28px",borderRadius:7,cursor:"pointer",border:"none",letterSpacing:.2,transition:"all .2s",transform:hov==="cta1"?"translateY(-2px)":"none",boxShadow:hov==="cta1"?"0 8px 20px rgba(200,160,70,0.3)":"none",fontFamily:ff}}>
+              style={{background:hov==="cta1"?"#d4ad4f":GOLD,color:NAVY,fontWeight:600,fontSize:13.5,padding:"13px 28px",borderRadius:7,cursor:"pointer",border:"none",letterSpacing:.2,transition:"all .2s",transform:hov==="cta1"?"translateY(-2px)":"none",boxShadow:hov==="cta1"?"0 8px 20px rgba(200,160,70,0.3)":"none",fontFamily:ff,width:isMobile?"100%":"auto",maxWidth:isMobile?320:"none"}}>
               Je recrute un juriste → Déposer une demande
             </button>
             <button onClick={()=>onChoose("candidat")} onMouseEnter={()=>setHov("cta2")} onMouseLeave={()=>setHov(null)}
-              style={{background:hov==="cta2"?"#F1F5F9":"#fff",color:NAVY,fontWeight:600,fontSize:13.5,padding:"13px 28px",borderRadius:7,cursor:"pointer",border:"none",letterSpacing:.2,transition:"all .2s",transform:hov==="cta2"?"translateY(-2px)":"none",boxShadow:hov==="cta2"?"0 8px 20px rgba(255,255,255,0.25)":"none",fontFamily:ff}}>
+              style={{background:hov==="cta2"?"#F1F5F9":"#fff",color:NAVY,fontWeight:600,fontSize:13.5,padding:"13px 28px",borderRadius:7,cursor:"pointer",border:"none",letterSpacing:.2,transition:"all .2s",transform:hov==="cta2"?"translateY(-2px)":"none",boxShadow:hov==="cta2"?"0 8px 20px rgba(255,255,255,0.25)":"none",fontFamily:ff,width:isMobile?"100%":"auto",maxWidth:isMobile?320:"none"}}>
               Je suis juriste → Créer mon profil
             </button>
           </div>
@@ -195,7 +209,7 @@ function Landing({onChoose}){
 
       {/* CHIFFRES */}
       <section style={{padding:"36px 32px",borderTop:"1px solid #E2E8F0",borderBottom:"1px solid #E2E8F0",background:"#fff"}}>
-        <div style={{maxWidth:1100,margin:"0 auto",display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:24,textAlign:"center"}}>
+        <div style={{maxWidth:1100,margin:"0 auto",display:"grid",gridTemplateColumns:isMobile?"1fr":"repeat(3,1fr)",gap:24,textAlign:"center"}}>
           {[
             ["48h","Délai short-list garanti"],
             ["24 ans","D'expérience juridique"],
@@ -216,7 +230,7 @@ function Landing({onChoose}){
           <h2 style={{fontFamily:fs,fontSize:32,color:NAVY,fontWeight:500,margin:"0 0 10px",letterSpacing:-0.4}}>Une alternative aux plateformes RH généralistes.</h2>
           <p style={{fontSize:14,color:"#4A5568",margin:"0 auto",maxWidth:620,fontFamily:ff,fontWeight:300,lineHeight:1.6}}>Pensée par et pour les juristes, JURIJOB s'appuie sur 24 ans d'expérience en direction juridique et sur le réseau d'un leader des juristes d'entreprise au Maroc, riche de plusieurs dizaines de milliers de contacts professionnels.</p>
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:16}}>
+        <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"repeat(2,1fr)",gap:16}}>
           <div onMouseEnter={()=>setHov("c1")} onMouseLeave={()=>setHov(null)} style={cardStyle("c1")}>
             <div style={{width:32,height:32,background:GOLD_LIGHT,borderRadius:6,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:14,color:GOLD,fontSize:16,fontWeight:600,fontFamily:fs}}>§</div>
             <h3 style={{fontFamily:fs,fontSize:19,color:NAVY,fontWeight:600,margin:"0 0 8px"}}>Une expertise terrain</h3>
@@ -247,7 +261,7 @@ function Landing({onChoose}){
             <p style={{color:GOLD,fontSize:10.5,letterSpacing:2.5,textTransform:"uppercase",margin:"0 0 10px",fontWeight:500,fontFamily:ff}}>Notre approche</p>
             <h2 style={{fontFamily:fs,fontSize:32,color:NAVY,fontWeight:500,margin:0,letterSpacing:-0.4}}>Un processus simple et supervisé.</h2>
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:18}}>
+          <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"repeat(3,1fr)",gap:18}}>
             {[
               {n:"01",t:"Vous déposez votre demande",d:"Critères précis : spécialisation, niveau, langues, diplôme. Quelques minutes suffisent."},
               {n:"02",t:"Notre équipe sélectionne",d:"Recherche dans la CVthèque et le réseau professionnel. Évaluation manuelle de chaque profil."},

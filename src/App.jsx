@@ -161,6 +161,7 @@ function Landing({onChoose}){
       <nav style={{background:"#fff",borderBottom:"1px solid #E2E8F0",padding:"0 32px",display:"flex",justifyContent:"space-between",alignItems:"center",height:64,position:"sticky",top:0,zIndex:10}}>
         <Logo size="header"/>
         <div style={{display:"flex",alignItems:"center",gap:24}}>
+          <button onClick={()=>onChoose("services")} style={{background:"none",border:"none",color:"#4A5568",fontSize:13,cursor:"pointer",fontFamily:ff}}>Services</button>
           <button onClick={()=>onChoose("faq")} style={{background:"none",border:"none",color:"#4A5568",fontSize:13,cursor:"pointer",fontFamily:ff}}>FAQ</button>
           <button onClick={()=>onChoose("candidat")} style={{background:"transparent",color:NAVY,border:`1.5px solid ${NAVY}`,borderRadius:6,padding:"8px 17px",fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:ff}}>Espace Candidat</button>
           <button onClick={()=>onChoose("recruteur")} style={{background:NAVY,color:"#fff",border:"none",borderRadius:6,padding:"9px 18px",fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:ff}}>Espace Recruteur</button>
@@ -295,6 +296,7 @@ function Landing({onChoose}){
             <span style={{fontSize:11,color:"#A0AEC0",fontFamily:ff}}>© 2026 — Smart Recrutement Juridique</span>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:18}}>
+            <button onClick={()=>onChoose("services")} style={{background:"none",border:"none",color:"#4A5568",fontSize:12,cursor:"pointer",fontFamily:ff}}>Services</button>
             <button onClick={()=>onChoose("faq")} style={{background:"none",border:"none",color:"#4A5568",fontSize:12,cursor:"pointer",fontFamily:ff}}>FAQ</button>
             <button onClick={()=>onChoose("legal")} style={{background:"none",border:"none",color:"#4A5568",fontSize:12,cursor:"pointer",fontFamily:ff}}>Mentions légales</button>
             <span style={{fontSize:12,color:"#4A5568",fontFamily:ff}}>recrutement@sentissilegal.com</span>
@@ -1342,7 +1344,7 @@ function ResetPassword({onDone}){
 /* ═══════════════════════════════════════
    MENTIONS LÉGALES — Style clair institutionnel
 ═══════════════════════════════════════ */
-function PageMentionsLegales({onBack}){
+function PageMentionsLegales({onBack,onNavigate}){
   useEffect(()=>{
     if(!document.getElementById('gfont-jurijob-landing')){
       const l=document.createElement('link'); l.id='gfont-jurijob-landing'; l.rel='stylesheet';
@@ -1400,6 +1402,138 @@ function PageMentionsLegales({onBack}){
           </div>
           <div style={{display:"flex",alignItems:"center",gap:18}}>
             <button onClick={onBack} style={{background:"none",border:"none",color:"#4A5568",fontSize:12,cursor:"pointer",fontFamily:ff}}>Accueil</button>
+            <button onClick={()=>onNavigate&&onNavigate("services")} style={{background:"none",border:"none",color:"#4A5568",fontSize:12,cursor:"pointer",fontFamily:ff}}>Services</button>
+            <span style={{fontSize:12,color:"#4A5568",fontFamily:ff}}>recrutement@sentissilegal.com</span>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════
+   SERVICES — Style clair institutionnel
+═══════════════════════════════════════ */
+function PageServices({onBack,onNavigate}){
+  useEffect(()=>{
+    if(!document.getElementById('gfont-jurijob-landing')){
+      const l=document.createElement('link'); l.id='gfont-jurijob-landing'; l.rel='stylesheet';
+      l.href='https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap';
+      document.head.appendChild(l);
+    }
+  },[]);
+  const ff="'Inter',system-ui,sans-serif";
+  const fs="'Cormorant Garamond',Georgia,serif";
+  const [hov,setHov]=useState(null);
+
+  const services=[
+    {
+      icon:"§",
+      titre:"Rédaction de contrats de travail sur mesure",
+      desc:"Nous rédigeons des contrats de travail personnalisés, adaptés à chaque poste et à votre contexte, dans le respect de la législation sociale en vigueur au Maroc."
+    },
+    {
+      icon:"◆",
+      titre:"Accompagnement au recrutement de profils étrangers",
+      desc:"Vous souhaitez recruter un talent non-marocain ? Nous vous accompagnons dans les démarches liées à l'embauche de profils étrangers au Maroc, en vous orientant à chaque étape du processus."
+    },
+    {
+      icon:"○",
+      titre:"Participation et évaluation des entretiens",
+      desc:"Nos experts peuvent assister à vos entretiens d'embauche et évaluer chaque candidat selon une grille d'appréciation rigoureuse, pour sécuriser et objectiver votre décision finale."
+    },
+    {
+      icon:"⊙",
+      titre:"Préparation de la fiche de poste",
+      desc:"En amont du recrutement, nous vous aidons à définir précisément votre besoin et à construire une fiche de poste claire et structurée — la base d'une recherche efficace."
+    },
+  ];
+
+  const cardStyle=(key)=>({
+    background:"#fff",
+    border:`1px solid ${hov===key?"#C8A046":"#E2E8F0"}`,
+    borderRadius:10,
+    padding:"24px 22px",
+    transition:"all .2s",
+    transform:hov===key?"translateY(-2px)":"none",
+    boxShadow:hov===key?"0 8px 20px rgba(11,37,69,0.06)":"none",
+    textAlign:"left"
+  });
+
+  return(
+    <div style={{background:"#fff",minHeight:"100vh",fontFamily:ff,color:"#1a202c"}}>
+      {/* NAV */}
+      <nav style={{background:"#fff",borderBottom:"1px solid #E2E8F0",padding:"0 32px",display:"flex",justifyContent:"space-between",alignItems:"center",height:64,position:"sticky",top:0,zIndex:10}}>
+        <Logo size="header"/>
+        <button onClick={onBack} style={{background:"none",border:"none",color:"#4A5568",fontSize:13,cursor:"pointer",fontFamily:ff}}>← Retour à l'accueil</button>
+      </nav>
+
+      {/* HERO */}
+      <section style={{background:NAVY,padding:"64px 32px",textAlign:"center"}}>
+        <div style={{maxWidth:900,margin:"0 auto"}}>
+          <p style={{color:GOLD,fontSize:10.5,letterSpacing:2.5,textTransform:"uppercase",margin:"0 0 14px",fontWeight:500,fontFamily:ff}}>Nos prestations</p>
+          <h1 style={{fontFamily:fs,fontSize:42,lineHeight:1.15,color:"#fff",fontWeight:500,margin:"0 auto 12px",letterSpacing:-0.6,maxWidth:640}}>
+            Nos <em style={{color:GOLD,fontStyle:"italic",fontWeight:500}}>services</em>
+          </h1>
+          <p style={{fontSize:14,lineHeight:1.6,color:"rgba(255,255,255,0.75)",maxWidth:540,margin:"0 auto",fontWeight:300,fontFamily:ff}}>
+            Au-delà de la mise en relation, JURIJOB et Sentissi Legal Advisory vous accompagnent à chaque étape de votre recrutement juridique.
+          </p>
+        </div>
+      </section>
+
+      {/* OFFRE PRINCIPALE — short-list */}
+      <section style={{padding:"56px 32px 32px",maxWidth:900,margin:"0 auto"}}>
+        <div style={{textAlign:"center",marginBottom:28}}>
+          <p style={{color:GOLD,fontSize:10.5,letterSpacing:2.5,textTransform:"uppercase",margin:"0 0 8px",fontWeight:500,fontFamily:ff}}>Notre offre principale</p>
+          <h2 style={{fontFamily:fs,fontSize:28,color:NAVY,fontWeight:500,margin:0,letterSpacing:-0.3}}>La short-list de profils juridiques</h2>
+        </div>
+        <div style={{background:"#F8F5ED",border:`1px solid ${GOLD_LIGHT}`,borderRadius:12,padding:"28px 32px"}}>
+          <p style={{fontSize:15,color:"#4A5568",lineHeight:1.75,fontFamily:ff,fontWeight:300,margin:"0 0 16px"}}>
+            Le cœur de JURIJOB : vous sélectionnez les critères du profil recherché — spécialisation, expérience, diplôme, langues — et le nombre de profils souhaité, et nous vous livrons une <strong style={{color:NAVY,fontWeight:600}}>short-list de juristes présélectionnés et scorés</strong>, sous 48 heures ouvrées.
+          </p>
+          <p style={{fontSize:15,color:"#4A5568",lineHeight:1.75,fontFamily:ff,fontWeight:300,margin:0}}>
+            Chaque short-list est validée manuellement par un ex-Directeur juridique. Vous gardez la main sur l'entretien et la décision finale.
+          </p>
+        </div>
+      </section>
+
+      {/* SERVICES COMPLÉMENTAIRES */}
+      <section style={{padding:"24px 32px 56px",maxWidth:900,margin:"0 auto"}}>
+        <div style={{textAlign:"center",marginBottom:28}}>
+          <p style={{color:GOLD,fontSize:10.5,letterSpacing:2.5,textTransform:"uppercase",margin:"0 0 8px",fontWeight:500,fontFamily:ff}}>Pour aller plus loin</p>
+          <h2 style={{fontFamily:fs,fontSize:28,color:NAVY,fontWeight:500,margin:0,letterSpacing:-0.3}}>Services complémentaires</h2>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:16}}>
+          {services.map((s,i)=>(
+            <div key={i} onMouseEnter={()=>setHov(i)} onMouseLeave={()=>setHov(null)} style={cardStyle(i)}>
+              <div style={{width:34,height:34,background:GOLD_LIGHT,borderRadius:7,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:14,color:GOLD,fontSize:17,fontWeight:600,fontFamily:fs}}>{s.icon}</div>
+              <h3 style={{fontFamily:fs,fontSize:19,color:NAVY,fontWeight:600,margin:"0 0 8px",lineHeight:1.3}}>{s.titre}</h3>
+              <p style={{fontSize:13.5,color:"#4A5568",lineHeight:1.65,margin:0,fontFamily:ff,fontWeight:300}}>{s.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* CTA CONTACT */}
+      <section style={{padding:"48px 32px",background:"#F8F5ED",borderTop:"1px solid #E2E8F0"}}>
+        <div style={{maxWidth:640,margin:"0 auto",textAlign:"center"}}>
+          <h2 style={{fontFamily:fs,fontSize:24,color:NAVY,fontWeight:500,margin:"0 0 10px",letterSpacing:-0.3}}>Un besoin spécifique ?</h2>
+          <p style={{fontSize:14,color:"#4A5568",margin:"0 0 20px",lineHeight:1.6,fontFamily:ff,fontWeight:300}}>Chaque prestation est adaptée à votre contexte et fait l'objet d'un devis personnalisé. Écrivez-nous pour en discuter.</p>
+          <a href="mailto:recrutement@sentissilegal.com" style={{display:"inline-block",background:NAVY,color:"#fff",fontWeight:500,fontSize:13.5,padding:"12px 26px",borderRadius:7,textDecoration:"none",fontFamily:ff}}>recrutement@sentissilegal.com</a>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer style={{background:"#fff",padding:"24px 32px",borderTop:"1px solid #E2E8F0"}}>
+        <div style={{maxWidth:1100,margin:"0 auto",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:16}}>
+          <div style={{display:"flex",alignItems:"center",gap:14}}>
+            <Logo size="compact"/>
+            <span style={{fontSize:11,color:"#A0AEC0",fontFamily:ff}}>© 2026 — Smart Recrutement Juridique</span>
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:18}}>
+            <button onClick={onBack} style={{background:"none",border:"none",color:"#4A5568",fontSize:12,cursor:"pointer",fontFamily:ff}}>Accueil</button>
+            <button onClick={()=>onNavigate&&onNavigate("faq")} style={{background:"none",border:"none",color:"#4A5568",fontSize:12,cursor:"pointer",fontFamily:ff}}>FAQ</button>
+            <button onClick={()=>onNavigate&&onNavigate("legal")} style={{background:"none",border:"none",color:"#4A5568",fontSize:12,cursor:"pointer",fontFamily:ff}}>Mentions légales</button>
             <span style={{fontSize:12,color:"#4A5568",fontFamily:ff}}>recrutement@sentissilegal.com</span>
           </div>
         </div>
@@ -1551,6 +1685,7 @@ function PageFAQ({onBack,onNavigate}){
           </div>
           <div style={{display:"flex",alignItems:"center",gap:18}}>
             <button onClick={onBack} style={{background:"none",border:"none",color:"#4A5568",fontSize:12,cursor:"pointer",fontFamily:ff}}>Accueil</button>
+            <button onClick={()=>onNavigate&&onNavigate("services")} style={{background:"none",border:"none",color:"#4A5568",fontSize:12,cursor:"pointer",fontFamily:ff}}>Services</button>
             <button onClick={()=>onNavigate&&onNavigate("legal")} style={{background:"none",border:"none",color:"#4A5568",fontSize:12,cursor:"pointer",fontFamily:ff}}>Mentions légales</button>
             <span style={{fontSize:12,color:"#4A5568",fontFamily:ff}}>recrutement@sentissilegal.com</span>
           </div>
@@ -1614,8 +1749,9 @@ export default function App(){
   }
 
   // Pas de session : écrans de connexion selon le choix
+  if(view==="services") return <PageServices onBack={()=>setView("landing")} onNavigate={(v)=>setView(v)}/>;
   if(view==="faq") return <PageFAQ onBack={()=>setView("landing")} onNavigate={(v)=>setView(v)}/>;
-  if(view==="legal") return <PageMentionsLegales onBack={()=>setView("landing")}/>;
+  if(view==="legal") return <PageMentionsLegales onBack={()=>setView("landing")} onNavigate={(v)=>setView(v)}/>;
   if(view==="candidat-auth") return <AuthCandidat onBack={()=>setView("landing")} onGoogle={loginGoogle} onSwitch={()=>{setIntendedRole("recruteur");setView("recruteur-auth");}}/>;
   if(view==="recruteur-auth") return <AuthRecruteur onBack={()=>setView("landing")} onSwitch={()=>{setIntendedRole("candidat");setView("candidat-auth");}}/>;
 

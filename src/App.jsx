@@ -170,7 +170,7 @@ function Landing({onChoose}){
   });
 
   return(
-    <div style={{background:"#fff",minHeight:"100vh",fontFamily:ff,color:"#1a202c"}}>
+    <div style={{background:"#fff",minHeight:"100vh",fontFamily:ff,color:"#1a202c",overflowX:"hidden",width:"100%",boxSizing:"border-box"}}>
       {/* NAV */}
       <nav style={{background:"#fff",borderBottom:"1px solid #E2E8F0",padding:isMobile?"0 16px":"0 32px",display:"flex",justifyContent:"space-between",alignItems:"center",height:64,position:"sticky",top:0,zIndex:10}}>
         <Logo size="header"/>
@@ -278,10 +278,10 @@ function Landing({onChoose}){
       </section>
 
       {/* BLOC FONDATEUR / SLA */}
-      <section style={{padding:"56px 32px",maxWidth:1100,margin:"0 auto"}}>
-        <div style={{background:"#fff",border:`1px solid ${GOLD_LIGHT}`,borderRadius:12,padding:"32px 36px",display:"flex",gap:24,alignItems:"center",flexWrap:"wrap"}}>
+      <section style={{padding:isMobile?"40px 20px":"56px 32px",maxWidth:1100,margin:"0 auto"}}>
+        <div style={{background:"#fff",border:`1px solid ${GOLD_LIGHT}`,borderRadius:12,padding:isMobile?"24px 22px":"32px 36px",display:"flex",gap:24,alignItems:"center",flexWrap:"wrap"}}>
           <div style={{width:80,height:80,borderRadius:"50%",background:NAVY,color:GOLD,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:fs,fontSize:28,fontWeight:600,flexShrink:0}}>MS</div>
-          <div style={{flex:1,minWidth:280}}>
+          <div style={{flex:1,minWidth:isMobile?0:280}}>
             <p style={{color:GOLD,fontSize:10.5,letterSpacing:2,textTransform:"uppercase",margin:"0 0 6px",fontWeight:500,fontFamily:ff}}>Fondateur</p>
             <h3 style={{fontFamily:fs,fontSize:22,color:NAVY,fontWeight:600,margin:"0 0 4px",letterSpacing:-0.2}}>Mohammed Sentissi</h3>
             <p style={{fontSize:13,color:"#4A5568",margin:"0 0 12px",fontFamily:ff,lineHeight:1.5}}>Expert juridique, ex-Directeur juridique de holdings au Maroc et en Afrique. Président élu de l'Association marocaine des juristes d'entreprise — AMJE (en cours de constitution). Fondateur de Sentissi Legal Advisory.</p>
@@ -1370,7 +1370,7 @@ function PageMentionsLegales({onBack,onNavigate}){
   const fs="'Cormorant Garamond',Georgia,serif";
 
   return(
-    <div style={{background:"#fff",minHeight:"100vh",fontFamily:ff,color:"#1a202c"}}>
+    <div style={{background:"#fff",minHeight:"100vh",fontFamily:ff,color:"#1a202c",overflowX:"hidden",width:"100%",boxSizing:"border-box"}}>
       {/* NAV */}
       <nav style={{background:"#fff",borderBottom:"1px solid #E2E8F0",padding:"0 32px",display:"flex",justifyContent:"space-between",alignItems:"center",height:64,position:"sticky",top:0,zIndex:10}}>
         <Logo size="header"/>
@@ -1476,7 +1476,7 @@ function PageServices({onBack,onNavigate}){
   });
 
   return(
-    <div style={{background:"#fff",minHeight:"100vh",fontFamily:ff,color:"#1a202c"}}>
+    <div style={{background:"#fff",minHeight:"100vh",fontFamily:ff,color:"#1a202c",overflowX:"hidden",width:"100%",boxSizing:"border-box"}}>
       {/* NAV */}
       <nav style={{background:"#fff",borderBottom:"1px solid #E2E8F0",padding:"0 32px",display:"flex",justifyContent:"space-between",alignItems:"center",height:64,position:"sticky",top:0,zIndex:10}}>
         <Logo size="header"/>
@@ -1632,7 +1632,7 @@ function PageFAQ({onBack,onNavigate}){
   let globalIdx = 0;
 
   return(
-    <div style={{background:"#fff",minHeight:"100vh",fontFamily:ff,color:"#1a202c"}}>
+    <div style={{background:"#fff",minHeight:"100vh",fontFamily:ff,color:"#1a202c",overflowX:"hidden",width:"100%",boxSizing:"border-box"}}>
       {/* NAV */}
       <nav style={{background:"#fff",borderBottom:"1px solid #E2E8F0",padding:"0 32px",display:"flex",justifyContent:"space-between",alignItems:"center",height:64,position:"sticky",top:0,zIndex:10}}>
         <Logo size="header"/>

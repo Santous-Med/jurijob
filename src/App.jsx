@@ -1434,8 +1434,8 @@ function PageServices({onBack,onNavigate}){
     },
     {
       icon:"◆",
-      titre:"Accompagnement au recrutement de profils étrangers",
-      desc:"Vous souhaitez recruter un talent non-marocain ? Nous vous accompagnons dans les démarches liées à l'embauche de profils étrangers au Maroc, en vous orientant à chaque étape du processus."
+      titre:"Prise en charge du recrutement de profils étrangers",
+      desc:"Vous souhaitez recruter un talent non-marocain ? Nous prenons en charge l'intégralité des démarches liées à l'embauche de profils étrangers au Maroc : vous nous confiez le dossier, nous nous en occupons de bout en bout, jusqu'à sa finalisation."
     },
     {
       icon:"○",

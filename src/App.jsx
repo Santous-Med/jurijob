@@ -1439,6 +1439,7 @@ function PageServices({onBack,onNavigate}){
   const ff="'Inter',system-ui,sans-serif";
   const fs="'Cormorant Garamond',Georgia,serif";
   const [hov,setHov]=useState(null);
+  const isMobile=useIsMobile();
 
   const services=[
     {
@@ -1483,10 +1484,10 @@ function PageServices({onBack,onNavigate}){
       </nav>
 
       {/* HERO */}
-      <section style={{background:NAVY,padding:"64px 32px",textAlign:"center"}}>
+      <section style={{background:NAVY,padding:isMobile?"48px 20px":"64px 32px",textAlign:"center"}}>
         <div style={{maxWidth:900,margin:"0 auto"}}>
           <p style={{color:GOLD,fontSize:10.5,letterSpacing:2.5,textTransform:"uppercase",margin:"0 0 14px",fontWeight:500,fontFamily:ff}}>Nos prestations</p>
-          <h1 style={{fontFamily:fs,fontSize:42,lineHeight:1.15,color:"#fff",fontWeight:500,margin:"0 auto 12px",letterSpacing:-0.6,maxWidth:640}}>
+          <h1 style={{fontFamily:fs,fontSize:isMobile?32:42,lineHeight:1.15,color:"#fff",fontWeight:500,margin:"0 auto 12px",letterSpacing:-0.6,maxWidth:640}}>
             Nos <em style={{color:GOLD,fontStyle:"italic",fontWeight:500}}>services</em>
           </h1>
           <p style={{fontSize:14,lineHeight:1.6,color:"rgba(255,255,255,0.75)",maxWidth:540,margin:"0 auto",fontWeight:300,fontFamily:ff}}>
@@ -1496,12 +1497,12 @@ function PageServices({onBack,onNavigate}){
       </section>
 
       {/* OFFRE PRINCIPALE — short-list */}
-      <section style={{padding:"56px 32px 32px",maxWidth:900,margin:"0 auto"}}>
+      <section style={{padding:isMobile?"40px 20px 24px":"56px 32px 32px",maxWidth:900,margin:"0 auto"}}>
         <div style={{textAlign:"center",marginBottom:28}}>
           <p style={{color:GOLD,fontSize:10.5,letterSpacing:2.5,textTransform:"uppercase",margin:"0 0 8px",fontWeight:500,fontFamily:ff}}>Notre offre principale</p>
           <h2 style={{fontFamily:fs,fontSize:28,color:NAVY,fontWeight:500,margin:0,letterSpacing:-0.3}}>La short-list de profils juridiques</h2>
         </div>
-        <div style={{background:"#F8F5ED",border:`1px solid ${GOLD_LIGHT}`,borderRadius:12,padding:"28px 32px"}}>
+        <div style={{background:"#F8F5ED",border:`1px solid ${GOLD_LIGHT}`,borderRadius:12,padding:isMobile?"22px 20px":"28px 32px"}}>
           <p style={{fontSize:15,color:"#4A5568",lineHeight:1.75,fontFamily:ff,fontWeight:300,margin:"0 0 16px"}}>
             Le cœur de JURIJOB : vous sélectionnez les critères du profil recherché — spécialisation, expérience, diplôme, langues — et le nombre de profils souhaité, et nous vous livrons une <strong style={{color:NAVY,fontWeight:600}}>short-list de juristes présélectionnés et scorés</strong>, sous 48 heures ouvrées.
           </p>
@@ -1512,12 +1513,12 @@ function PageServices({onBack,onNavigate}){
       </section>
 
       {/* SERVICES COMPLÉMENTAIRES */}
-      <section style={{padding:"24px 32px 56px",maxWidth:900,margin:"0 auto"}}>
+      <section style={{padding:isMobile?"16px 20px 40px":"24px 32px 56px",maxWidth:900,margin:"0 auto"}}>
         <div style={{textAlign:"center",marginBottom:28}}>
           <p style={{color:GOLD,fontSize:10.5,letterSpacing:2.5,textTransform:"uppercase",margin:"0 0 8px",fontWeight:500,fontFamily:ff}}>Pour aller plus loin</p>
           <h2 style={{fontFamily:fs,fontSize:28,color:NAVY,fontWeight:500,margin:0,letterSpacing:-0.3}}>Services complémentaires</h2>
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:16}}>
+        <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"repeat(2,1fr)",gap:16}}>
           {services.map((s,i)=>(
             <div key={i} onMouseEnter={()=>setHov(i)} onMouseLeave={()=>setHov(null)} style={cardStyle(i)}>
               <div style={{width:34,height:34,background:GOLD_LIGHT,borderRadius:7,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:14,color:GOLD,fontSize:17,fontWeight:600,fontFamily:fs}}>{s.icon}</div>

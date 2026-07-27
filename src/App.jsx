@@ -1572,6 +1572,7 @@ function PageFAQ({onBack,onNavigate}){
   const fs="'Cormorant Garamond',Georgia,serif";
   const [open,setOpen]=useState(null);
   const toggle=i=>setOpen(o=>o===i?null:i);
+  const isMobile=useIsMobile();
 
   const sections = [
     {
@@ -1642,9 +1643,9 @@ function PageFAQ({onBack,onNavigate}){
       <section style={{position:"relative",overflow:"hidden",minHeight:"min(340px,45vh)",display:"flex",alignItems:"center",justifyContent:"center"}}>
         <div style={{position:"absolute",inset:0,backgroundImage:`url(${handshakeImage})`,backgroundSize:"cover",backgroundPosition:"center"}} aria-hidden="true"/>
         <div style={{position:"absolute",inset:0,background:"linear-gradient(135deg, rgba(11,37,69,0.92) 0%, rgba(11,37,69,0.78) 50%, rgba(26,58,107,0.72) 100%)"}} aria-hidden="true"/>
-        <div style={{position:"relative",zIndex:2,padding:"60px 32px",maxWidth:900,margin:"0 auto",textAlign:"center"}}>
+        <div style={{position:"relative",zIndex:2,padding:isMobile?"48px 20px":"60px 32px",maxWidth:900,margin:"0 auto",textAlign:"center"}}>
           <p style={{color:GOLD,fontSize:10.5,letterSpacing:2.5,textTransform:"uppercase",margin:"0 0 14px",fontWeight:500,fontFamily:ff}}>Foire aux questions</p>
-          <h1 style={{fontFamily:fs,fontSize:42,lineHeight:1.15,color:"#fff",fontWeight:500,margin:"0 auto 12px",letterSpacing:-0.6,maxWidth:640,textShadow:"0 2px 12px rgba(0,0,0,0.25)"}}>
+          <h1 style={{fontFamily:fs,fontSize:isMobile?32:42,lineHeight:1.15,color:"#fff",fontWeight:500,margin:"0 auto 12px",letterSpacing:-0.6,maxWidth:640,textShadow:"0 2px 12px rgba(0,0,0,0.25)"}}>
             Questions <em style={{color:GOLD,fontStyle:"italic",fontWeight:500}}>Fréquentes</em>
           </h1>
           <p style={{fontSize:14,lineHeight:1.6,color:"rgba(255,255,255,0.75)",maxWidth:520,margin:"0 auto",fontWeight:300,fontFamily:ff}}>
@@ -1654,7 +1655,7 @@ function PageFAQ({onBack,onNavigate}){
       </section>
 
       {/* SECTIONS FAQ */}
-      <section style={{padding:"56px 32px",maxWidth:820,margin:"0 auto"}}>
+      <section style={{padding:isMobile?"40px 20px":"56px 32px",maxWidth:820,margin:"0 auto"}}>
         {sections.map((sec, si) => (
           <div key={si} style={{marginBottom:si<sections.length-1?44:0}}>
             <div style={{textAlign:"center",marginBottom:24}}>
@@ -1671,7 +1672,7 @@ function PageFAQ({onBack,onNavigate}){
                     <span style={{fontSize:24,color:GOLD,fontWeight:300,lineHeight:1,transition:"transform .2s",transform:isOpen?"rotate(45deg)":"none",flexShrink:0}}>+</span>
                   </button>
                   {isOpen && (
-                    <div style={{paddingBottom:22,paddingRight:32}}>
+                    <div style={{paddingBottom:22,paddingRight:isMobile?0:32}}>
                       <p style={{margin:0,fontSize:14,color:"#4A5568",lineHeight:1.7,fontWeight:300,fontFamily:ff}}>{item.a}</p>
                     </div>
                   )}
@@ -1683,11 +1684,11 @@ function PageFAQ({onBack,onNavigate}){
       </section>
 
       {/* CTA CONTACT */}
-      <section style={{padding:"48px 32px",background:"#F8F5ED",borderTop:"1px solid #E2E8F0"}}>
+      <section style={{padding:isMobile?"40px 20px":"48px 32px",background:"#F8F5ED",borderTop:"1px solid #E2E8F0"}}>
         <div style={{maxWidth:640,margin:"0 auto",textAlign:"center"}}>
           <h2 style={{fontFamily:fs,fontSize:24,color:NAVY,fontWeight:500,margin:"0 0 10px",letterSpacing:-0.3}}>Une autre question ?</h2>
           <p style={{fontSize:14,color:"#4A5568",margin:"0 0 20px",lineHeight:1.6,fontFamily:ff,fontWeight:300}}>Notre équipe reste à votre disposition pour toute demande spécifique.</p>
-          <a href="mailto:recrutement@sentissilegal.com" style={{display:"inline-block",background:NAVY,color:"#fff",fontWeight:500,fontSize:13.5,padding:"12px 26px",borderRadius:7,textDecoration:"none",fontFamily:ff}}>recrutement@sentissilegal.com</a>
+          <a href="mailto:recrutement@sentissilegal.com" style={{display:"inline-block",background:NAVY,color:"#fff",fontWeight:500,fontSize:isMobile?12.5:13.5,padding:isMobile?"12px 18px":"12px 26px",borderRadius:7,textDecoration:"none",fontFamily:ff,wordBreak:"break-word"}}>recrutement@sentissilegal.com</a>
         </div>
       </section>
 

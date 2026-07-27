@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 const NAVY="#0B2545",GOLD="#C8A046",CREAM="#F8F5ED",GOLD_LIGHT="#F5EDD6";
 const ADMIN_EMAIL="admin@jurijob.ma";
 
-const DIPLOMES_CAND_LABELS={bac:"Bac",deug:"DEUG",licence:"Licence",master1:"Master I",master2:"Master II",barreau:"CAPA",doctorat:"Doctorat",autre:"Autre"};
+const DIPLOMES_CAND_LABELS={bac:"Bac",deug:"DEUG",licence:"Licence",licence_bac4:"Licence (Bac+4, ancien système)",master1:"Master I",master2:"Master II",barreau:"CAPA",doctorat:"Doctorat",autre:"Autre"};
 const NIVEAUX_LABELS={stagiaire:"Stagiaire",junior:"Junior",confirme:"Confirmé",senior:"Senior",directeur:"Directeur juridique"};
 
 const SPECS=[
@@ -38,7 +38,10 @@ const triExp=list=>[...(list||[])].sort((a,b)=>(!!b.encours-!!a.encours)||(moisA
 const triFo=list=>[...(list||[])].sort((a,b)=>((parseInt(b.annee,10)||0)-(parseInt(a.annee,10)||0)));
 
 const NIV_ORDER=["stagiaire","junior","confirme","senior","directeur"];
-const DIPL_ORDER=["bac","deug","licence","master1","master2","barreau","notariat","doctorat"];
+// Rangs explicites (et non plus un simple tableau indexOf) pour permettre à deux diplômes
+// d'être à égalité de niveau — ex. "licence_bac4" (ancien système, avant la réforme LMD)
+// est reconnu comme équivalent à "master1".
+const DIPL_RANK={bac:0,deug:1,licence:2,licence_bac4:3,master1:3,master2:4,barreau:5,notariat:6,doctorat:7};
 
 function scoreCandidat(c,d){
   let score=0; const details={};
@@ -61,9 +64,11 @@ function scoreCandidat(c,d){
   let diplomeScore=0;
   if(d.diplome==="indifferent"){ diplomeScore=15; }
   else{
-    const cdi=DIPL_ORDER.indexOf(c.diplome),ddi=DIPL_ORDER.indexOf(d.diplome);
-    if(cdi>=ddi) diplomeScore=15;
-    else if(ddi-cdi===1) diplomeScore=8;
+    const cdi=DIPL_RANK[c.diplome],ddi=DIPL_RANK[d.diplome];
+    if(cdi!==undefined && ddi!==undefined){
+      if(cdi>=ddi) diplomeScore=15;
+      else if(ddi-cdi===1) diplomeScore=8;
+    }
   }
   score+=diplomeScore;
   details.diplome={score:diplomeScore,max:15};

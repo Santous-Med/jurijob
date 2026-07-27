@@ -28,7 +28,7 @@ const CONTRATS=["CDI","CDD","Stage","Freelance / Consulting","Associé(e)","Coll
 const DISPOS=["Immédiatement","Sous 1 mois","Sous 3 mois","En veille passive"];
 const MODALITES=["Présentiel","Hybride","Télétravail"];
 const NIVEAUX_RH=[{val:"stagiaire",label:"Stagiaire",sub:"0 an"},{val:"junior",label:"Junior",sub:"1 – 3 ans"},{val:"confirme",label:"Confirmé",sub:"3 – 7 ans"},{val:"senior",label:"Senior",sub:"7 – 12 ans"},{val:"directeur",label:"Directeur juridique",sub:"12 ans +"}];
-const DIPLOMES_RH=[{val:"licence",label:"Licence en droit"},{val:"master1",label:"Master I"},{val:"master2",label:"Master II / DESA"},{val:"doctorat",label:"Doctorat"},{val:"barreau",label:"Diplôme du Barreau"},{val:"notariat",label:"Notariat"},{val:"indifferent",label:"Indifférent"}];
+const DIPLOMES_RH=[{val:"licence",label:"Licence en droit"},{val:"licence_bac4",label:"Licence (ancien système, Bac+4)"},{val:"master1",label:"Master I"},{val:"master2",label:"Master II / DESA"},{val:"doctorat",label:"Doctorat"},{val:"barreau",label:"Diplôme du Barreau"},{val:"notariat",label:"Notariat"},{val:"indifferent",label:"Indifférent"}];
 const LANGUES_RH=["Arabe","Français","Anglais","Espagnol","Allemand","Italien","Mandarin"];
 const STEPS_C=["Identité","Formation","Expériences","Spécialisations","Langues","Préférences","Aperçu"];
 const STEPS_R=["Votre profil","Genre & Langues","Expérience & Diplôme","Spécialisation","Confirmation"];
@@ -60,6 +60,7 @@ const DIPLOMES_CAND=[
   {val:"bac",label:"Baccalauréat"},
   {val:"deug",label:"DEUG / Bac+2"},
   {val:"licence",label:"Licence"},
+  {val:"licence_bac4",label:"Licence (ancien système, Bac+4)"},
   {val:"master1",label:"Master I"},
   {val:"master2",label:"Master II / DESA / DESS / DEA"},
   {val:"barreau",label:"CAPA (avocat — France)"},

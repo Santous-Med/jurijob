@@ -90,10 +90,16 @@ function useIsMobile(breakpoint=768){
   return isMobile;
 }
 const iSt={padding:"8px 11px",borderRadius:7,fontSize:13,border:"1.5px solid #CBD5E0",background:"#fff",color:NAVY,outline:"none",width:"100%",boxSizing:"border-box"};
-const Inp=({val,onChange,ph,style,filter})=><input value={val} onChange={e=>onChange(filter?filter(e.target.value):e.target.value)} placeholder={ph} style={{...iSt,...style}}/>;
+const Inp=({val,onChange,ph,style,filter,onBlur})=><input value={val} onChange={e=>onChange(filter?filter(e.target.value):e.target.value)} onBlur={onBlur} placeholder={ph} style={{...iSt,...style}}/>;
 const Lbl=({t,r})=><label style={{fontSize:12,fontWeight:500,color:"#4A5568",display:"block",marginBottom:5}}>{t}{r&&<span style={{color:GOLD,marginLeft:3}}>*</span>}</label>;
 const Pill=({active,onClick,children})=><button onClick={onClick} style={{padding:"6px 13px",borderRadius:20,fontSize:12.5,cursor:"pointer",background:active?NAVY:"transparent",color:active?"#fff":NAVY,border:`1.5px solid ${active?NAVY:"#CBD5E0"}`,fontWeight:active?500:400}}>{children}</button>;
 const SecTitle=({t})=><p style={{fontSize:11,fontWeight:500,color:GOLD,textTransform:"uppercase",letterSpacing:.8,margin:"0 0 10px",borderBottom:`1px solid ${CREAM}`,paddingBottom:6}}>{t}</p>;
+
+/* Normalise la casse d'un nom propre : « el amrani » ou « EL AMRANI » → « El Amrani ».
+   Découpe sur les espaces, tirets et apostrophes (droites ou typographiques),
+   et réduit les espaces multiples. */
+const capNom = s => (s||"").trim().replace(/\s+/g," ").toLowerCase()
+  .replace(/(^|[\s\-'’])([a-zà-ÿ])/g,(m,p1,p2)=>p1+p2.toUpperCase());
 
 /* Calcule la durée entre deux dates MM/AAAA (ou « en cours ») */
 const calcDuree=(debut,fin,encours)=>{
@@ -556,8 +562,8 @@ function EspaceCandidat({session,onLogout}){
   const { error } = await supabase
     .from('candidats')
     .insert([{
-      prenom: f.prenom, nom: f.nom, email: f.email,
-      tel: f.tel, ville: f.ville, titre: f.titre,
+      prenom: capNom(f.prenom), nom: capNom(f.nom), email: f.email,
+      tel: f.tel, ville: capNom(f.ville), titre: f.titre,
       pays: f.pays, niveau: f.niveau, diplome: f.diplome,
       formations: f.formations, experiences: f.experiences,
       specs: f.specs, langues: f.langues,
@@ -593,7 +599,7 @@ salaire_actuel: f.salaireActuel,
   const enregistrerModifs=async()=>{
     setSaving(true);
     const payload={
-      prenom:f.prenom, nom:f.nom, tel:f.tel, ville:f.ville, titre:f.titre,
+      prenom:capNom(f.prenom), nom:capNom(f.nom), tel:f.tel, ville:capNom(f.ville), titre:f.titre,
       pays:f.pays, niveau:f.niveau, diplome:f.diplome,
       formations:f.formations.map(({editing,...r})=>r),
       experiences:f.experiences.map(({editing,...r})=>r),
@@ -659,8 +665,8 @@ salaire_actuel: f.salaireActuel,
     if(step===0)return(
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-          <div><Lbl t="Prénom" r/><Inp val={f.prenom} onChange={v=>upd("prenom",v)} ph="Votre prénom"/></div>
-          <div><Lbl t="Nom" r/><Inp val={f.nom} onChange={v=>upd("nom",v)} ph="Votre nom"/></div>
+          <div><Lbl t="Prénom" r/><Inp val={f.prenom} onChange={v=>upd("prenom",v)} onBlur={()=>upd("prenom",capNom(f.prenom))} ph="Votre prénom"/></div>
+          <div><Lbl t="Nom" r/><Inp val={f.nom} onChange={v=>upd("nom",v)} onBlur={()=>upd("nom",capNom(f.nom))} ph="Votre nom"/></div>
         </div>
         <div><Lbl t="Titre professionnel" r/>
           <datalist id="titres-list">{TITRES.map(t=><option key={t} value={t}/>)}</datalist>

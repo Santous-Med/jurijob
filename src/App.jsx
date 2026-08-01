@@ -1641,6 +1641,31 @@ function PageServices({onBack,onNavigate}){
             Chaque short-list est validée manuellement par un ex-Directeur juridique. Vous gardez la main sur l'entretien et la décision finale.
           </p>
         </div>
+
+        {/* Bloc tarif */}
+        <div style={{background:"#fff",border:`1.5px solid ${GOLD}`,borderRadius:12,padding:isMobile?"24px 20px":"30px 32px",marginTop:18,textAlign:"center"}}>
+          <p style={{color:GOLD,fontSize:10.5,letterSpacing:2.5,textTransform:"uppercase",margin:"0 0 12px",fontWeight:500,fontFamily:ff}}>Tarification</p>
+          <p style={{fontFamily:fs,fontSize:isMobile?36:44,color:NAVY,fontWeight:500,margin:"0 0 2px",lineHeight:1,letterSpacing:-1}}>1 490 <span style={{fontSize:isMobile?20:24}}>MAD HT</span></p>
+          <p style={{fontSize:13,color:"#718096",margin:"0 0 20px",fontFamily:ff}}>par profil livré · soit 1 788 MAD TTC</p>
+          <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"repeat(3,1fr)",gap:12,margin:"0 0 20px",textAlign:"left"}}>
+            {[
+              ["Sans abonnement","Vous ne payez que les profils que vous recevez."],
+              ["Sans commission","Aucun pourcentage prélevé sur le salaire du candidat recruté."],
+              ["Sans engagement","Une demande ponctuelle ou récurrente, à votre rythme."]
+            ].map(([t,d])=>(
+              <div key={t} style={{background:"#F8F5ED",borderRadius:9,padding:"14px 15px"}}>
+                <p style={{margin:"0 0 5px",fontSize:13,fontWeight:600,color:NAVY,fontFamily:ff}}>{t}</p>
+                <p style={{margin:0,fontSize:12.5,color:"#4A5568",lineHeight:1.55,fontFamily:ff,fontWeight:300}}>{d}</p>
+              </div>
+            ))}
+          </div>
+          <p style={{fontSize:13,color:"#4A5568",lineHeight:1.7,margin:"0 0 6px",fontFamily:ff,fontWeight:300}}>
+            Le montant total vous est communiqué <strong style={{color:NAVY,fontWeight:600}}>avant tout paiement</strong>. Si aucun profil de la CVthèque ne correspond à vos critères, aucune short-list n'est livrée et rien ne vous est facturé.
+          </p>
+          <p style={{fontSize:12.5,color:"#718096",lineHeight:1.65,margin:0,fontFamily:ff,fontWeight:300}}>
+            Une tarification préférentielle s'applique à partir de cinq profils. <a href="mailto:recrutement@sentissilegal.com" style={{color:GOLD,textDecoration:"none",fontWeight:500}}>Écrivez-nous</a> pour un devis adapté à vos volumes.
+          </p>
+        </div>
       </section>
 
       {/* SERVICES COMPLÉMENTAIRES */}
@@ -1930,7 +1955,7 @@ function PageFAQ({onBack,onNavigate}){
         },
         {
           q: "En quoi JURIJOB diffère d'un cabinet de recrutement classique ?",
-          a: "Un cabinet de recrutement facture au succès de l'embauche, souvent 15 à 25 % du salaire annuel du candidat recruté. JURIJOB facture un tarif fixe et transparent par profil livré, communiqué directement au recruteur lors de sa demande. Nous ne sommes pas rémunérés au succès de votre embauche, mais à la qualité de la sélection — cela nous permet de rester objectifs et de proposer un service à coût maîtrisé, même pour des besoins récurrents."
+          a: "Un cabinet de recrutement facture au succès de l'embauche, souvent 15 à 25 % du salaire annuel du candidat recruté — soit plusieurs dizaines de milliers de dirhams pour un juriste confirmé. JURIJOB facture 1 490 MAD HT par profil livré, sans abonnement et sans commission sur l'embauche. Nous ne sommes pas rémunérés au succès de votre recrutement, mais à la qualité de la sélection — cela nous permet de rester objectifs et de proposer un service à coût maîtrisé, même pour des besoins récurrents."
         },
         {
           q: "Qui est derrière JURIJOB ?",
@@ -1941,6 +1966,14 @@ function PageFAQ({onBack,onNavigate}){
     {
       titre: "Pour les recruteurs",
       faqs: [
+        {
+          q: "Combien coûte une short-list ?",
+          a: "1 490 MAD HT par profil livré, soit 1 788 MAD TTC. Vous choisissez le nombre de profils souhaité lors de votre demande, et le montant total vous est communiqué avant tout paiement — vous savez donc exactement ce que vous engagez. Aucun abonnement, aucune commission sur le salaire du candidat recruté. Si aucun profil de notre CVthèque ne correspond à vos critères, aucune short-list n'est livrée et rien ne vous est facturé. Une tarification préférentielle s'applique à partir de cinq profils : écrivez-nous à recrutement@sentissilegal.com pour un devis adapté."
+        },
+        {
+          q: "Quand et comment s'effectue le paiement ?",
+          a: "Vous ne payez qu'après avoir reçu votre short-list. Le règlement s'effectue par virement bancaire : les coordonnées et une référence unique vous sont communiquées dans votre espace recruteur. Une fois le virement signalé et sa réception confirmée par nos soins — généralement sous 24 heures ouvrées — les profils complets se débloquent : identité, coordonnées, parcours et expériences. Tant que le paiement n'est pas confirmé, les profils restent verrouillés."
+        },
         {
           q: "Comment JURIJOB sélectionne-t-il ses candidats ?",
           a: "Nous appliquons une méthodologie rigoureuse fondée sur une expertise juridique de terrain. Notre algorithme de scoring évalue chaque profil sur quatre dimensions clés : spécialisations juridiques, langues, expérience et diplôme. Chaque short-list est ensuite validée manuellement par un ex-Directeur juridique, avant envoi au recruteur."
@@ -1995,7 +2028,7 @@ function PageFAQ({onBack,onNavigate}){
             Questions <em style={{color:GOLD,fontStyle:"italic",fontWeight:500}}>Fréquentes</em>
           </h1>
           <p style={{fontSize:14,lineHeight:1.6,color:"rgba(255,255,255,0.75)",maxWidth:520,margin:"0 auto",fontWeight:300,fontFamily:ff}}>
-            Tout ce que vous devez savoir sur JURIJOB : notre approche, nos tarifs, nos délais et nos garanties.
+            Tout ce que vous devez savoir sur JURIJOB : notre approche, nos tarifs, nos délais et notre méthode.
           </p>
         </div>
       </section>

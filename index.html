@@ -22,6 +22,7 @@
     <meta property="og:image" content="https://www.jurijob.ma/og-image.jpg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="JURIJOB — Smart Recrutement Juridique" />
     <meta property="og:locale" content="fr_FR" />
 
     <!-- Twitter Card -->
@@ -29,6 +30,70 @@
     <meta name="twitter:title" content="JURIJOB — Smart Recrutement Juridique" />
     <meta name="twitter:description" content="Une short-list de juristes présélectionnés et scorés, au Maroc et en Afrique francophone." />
     <meta name="twitter:image" content="https://www.jurijob.ma/og-image.jpg" />
+
+    <!-- Données structurées — Organisation + Service -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://www.jurijob.ma/#organisation",
+          "name": "JURIJOB",
+          "alternateName": "JURIJOB — Smart Recrutement Juridique",
+          "url": "https://www.jurijob.ma/",
+          "logo": "https://www.jurijob.ma/og-image.jpg",
+          "email": "recrutement@sentissilegal.com",
+          "description": "Plateforme de sourcing de profils juridiques au Maroc et en Afrique francophone.",
+          "parentOrganization": {
+            "@type": "Organization",
+            "name": "Sentissi Legal Advisory",
+            "url": "https://www.sentissilegal.com"
+          },
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "12, rue Saria Ben Zounaim, étage 3, appartement 3 — Palmier",
+            "addressLocality": "Casablanca",
+            "addressCountry": "MA"
+          },
+          "founder": {
+            "@type": "Person",
+            "name": "Mohammed Sentissi",
+            "jobTitle": "Expert juridique, ex-Directeur juridique de holdings"
+          },
+          "areaServed": [
+            { "@type": "Country", "name": "Maroc" },
+            { "@type": "Country", "name": "Sénégal" },
+            { "@type": "Country", "name": "Côte d'Ivoire" },
+            { "@type": "Country", "name": "Tunisie" },
+            { "@type": "Country", "name": "France" }
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://www.jurijob.ma/#site",
+          "url": "https://www.jurijob.ma/",
+          "name": "JURIJOB",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://www.jurijob.ma/#organisation" }
+        },
+        {
+          "@type": "Service",
+          "name": "Short-list de profils juridiques",
+          "serviceType": "Sourcing de profils juridiques",
+          "provider": { "@id": "https://www.jurijob.ma/#organisation" },
+          "description": "Livraison d'une sélection de juristes présélectionnés et scorés selon les critères du recruteur : spécialisation, expérience, diplôme et langues.",
+          "offers": {
+            "@type": "Offer",
+            "price": "1490",
+            "priceCurrency": "MAD",
+            "description": "Prix hors taxes par profil livré",
+            "availability": "https://schema.org/InStock"
+          }
+        }
+      ]
+    }
+    </script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -39,6 +104,14 @@
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <div style="max-width:640px;margin:60px auto;padding:0 24px;font-family:sans-serif;color:#0B2545;line-height:1.7">
+        <h1 style="font-size:24px;font-weight:600">JURIJOB — Smart Recrutement Juridique</h1>
+        <p>Plateforme de sourcing de profils juridiques pour le Maroc et l'Afrique francophone, éditée par Sentissi Legal Advisory.</p>
+        <p>Les directions juridiques et RH définissent leurs critères — spécialisation, niveau d'expérience, diplôme, langues — et reçoivent une short-list de juristes présélectionnés et scorés, validée manuellement par un ex-Directeur juridique.</p>
+        <p>L'activation de JavaScript est nécessaire pour utiliser la plateforme. Pour toute demande : <a href="mailto:recrutement@sentissilegal.com" style="color:#C8A046">recrutement@sentissilegal.com</a></p>
+      </div>
+    </noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

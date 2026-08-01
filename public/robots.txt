@@ -1,0 +1,7 @@
+# JURIJOB — www.jurijob.ma
+# Sentissi Legal Advisory
+
+User-agent: *
+Allow: /
+
+Sitemap: https://www.jurijob.ma/sitemap.xml

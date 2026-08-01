@@ -218,7 +218,7 @@ function Landing({onChoose}){
       <section style={{padding:"36px 32px",borderTop:"1px solid #E2E8F0",borderBottom:"1px solid #E2E8F0",background:"#fff"}}>
         <div style={{maxWidth:1100,margin:"0 auto",display:"grid",gridTemplateColumns:isMobile?"1fr":"repeat(3,1fr)",gap:24,textAlign:"center"}}>
           {[
-            ["48h","Délai short-list garanti"],
+            ["48h","Livraison de la short-list"],
             ["24 ans","D'expérience juridique"],
             ["Maroc + Afrique","Couverture géographique"]
           ].map(([v,l])=>(
@@ -319,6 +319,8 @@ function Landing({onChoose}){
           <div style={{display:"flex",alignItems:"center",gap:18}}>
             <button onClick={()=>onChoose("services")} style={{background:"none",border:"none",color:"#4A5568",fontSize:12,cursor:"pointer",fontFamily:ff}}>Services</button>
             <button onClick={()=>onChoose("faq")} style={{background:"none",border:"none",color:"#4A5568",fontSize:12,cursor:"pointer",fontFamily:ff}}>FAQ</button>
+            <button onClick={()=>onChoose("cgu")} style={{background:"none",border:"none",color:"#4A5568",fontSize:12,cursor:"pointer",fontFamily:ff}}>CGU</button>
+            <button onClick={()=>onChoose("cgv")} style={{background:"none",border:"none",color:"#4A5568",fontSize:12,cursor:"pointer",fontFamily:ff}}>CGV</button>
             <button onClick={()=>onChoose("legal")} style={{background:"none",border:"none",color:"#4A5568",fontSize:12,cursor:"pointer",fontFamily:ff}}>Mentions légales</button>
             <span style={{fontSize:12,color:"#4A5568",fontFamily:ff}}>recrutement@sentissilegal.com</span>
             <button onClick={()=>onChoose("admin")} style={{background:"none",border:"none",color:"#A0AEC0",fontSize:10.5,cursor:"pointer",fontFamily:ff}}>Admin</button>
@@ -1687,6 +1689,221 @@ function PageServices({onBack,onNavigate}){
 }
 
 /* ═══════════════════════════════════════
+   GABARIT COMMUN — Pages juridiques (CGU / CGV)
+═══════════════════════════════════════ */
+function PageJuridique({titre,titreEm,sousTitre,articles,maj,onBack,onNavigate}){
+  useEffect(()=>{
+    if(!document.getElementById('gfont-jurijob-landing')){
+      const l=document.createElement('link'); l.id='gfont-jurijob-landing'; l.rel='stylesheet';
+      l.href='https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap';
+      document.head.appendChild(l);
+    }
+  },[]);
+  const ff="'Inter',system-ui,sans-serif";
+  const fs="'Cormorant Garamond',Georgia,serif";
+  const isMobile=useIsMobile();
+
+  return(
+    <div style={{background:"#fff",minHeight:"100vh",fontFamily:ff,color:"#1a202c",overflowX:"hidden",width:"100%",boxSizing:"border-box"}}>
+      <nav style={{background:"#fff",borderBottom:"1px solid #E2E8F0",padding:isMobile?"0 16px":"0 32px",display:"flex",justifyContent:"space-between",alignItems:"center",height:64,position:"sticky",top:0,zIndex:10}}>
+        <Logo size="header"/>
+        <button onClick={onBack} style={{background:"none",border:"none",color:"#4A5568",fontSize:13,cursor:"pointer",fontFamily:ff}}>← Retour à l'accueil</button>
+      </nav>
+
+      <section style={{background:NAVY,padding:isMobile?"48px 20px":"64px 32px",textAlign:"center"}}>
+        <div style={{maxWidth:900,margin:"0 auto"}}>
+          <p style={{color:GOLD,fontSize:10.5,letterSpacing:2.5,textTransform:"uppercase",margin:"0 0 14px",fontWeight:500,fontFamily:ff}}>Informations juridiques</p>
+          <h1 style={{fontFamily:fs,fontSize:isMobile?30:42,lineHeight:1.15,color:"#fff",fontWeight:500,margin:"0 auto 12px",letterSpacing:-0.6}}>
+            {titre} <em style={{color:GOLD,fontStyle:"italic",fontWeight:500}}>{titreEm}</em>
+          </h1>
+          <p style={{fontSize:14,lineHeight:1.6,color:"rgba(255,255,255,0.75)",maxWidth:560,margin:"0 auto",fontWeight:300,fontFamily:ff}}>{sousTitre}</p>
+        </div>
+      </section>
+
+      <section style={{padding:isMobile?"40px 20px":"56px 32px",maxWidth:820,margin:"0 auto"}}>
+        {articles.map((a,i)=>(
+          <div key={i} style={{marginBottom:i<articles.length-1?38:8}}>
+            <p style={{color:GOLD,fontSize:10.5,letterSpacing:2.5,textTransform:"uppercase",margin:"0 0 8px",fontWeight:500,fontFamily:ff}}>Article {i+1}</p>
+            <h2 style={{fontFamily:fs,fontSize:isMobile?22:26,color:NAVY,fontWeight:500,margin:"0 0 16px",letterSpacing:-0.3}}>{a.titre}</h2>
+            {a.paras.map((t,j)=>(
+              <p key={j} style={{fontSize:14,color:"#4A5568",lineHeight:1.75,fontFamily:ff,fontWeight:300,margin:j<a.paras.length-1?"0 0 13px":0}} dangerouslySetInnerHTML={{__html:t}}/>
+            ))}
+            {a.encadre&&(
+              <div style={{background:"#F8F5ED",border:`1px solid ${GOLD_LIGHT}`,borderRadius:10,padding:isMobile?"16px 15px":"18px 22px",marginTop:14}}>
+                <p style={{margin:0,fontSize:13.5,color:NAVY,lineHeight:1.7,fontFamily:ff}} dangerouslySetInnerHTML={{__html:a.encadre}}/>
+              </div>
+            )}
+          </div>
+        ))}
+        <p style={{fontSize:12.5,color:"#A0AEC0",lineHeight:1.7,fontFamily:ff,fontWeight:300,margin:"32px 0 0",fontStyle:"italic"}}>{maj}</p>
+      </section>
+
+      <footer style={{background:"#fff",padding:"24px 32px",borderTop:"1px solid #E2E8F0"}}>
+        <div style={{maxWidth:1100,margin:"0 auto",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:16}}>
+          <div style={{display:"flex",alignItems:"center",gap:14}}>
+            <Logo size="compact"/>
+            <span style={{fontSize:11,color:"#A0AEC0",fontFamily:ff}}>© 2026 — Smart Recrutement Juridique</span>
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:16,flexWrap:"wrap"}}>
+            <button onClick={onBack} style={{background:"none",border:"none",color:"#4A5568",fontSize:12,cursor:"pointer",fontFamily:ff}}>Accueil</button>
+            <button onClick={()=>onNavigate&&onNavigate("cgu")} style={{background:"none",border:"none",color:"#4A5568",fontSize:12,cursor:"pointer",fontFamily:ff}}>CGU</button>
+            <button onClick={()=>onNavigate&&onNavigate("cgv")} style={{background:"none",border:"none",color:"#4A5568",fontSize:12,cursor:"pointer",fontFamily:ff}}>CGV</button>
+            <button onClick={()=>onNavigate&&onNavigate("legal")} style={{background:"none",border:"none",color:"#4A5568",fontSize:12,cursor:"pointer",fontFamily:ff}}>Mentions légales</button>
+            <span style={{fontSize:12,color:"#4A5568",fontFamily:ff}}>recrutement@sentissilegal.com</span>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════
+   CGU — Conditions Générales d'Utilisation
+═══════════════════════════════════════ */
+const ART_CGU=[
+  {titre:"Objet et champ d'application",paras:[
+    "Les présentes Conditions Générales d'Utilisation (ci-après les « CGU ») définissent les modalités d'accès et d'utilisation de la plateforme <strong>JURIJOB</strong>, accessible à l'adresse www.jurijob.ma, éditée par la société SENTISSI LEGAL ADVISORY SARL AU (ci-après « SLA » ou « la Plateforme »).",
+    "JURIJOB est un outil de sourcing spécialisé dans les métiers du droit. La Plateforme met en relation des professionnels du droit — juristes d'entreprise, avocats, notaires, fiscalistes, compliance officers — avec des recruteurs identifiés au Maroc et en Afrique francophone.",
+    "Toute utilisation de la Plateforme emporte acceptation pleine et entière des présentes CGU. L'utilisateur qui n'accepte pas ces conditions doit renoncer à utiliser le service."
+  ]},
+  {titre:"Définitions",paras:[
+    "<strong>Candidat</strong> : toute personne physique créant un profil dans la CVthèque JURIJOB en vue d'être proposée à des recruteurs.",
+    "<strong>Recruteur</strong> : toute personne morale ou physique agissant dans le cadre de son activité professionnelle, déposant une demande de sourcing sur la Plateforme.",
+    "<strong>Short-list</strong> : sélection de profils de candidats, évalués puis validés manuellement, transmise à un recruteur en réponse à sa demande.",
+    "<strong>CVthèque</strong> : base de données des profils candidats constituée et exploitée par SLA."
+  ]},
+  {titre:"Accès au service",paras:[
+    "La consultation des pages publiques de la Plateforme est libre et gratuite. La création d'un compte est nécessaire pour déposer un profil candidat ou une demande de sourcing.",
+    "L'utilisateur est responsable de son équipement informatique et de sa connexion Internet. Les frais d'accès au réseau demeurent à sa charge.",
+    "SLA se réserve le droit de suspendre temporairement l'accès à la Plateforme pour des raisons de maintenance, de mise à jour ou de sécurité, sans que cette interruption puisse ouvrir droit à indemnisation."
+  ]},
+  {titre:"Inscription et compte utilisateur",paras:[
+    "L'inscription requiert la communication d'informations exactes, complètes et à jour. L'utilisateur s'engage à maintenir l'exactitude de ces informations pendant toute la durée d'utilisation du service.",
+    "Une adresse e-mail valide est exigée ; son activation peut être soumise à vérification. Chaque utilisateur est seul responsable de la confidentialité de ses identifiants et de toute activité effectuée depuis son compte.",
+    "Une même adresse e-mail ne peut être associée qu'à un seul rôle — candidat ou recruteur. Pour disposer des deux espaces, l'utilisateur doit créer deux comptes distincts avec des adresses différentes.",
+    "SLA se réserve le droit de suspendre ou de supprimer tout compte en cas de manquement aux présentes CGU, notamment en cas d'informations manifestement fausses ou d'usurpation d'identité."
+  ]},
+  {titre:"Obligations du candidat",paras:[
+    "Le candidat garantit l'exactitude et la sincérité des informations qu'il déclare : identité, coordonnées, formations, expériences professionnelles, spécialisations et compétences linguistiques.",
+    "Il s'engage à ne renseigner que des données le concernant personnellement et dont il est en droit de disposer.",
+    "Le candidat conserve la maîtrise de son profil : il peut le consulter, le modifier, le compléter ou le supprimer définitivement à tout moment depuis son espace personnel.",
+    "Toute déclaration inexacte de nature à induire un recruteur en erreur engage la responsabilité exclusive du candidat et peut entraîner la suppression de son profil."
+  ]},
+  {titre:"Obligations du recruteur",paras:[
+    "Le recruteur agit exclusivement dans le cadre de son activité professionnelle et garantit disposer des pouvoirs nécessaires pour engager la structure qu'il représente.",
+    "Il s'engage à formuler des critères de recherche conformes au droit du travail applicable, notamment aux dispositions prohibant toute discrimination à l'embauche.",
+    "Les profils communiqués sont destinés au seul processus de recrutement au titre duquel ils ont été demandés. Toute extraction, conservation en base interne, revente, cession ou transmission à un tiers est strictement interdite.",
+    "Le recruteur demeure seul responsable de la conduite des entretiens, de l'appréciation des candidats et de sa décision finale d'embauche."
+  ]},
+  {titre:"Rôle et limites de la Plateforme",paras:[
+    "JURIJOB agit en qualité d'<strong>outil de sourcing</strong> et d'intermédiaire technique. La Plateforme n'exerce pas l'activité d'agence de recrutement privée et n'intervient pas dans la relation contractuelle qui peut se nouer entre un candidat et un recruteur.",
+    "SLA ne garantit ni l'embauche d'un candidat, ni sa disponibilité effective, ni l'exactitude des informations qu'il a déclarées sous sa propre responsabilité.",
+    "La Plateforme ne saurait être tenue responsable du déroulement des processus de recrutement, des engagements pris entre les parties, ni des conséquences d'une embauche."
+  ],
+  encadre:"<strong>Point essentiel.</strong> JURIJOB identifie et présente des profils pertinents. Le recruteur conserve l'intégralité de la maîtrise des entretiens et de la décision d'embauche."},
+  {titre:"Propriété intellectuelle",paras:[
+    "La Plateforme, sa structure, son design, ses textes, son logo, sa charte graphique, sa base de données et sa méthodologie de sélection sont protégés par les lois marocaines 2-00 relative aux droits d'auteur et droits voisins et 17-97 relative à la protection de la propriété industrielle.",
+    "La marque « JURIJOB — Smart Recrutement Juridique » est déposée auprès de l'OMPIC. Toute reproduction ou représentation, totale ou partielle, sans autorisation écrite préalable, est interdite.",
+    "Les contenus déposés par les utilisateurs demeurent leur propriété. Ceux-ci concèdent à SLA une licence d'utilisation non exclusive, limitée aux seules finalités de fonctionnement du service."
+  ]},
+  {titre:"Données personnelles",paras:[
+    "Le traitement des données personnelles est effectué conformément à la loi 09-08 relative à la protection des personnes physiques à l'égard du traitement des données à caractère personnel, et a fait l'objet d'une déclaration auprès de la CNDP.",
+    "Les profils candidats ne font l'objet d'aucune diffusion publique. Leur accès est strictement réservé aux recruteurs dont le paiement a été confirmé, et limité aux profils composant la short-list qui leur a été adressée.",
+    "Chaque utilisateur dispose d'un droit d'accès, de rectification et d'opposition, qu'il peut exercer en écrivant à recrutement@sentissilegal.com. Les modalités détaillées figurent dans les mentions légales."
+  ]},
+  {titre:"Modification des CGU",paras:[
+    "SLA se réserve le droit de modifier les présentes CGU à tout moment afin de les adapter à l'évolution du service ou de la réglementation.",
+    "Les utilisateurs sont informés de toute modification substantielle. La poursuite de l'utilisation de la Plateforme après modification vaut acceptation des nouvelles conditions."
+  ]},
+  {titre:"Droit applicable et litiges",paras:[
+    "Les présentes CGU sont régies par le droit marocain.",
+    "Tout litige relatif à leur interprétation ou à leur exécution relève de la compétence exclusive des tribunaux de Casablanca, à défaut de résolution amiable préalable."
+  ]},
+];
+
+function PageCGU({onBack,onNavigate}){
+  return <PageJuridique
+    titre="Conditions Générales" titreEm="d'Utilisation"
+    sousTitre="Les règles d'accès et d'utilisation de la plateforme JURIJOB, applicables aux candidats comme aux recruteurs."
+    articles={ART_CGU}
+    maj="Dernière mise à jour : août 2026."
+    onBack={onBack} onNavigate={onNavigate}/>;
+}
+
+/* ═══════════════════════════════════════
+   CGV — Conditions Générales de Vente
+═══════════════════════════════════════ */
+const ART_CGV=[
+  {titre:"Objet",paras:[
+    "Les présentes Conditions Générales de Vente (ci-après les « CGV ») régissent les prestations payantes proposées par SENTISSI LEGAL ADVISORY SARL AU (ci-après « SLA ») aux recruteurs professionnels via la plateforme JURIJOB.",
+    "Elles complètent les Conditions Générales d'Utilisation, auxquelles elles ne dérogent pas. En cas de contradiction, les présentes CGV prévalent pour tout ce qui concerne les prestations payantes.",
+    "Toute commande emporte acceptation pleine et entière des présentes CGV."
+  ]},
+  {titre:"Prestation : la short-list de profils juridiques",paras:[
+    "La prestation principale consiste en la livraison d'une <strong>short-list de profils juridiques présélectionnés</strong>, établie en réponse aux critères définis par le recruteur : spécialisations, niveau d'expérience, diplôme, langues et modalité de travail.",
+    "Chaque profil est évalué au moyen d'un algorithme de scoring propriétaire portant sur quatre dimensions, puis la sélection est validée manuellement avant transmission.",
+    "La prestation comprend, pour chaque profil livré : l'identité et les coordonnées du candidat, son parcours de formation, ses expériences professionnelles, ses spécialisations juridiques et ses compétences linguistiques.",
+    "La prestation ne comprend ni la conduite des entretiens, ni l'évaluation approfondie des candidats, ni aucune garantie d'embauche. Ces prestations peuvent faire l'objet de services complémentaires distincts, sur devis."
+  ]},
+  {titre:"Prix",paras:[
+    "Le prix unitaire est fixé à <strong>1 490 MAD hors taxes par profil livré</strong>, soit 1 788 MAD toutes taxes comprises, au taux de TVA en vigueur de 20 %.",
+    "Le montant total dû correspond au prix unitaire multiplié par le nombre de profils effectivement composant la short-list livrée. Ce montant est affiché au recruteur avant tout engagement de paiement.",
+    "Des conditions tarifaires spécifiques peuvent être consenties pour les besoins récurrents ou les volumes importants. Elles sont communiquées directement au recruteur et font l'objet d'un accord distinct.",
+    "Les prix sont susceptibles d'évoluer ; le tarif applicable est celui en vigueur au jour de la livraison de la short-list."
+  ]},
+  {titre:"Commande et livraison",paras:[
+    "Le recruteur dépose sa demande depuis son espace personnel en précisant ses critères et le nombre de profils souhaité.",
+    "SLA s'engage à livrer la short-list dans un <strong>délai indicatif de 48 heures ouvrées</strong> à compter de la validation de la demande, sous réserve que la CVthèque comporte des profils correspondant aux critères exprimés.",
+    "Lorsque aucun profil ne correspond aux critères, aucune short-list n'est livrée et <strong>aucune somme n'est due</strong>. SLA en informe le recruteur et peut lui proposer une prestation complémentaire de recherche directe, sur devis séparé.",
+    "Le nombre de profils livrés peut être inférieur au nombre demandé si la CVthèque ne permet pas de constituer une sélection pertinente. Le montant facturé est alors ajusté au nombre de profils effectivement livrés."
+  ]},
+  {titre:"Modalités de paiement",paras:[
+    "Le paiement s'effectue par <strong>virement bancaire</strong> sur le compte de SENTISSI LEGAL ADVISORY, dont les coordonnées et la référence de virement sont communiquées au recruteur au moment de la commande.",
+    "Le recruteur signale son virement depuis son espace personnel. L'accès aux profils est débloqué après vérification et confirmation de la réception des fonds par SLA, généralement sous 24 heures ouvrées.",
+    "Tant que le paiement n'a pas été confirmé, les profils composant la short-list demeurent inaccessibles au recruteur. Le défaut de paiement n'entraîne aucune pénalité : la short-list reste simplement verrouillée et devient caduque.",
+    "La référence de virement indiquée doit impérativement être reportée lors du transfert, à défaut de quoi le rapprochement du paiement ne peut être garanti."
+  ]},
+  {titre:"Annulation et rétractation",paras:[
+    "Le recruteur peut retirer sa demande à tout moment, <strong>tant qu'aucun paiement n'a été effectué</strong>, sans frais ni justification, en informant SLA à l'adresse recrutement@sentissilegal.com.",
+    "Une fois le paiement confirmé et l'accès aux profils débloqué, la prestation est réputée exécutée. Les services étant fournis à des professionnels agissant dans le cadre de leur activité, et l'accès aux contenus débutant dès la confirmation du paiement, le droit de rétractation ne trouve pas à s'appliquer.",
+    "Aucun remboursement ne peut être demandé au motif qu'aucun candidat de la short-list n'aurait été retenu à l'issue des entretiens. Le recruteur reconnaît que la prestation porte sur l'identification et la livraison de profils qualifiés, et non sur le résultat du recrutement."
+  ],
+  encadre:"<strong>À retenir.</strong> Le recruteur connaît le nombre de profils et le montant total <em>avant</em> de payer. Le paiement n'intervient donc jamais à l'aveugle."},
+  {titre:"Absence de garantie de résultat",paras:[
+    "SLA est tenue à une <strong>obligation de moyens</strong> et non de résultat. La prestation consiste à identifier et livrer des profils correspondant aux critères exprimés.",
+    "SLA ne garantit ni l'embauche d'un candidat, ni son acceptation d'une proposition, ni sa disponibilité effective à la date souhaitée, ni le maintien de sa candidature.",
+    "Les informations composant les profils sont déclarées par les candidats sous leur seule responsabilité. Il appartient au recruteur de procéder aux vérifications qu'il juge nécessaires, notamment quant aux diplômes et aux expériences déclarés."
+  ]},
+  {titre:"Utilisation des profils livrés",paras:[
+    "Les profils livrés sont destinés au seul processus de recrutement au titre duquel la short-list a été commandée.",
+    "Sont strictement interdites : l'extraction massive de données, la conservation des profils dans une base interne au-delà du processus concerné, la revente, la cession ou la communication à un tiers, ainsi que la réutilisation pour un poste distinct sans nouvelle commande.",
+    "Tout manquement engage la responsabilité du recruteur et peut donner lieu à la suspension immédiate de son accès, sans préjudice de toute action ultérieure."
+  ]},
+  {titre:"Responsabilité",paras:[
+    "La responsabilité de SLA, si elle venait à être engagée, ne saurait excéder le montant effectivement réglé par le recruteur au titre de la prestation concernée.",
+    "SLA ne saurait être tenue responsable des dommages indirects, notamment de la perte d'exploitation, de la perte de chance ou du préjudice commercial résultant d'un recrutement non abouti.",
+    "SLA s'efforce d'assurer la disponibilité de la Plateforme sans garantir une accessibilité ininterrompue."
+  ]},
+  {titre:"Facturation et données personnelles",paras:[
+    "Une facture est établie pour chaque prestation et adressée au recruteur à l'adresse électronique associée à son compte.",
+    "Le traitement des données personnelles est effectué conformément à la loi 09-08 et aux mentions légales de la Plateforme. Le recruteur, en sa qualité de destinataire de données personnelles de candidats, s'engage à en assurer la confidentialité et à n'en faire usage que pour la finalité de recrutement prévue."
+  ]},
+  {titre:"Droit applicable et litiges",paras:[
+    "Les présentes CGV sont régies par le droit marocain.",
+    "Tout litige relatif à leur interprétation ou à leur exécution relève de la compétence exclusive des tribunaux de Casablanca, à défaut de résolution amiable préalable."
+  ]},
+];
+
+function PageCGV({onBack,onNavigate}){
+  return <PageJuridique
+    titre="Conditions Générales" titreEm="de Vente"
+    sousTitre="Les conditions applicables aux prestations payantes de JURIJOB, destinées aux recruteurs professionnels."
+    articles={ART_CGV}
+    maj="Dernière mise à jour : août 2026."
+    onBack={onBack} onNavigate={onNavigate}/>;
+}
+
+/* ═══════════════════════════════════════
    FAQ — Accordéon, style clair institutionnel
 ═══════════════════════════════════════ */
 function PageFAQ({onBack,onNavigate}){
@@ -1897,6 +2114,8 @@ export default function App(){
   if(view==="services") return <PageServices onBack={()=>setView("landing")} onNavigate={(v)=>setView(v)}/>;
   if(view==="faq") return <PageFAQ onBack={()=>setView("landing")} onNavigate={(v)=>setView(v)}/>;
   if(view==="legal") return <PageMentionsLegales onBack={()=>setView("landing")} onNavigate={(v)=>setView(v)}/>;
+  if(view==="cgu") return <PageCGU onBack={()=>setView("landing")} onNavigate={(v)=>setView(v)}/>;
+  if(view==="cgv") return <PageCGV onBack={()=>setView("landing")} onNavigate={(v)=>setView(v)}/>;
   if(view==="candidat-auth") return <AuthCandidat onBack={()=>setView("landing")} onGoogle={loginGoogle} onSwitch={()=>{setIntendedRole("recruteur");setView("recruteur-auth");}}/>;
   if(view==="recruteur-auth") return <AuthRecruteur onBack={()=>setView("landing")} onSwitch={()=>{setIntendedRole("candidat");setView("candidat-auth");}}/>;
 

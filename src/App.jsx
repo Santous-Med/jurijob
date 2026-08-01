@@ -1412,20 +1412,21 @@ function PageMentionsLegales({onBack,onNavigate}){
   },[]);
   const ff="'Inter',system-ui,sans-serif";
   const fs="'Cormorant Garamond',Georgia,serif";
+  const isMobile=useIsMobile();
 
   return(
     <div style={{background:"#fff",minHeight:"100vh",fontFamily:ff,color:"#1a202c",overflowX:"hidden",width:"100%",boxSizing:"border-box"}}>
       {/* NAV */}
-      <nav style={{background:"#fff",borderBottom:"1px solid #E2E8F0",padding:"0 32px",display:"flex",justifyContent:"space-between",alignItems:"center",height:64,position:"sticky",top:0,zIndex:10}}>
+      <nav style={{background:"#fff",borderBottom:"1px solid #E2E8F0",padding:isMobile?"0 16px":"0 32px",display:"flex",justifyContent:"space-between",alignItems:"center",height:64,position:"sticky",top:0,zIndex:10}}>
         <Logo size="header"/>
         <button onClick={onBack} style={{background:"none",border:"none",color:"#4A5568",fontSize:13,cursor:"pointer",fontFamily:ff}}>← Retour à l'accueil</button>
       </nav>
 
       {/* HERO */}
-      <section style={{background:NAVY,padding:"64px 32px",textAlign:"center"}}>
+      <section style={{background:NAVY,padding:isMobile?"48px 20px":"64px 32px",textAlign:"center"}}>
         <div style={{maxWidth:900,margin:"0 auto"}}>
           <p style={{color:GOLD,fontSize:10.5,letterSpacing:2.5,textTransform:"uppercase",margin:"0 0 14px",fontWeight:500,fontFamily:ff}}>Informations juridiques</p>
-          <h1 style={{fontFamily:fs,fontSize:42,lineHeight:1.15,color:"#fff",fontWeight:500,margin:"0 auto 12px",letterSpacing:-0.6}}>
+          <h1 style={{fontFamily:fs,fontSize:isMobile?32:42,lineHeight:1.15,color:"#fff",fontWeight:500,margin:"0 auto 12px",letterSpacing:-0.6}}>
             Mentions <em style={{color:GOLD,fontStyle:"italic",fontWeight:500}}>légales</em>
           </h1>
           <p style={{fontSize:14,lineHeight:1.6,color:"rgba(255,255,255,0.75)",maxWidth:520,margin:"0 auto",fontWeight:300,fontFamily:ff}}>
@@ -1434,21 +1435,105 @@ function PageMentionsLegales({onBack,onNavigate}){
         </div>
       </section>
 
-      {/* SECTION — Traitement des données personnelles (CNDP) */}
-      <section style={{padding:"56px 32px",maxWidth:820,margin:"0 auto"}}>
-        <div style={{marginBottom:36}}>
-          <p style={{color:GOLD,fontSize:10.5,letterSpacing:2.5,textTransform:"uppercase",margin:"0 0 8px",fontWeight:500,fontFamily:ff}}>Protection des données personnelles</p>
-          <h2 style={{fontFamily:fs,fontSize:26,color:NAVY,fontWeight:500,margin:"0 0 20px",letterSpacing:-0.3}}>Traitement des données personnelles</h2>
+      {/* SECTIONS — Éditeur, hébergeur, PI, données personnelles */}
+      <section style={{padding:isMobile?"40px 20px":"56px 32px",maxWidth:820,margin:"0 auto"}}>
+
+        {/* 1 — Éditeur du site */}
+        <div style={{marginBottom:40}}>
+          <p style={{color:GOLD,fontSize:10.5,letterSpacing:2.5,textTransform:"uppercase",margin:"0 0 8px",fontWeight:500,fontFamily:ff}}>Article 1</p>
+          <h2 style={{fontFamily:fs,fontSize:26,color:NAVY,fontWeight:500,margin:"0 0 16px",letterSpacing:-0.3}}>Éditeur du site</h2>
+          <p style={{fontSize:14,color:"#4A5568",lineHeight:1.75,fontFamily:ff,fontWeight:300,margin:"0 0 18px"}}>
+            Le site <strong style={{color:NAVY}}>www.jurijob.ma</strong> et la plateforme JURIJOB sont édités par :
+          </p>
+          <div style={{background:"#F8F5ED",border:`1px solid ${GOLD_LIGHT}`,borderRadius:10,padding:isMobile?"18px 16px":"22px 24px"}}>
+            {[
+              ["Dénomination sociale","SENTISSI LEGAL ADVISORY (SLA)"],
+              ["Forme juridique","Société à responsabilité limitée à associé unique (SARL AU)"],
+              ["Capital social","10 000 MAD"],
+              ["Siège social","12, rue Saria Ben Zounaim, étage 3, appartement 3 — Palmier, Casablanca, Maroc"],
+              ["Registre du commerce","RC n° 641427 — Tribunal de commerce de Casablanca"],
+              ["Identifiant commun de l'entreprise","ICE 003569200000033"],
+              ["Identifiant fiscal","IF 66067629"],
+              ["Responsable de la publication","Mohammed Sentissi, gérant"],
+              ["Contact","recrutement@sentissilegal.com"],
+            ].map(([k,v])=>(
+              <div key={k} style={{display:"flex",flexDirection:isMobile?"column":"row",justifyContent:"space-between",gap:isMobile?2:16,padding:"7px 0",borderBottom:"1px solid rgba(200,160,70,0.15)"}}>
+                <span style={{fontSize:12.5,color:"#718096",fontFamily:ff,flexShrink:0}}>{k}</span>
+                <span style={{fontSize:13,color:NAVY,fontFamily:ff,fontWeight:500,textAlign:isMobile?"left":"right"}}>{v}</span>
+              </div>
+            ))}
+          </div>
+          <p style={{fontSize:13,color:"#718096",lineHeight:1.7,fontFamily:ff,fontWeight:300,margin:"16px 0 0"}}>
+            JURIJOB est une marque déposée auprès de l'OMPIC sous la dénomination « JURIJOB — Smart Recrutement Juridique ». La plateforme est exploitée par Sentissi Legal Advisory, également éditrice du site www.sentissilegal.com.
+          </p>
+        </div>
+
+        {/* 2 — Hébergement */}
+        <div style={{marginBottom:40}}>
+          <p style={{color:GOLD,fontSize:10.5,letterSpacing:2.5,textTransform:"uppercase",margin:"0 0 8px",fontWeight:500,fontFamily:ff}}>Article 2</p>
+          <h2 style={{fontFamily:fs,fontSize:26,color:NAVY,fontWeight:500,margin:"0 0 16px",letterSpacing:-0.3}}>Hébergement</h2>
+          <p style={{fontSize:14,color:"#4A5568",lineHeight:1.75,fontFamily:ff,fontWeight:300,margin:"0 0 12px"}}>
+            Le site est hébergé par <strong style={{color:NAVY}}>Vercel Inc.</strong>, société de droit américain dont le siège est situé 340 S Lemon Ave #4133, Walnut, CA 91789, États-Unis.
+          </p>
+          <p style={{fontSize:14,color:"#4A5568",lineHeight:1.75,fontFamily:ff,fontWeight:300,margin:0}}>
+            Les données de la plateforme sont hébergées sur l'infrastructure de <strong style={{color:NAVY}}>Supabase Inc.</strong> Les e-mails transactionnels sont acheminés par <strong style={{color:NAVY}}>Resend</strong>, dont les serveurs d'envoi sont situés en Irlande (Union européenne).
+          </p>
+        </div>
+
+        {/* 3 — Propriété intellectuelle */}
+        <div style={{marginBottom:40}}>
+          <p style={{color:GOLD,fontSize:10.5,letterSpacing:2.5,textTransform:"uppercase",margin:"0 0 8px",fontWeight:500,fontFamily:ff}}>Article 3</p>
+          <h2 style={{fontFamily:fs,fontSize:26,color:NAVY,fontWeight:500,margin:"0 0 16px",letterSpacing:-0.3}}>Propriété intellectuelle</h2>
+          <p style={{fontSize:14,color:"#4A5568",lineHeight:1.75,fontFamily:ff,fontWeight:300,margin:"0 0 12px"}}>
+            L'ensemble des éléments composant le site — structure, textes, graphismes, logo, charte visuelle, base de données et méthodologie de sélection — est protégé par la loi 2-00 relative aux droits d'auteur et droits voisins, ainsi que par la loi 17-97 relative à la protection de la propriété industrielle.
+          </p>
+          <p style={{fontSize:14,color:"#4A5568",lineHeight:1.75,fontFamily:ff,fontWeight:300,margin:0}}>
+            Toute reproduction, représentation, extraction ou réutilisation, totale ou partielle, sans autorisation écrite préalable de Sentissi Legal Advisory, est interdite. Les contenus déposés par les candidats demeurent leur propriété ; ceux-ci concèdent à la plateforme une licence d'utilisation limitée aux seules finalités du service.
+          </p>
+        </div>
+
+        {/* 4 — Données personnelles (CNDP) */}
+        <div style={{marginBottom:40}}>
+          <p style={{color:GOLD,fontSize:10.5,letterSpacing:2.5,textTransform:"uppercase",margin:"0 0 8px",fontWeight:500,fontFamily:ff}}>Article 4</p>
+          <h2 style={{fontFamily:fs,fontSize:26,color:NAVY,fontWeight:500,margin:"0 0 16px",letterSpacing:-0.3}}>Traitement des données personnelles</h2>
           <p style={{fontSize:14,color:"#4A5568",lineHeight:1.75,fontFamily:ff,fontWeight:300,margin:"0 0 14px"}}>
             Par le biais de ce formulaire, Mohammed Sentissi collecte vos données personnelles en vue de leur inscription dans la CVthèque JURIJOB, plateforme de sélection de profils juridiques destinée à mettre les candidats en relation avec des recruteurs identifiés au Maroc et en Afrique francophone.
           </p>
           <p style={{fontSize:14,color:"#4A5568",lineHeight:1.75,fontFamily:ff,fontWeight:300,margin:"0 0 14px"}}>
             Ce traitement a fait l'objet d'une déclaration auprès de la CNDP sous le numéro <strong style={{color:NAVY}}>en cours de traitement par la CNDP</strong>. Les données personnelles collectées peuvent être transmises à tous les recruteurs potentiels au Maroc conformément à la demande de transfert déposée auprès de la CNDP.
           </p>
+          <p style={{fontSize:14,color:"#4A5568",lineHeight:1.75,fontFamily:ff,fontWeight:300,margin:"0 0 14px"}}>
+            L'accès aux profils est strictement réservé aux recruteurs dont le paiement a été confirmé. Aucune diffusion publique n'est effectuée. Les données sont conservées tant que le candidat maintient son profil actif ; celui-ci peut le supprimer définitivement à tout moment depuis son espace personnel.
+          </p>
           <p style={{fontSize:14,color:"#4A5568",lineHeight:1.75,fontFamily:ff,fontWeight:300,margin:0}}>
             Vous pouvez vous adresser à <a href="mailto:recrutement@sentissilegal.com" style={{color:GOLD,textDecoration:"none",fontWeight:500}}>recrutement@sentissilegal.com</a> pour exercer vos droits d'accès, de rectification et d'opposition conformément aux dispositions de la loi 09-08.
           </p>
         </div>
+
+        {/* 5 — Responsabilité */}
+        <div style={{marginBottom:40}}>
+          <p style={{color:GOLD,fontSize:10.5,letterSpacing:2.5,textTransform:"uppercase",margin:"0 0 8px",fontWeight:500,fontFamily:ff}}>Article 5</p>
+          <h2 style={{fontFamily:fs,fontSize:26,color:NAVY,fontWeight:500,margin:"0 0 16px",letterSpacing:-0.3}}>Responsabilité</h2>
+          <p style={{fontSize:14,color:"#4A5568",lineHeight:1.75,fontFamily:ff,fontWeight:300,margin:"0 0 12px"}}>
+            JURIJOB intervient en qualité d'outil de sourcing et de mise en relation. La plateforme n'est pas partie aux relations contractuelles qui se nouent entre candidats et recruteurs, et ne saurait être tenue responsable du déroulement des entretiens, des décisions d'embauche ou des engagements pris entre les parties.
+          </p>
+          <p style={{fontSize:14,color:"#4A5568",lineHeight:1.75,fontFamily:ff,fontWeight:300,margin:0}}>
+            Les informations figurant dans les profils sont déclarées par les candidats sous leur seule responsabilité. Sentissi Legal Advisory s'efforce d'assurer la disponibilité et l'exactitude du service, sans garantir une accessibilité ininterrompue.
+          </p>
+        </div>
+
+        {/* 6 — Droit applicable */}
+        <div style={{marginBottom:8}}>
+          <p style={{color:GOLD,fontSize:10.5,letterSpacing:2.5,textTransform:"uppercase",margin:"0 0 8px",fontWeight:500,fontFamily:ff}}>Article 6</p>
+          <h2 style={{fontFamily:fs,fontSize:26,color:NAVY,fontWeight:500,margin:"0 0 16px",letterSpacing:-0.3}}>Droit applicable</h2>
+          <p style={{fontSize:14,color:"#4A5568",lineHeight:1.75,fontFamily:ff,fontWeight:300,margin:"0 0 12px"}}>
+            Les présentes mentions légales sont régies par le droit marocain. Tout litige relatif à leur interprétation ou à leur exécution relève de la compétence exclusive des tribunaux de Casablanca, à défaut de résolution amiable.
+          </p>
+          <p style={{fontSize:12.5,color:"#A0AEC0",lineHeight:1.7,fontFamily:ff,fontWeight:300,margin:0,fontStyle:"italic"}}>
+            Dernière mise à jour : août 2026.
+          </p>
+        </div>
+
       </section>
 
       {/* FOOTER */}

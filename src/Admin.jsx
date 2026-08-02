@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import Logo from './Logo'
 import { useState, useEffect } from 'react'
 
 const NAVY="#0B2545",GOLD="#C8A046",CREAM="#F8F5ED",GOLD_LIGHT="#F5EDD6";
@@ -14,6 +15,21 @@ const SPECS=[
   {cat:"Droit sectoriel",items:["Droit de l'énergie","Droit minier","Droit des transports & logistique","Droit de la santé & bioéthique","Droit rural & agricole","Droit du tourisme & de l'hôtellerie"]},
   {cat:"Droit international & spécialisé",items:["Droit international des affaires","Droit OHADA","Droit du sport","Droit maritime","Droit de l'environnement","Droit de la consommation","Droit humanitaire","Droit du travail international & mobilité"]},
 ];
+
+/* Détecte les écrans étroits (mobile) pour adapter les styles inline.
+   ⚠️ Copie conforme du hook défini dans App.jsx — toute modification doit
+   être répercutée dans les deux fichiers (ou le hook extrait dans un
+   fichier partagé useIsMobile.js). */
+function useIsMobile(breakpoint=768){
+  const [isMobile,setIsMobile]=useState(typeof window!=="undefined"?window.innerWidth<=breakpoint:false);
+  useEffect(()=>{
+    const onResize=()=>setIsMobile(window.innerWidth<=breakpoint);
+    window.addEventListener("resize",onResize);
+    onResize();
+    return ()=>window.removeEventListener("resize",onResize);
+  },[breakpoint]);
+  return isMobile;
+}
 
 // Durée d'une expérience — même logique que calcDuree d'App.jsx (format MM/AAAA) ; renvoie "" si dates illisibles
 function calcDuree(debut,fin,encours){
@@ -43,35 +59,81 @@ const NIV_ORDER=["stagiaire","junior","confirme","senior","directeur"];
 // est reconnu comme équivalent à "master1".
 const DIPL_RANK={bac:0,deug:1,licence:2,licence_bac4:3,master1:3,master2:4,barreau:5,notariat:6,doctorat:7};
 
+// Normalise un nom de lieu avant comparaison : la ville est saisie en partie librement
+// (option « Autre… »), donc casse, accents et espaces multiples doivent être neutralisés.
+const normLieu=s=>(s||"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ");
+
+// Bassins d'emploi : villes traitées comme un même marché du travail, pour ne pas
+// pénaliser un candidat de Salé sur un poste à Rabat. Toute ville absente de cette
+// table constitue son propre bassin. Retirer une ville = retirer une entrée.
+const BASSINS=[
+  {nom:"Casablanca",villes:["Casablanca","Mohammedia","Berrechid"]},
+  {nom:"Rabat",villes:["Rabat","Salé","Témara","Kénitra"]},
+  {nom:"Fès-Meknès",villes:["Fès","Meknès"]},
+  {nom:"Tanger-Tétouan",villes:["Tanger","Tétouan"]},
+  {nom:"Marseille",villes:["Marseille","Aix-en-Provence"]},
+];
+const BASSIN_INDEX={};
+BASSINS.forEach(b=>b.villes.forEach(v=>{BASSIN_INDEX[normLieu(v)]=b.nom;}));
+const bassinDe=ville=>{const n=normLieu(ville); return n?(BASSIN_INDEX[n]||n):"";};
+
+// ── Barème : Spécialisations 35 · Langues 25 · Niveau 20 · Diplôme 10 · Géographie 10 ──
+// Règle commune aux cinq dimensions :
+//   • critère non renseigné côté DEMANDE  → dimension neutralisée (points pleins)
+//   • donnée absente côté CANDIDAT        → 0 point
 function scoreCandidat(c,d){
   let score=0; const details={};
+
+  // ── Spécialisations (35) ──
   const specMatch=d.specs?d.specs.filter(s=>c.specs&&c.specs.includes(s)):[];
-  const specScore=d.specs&&d.specs.length>0?Math.round((specMatch.length/d.specs.length)*40):0;
+  const specScore=d.specs&&d.specs.length>0?Math.round((specMatch.length/d.specs.length)*35):35;
   score+=specScore;
-  details.specs={score:specScore,max:40,matched:specMatch,total:d.specs?d.specs.length:0};
+  details.specs={score:specScore,max:35,matched:specMatch,total:d.specs?d.specs.length:0};
+
+  // ── Langues (25) — le niveau déclaré n'est pas pris en compte, seule la présence compte ──
   const candLangs=(c.langues||[]).map(l=>typeof l==="string"?l:(l&&l.langue)).filter(Boolean);
   const langMatch=d.langues?d.langues.filter(l=>candLangs.includes(l)):[];
   const langScore=d.langues&&d.langues.length>0?Math.round((langMatch.length/d.langues.length)*25):25;
   score+=langScore;
   details.langues={score:langScore,max:25,matched:langMatch,total:d.langues?d.langues.length:0};
+
+  // ── Niveau d'expérience (20) ──
+  // indexOf renvoie -1 quand la valeur est absente : ce cas est désormais traité
+  // explicitement, sinon un candidat sans niveau récupérait des points indus.
   const ci=NIV_ORDER.indexOf(c.niveau),di=NIV_ORDER.indexOf(d.niveau);
   let niveauScore=0;
-  if(ci===di) niveauScore=20;
+  if(di===-1) niveauScore=20;              // demande sans niveau → neutralisé
+  else if(ci===-1) niveauScore=0;          // candidat sans niveau → 0
+  else if(ci===di) niveauScore=20;
   else if(ci>di) niveauScore=14;
   else if(di-ci===1) niveauScore=10;
   score+=niveauScore;
   details.niveau={score:niveauScore,max:20};
+
+  // ── Diplôme (10) ──
+  const cdi=DIPL_RANK[c.diplome],ddi=DIPL_RANK[d.diplome];
   let diplomeScore=0;
-  if(d.diplome==="indifferent"){ diplomeScore=15; }
-  else{
-    const cdi=DIPL_RANK[c.diplome],ddi=DIPL_RANK[d.diplome];
-    if(cdi!==undefined && ddi!==undefined){
-      if(cdi>=ddi) diplomeScore=15;
-      else if(ddi-cdi===1) diplomeScore=8;
-    }
-  }
+  if(d.diplome==="indifferent"||!d.diplome||ddi===undefined) diplomeScore=10;
+  else if(cdi===undefined) diplomeScore=0; // diplôme candidat absent ou hors barème (« autre »)
+  else if(cdi>=ddi) diplomeScore=10;
+  else if(ddi-cdi===1) diplomeScore=5;
   score+=diplomeScore;
-  details.diplome={score:diplomeScore,max:15};
+  details.diplome={score:diplomeScore,max:10};
+
+  // ── Géographie (10) ──
+  const demPays=(d.pays||"").trim(), demVille=(d.ville||"").trim();
+  const candPays=(c.pays||"").trim();
+  let geoScore=0, geoNote="";
+  if((d.modalite||"")==="Télétravail"){ geoScore=10; geoNote="télétravail"; }
+  else if(!demPays){ geoScore=10; geoNote="lieu non précisé"; }
+  else if(!candPays){ geoScore=0; geoNote="pays absent"; }
+  else if(normLieu(candPays)!==normLieu(demPays)){ geoScore=0; geoNote="pays différent"; }
+  else if(!demVille){ geoScore=10; geoNote="même pays"; }
+  else if(bassinDe(c.ville)&&bassinDe(c.ville)===bassinDe(demVille)){ geoScore=10; geoNote="même bassin"; }
+  else { geoScore=5; geoNote="même pays"; }
+  score+=geoScore;
+  details.geo={score:geoScore,max:10,note:geoNote};
+
   return{score,details};
 }
 
@@ -106,9 +168,9 @@ const ScoreRing=({score})=>{
 
 const ScoreBar=({label,score,max,note})=>(
   <div style={{marginBottom:6}}>
-    <div style={{display:"flex",justifyContent:"space-between",marginBottom:2}}>
+    <div style={{display:"flex",justifyContent:"space-between",gap:8,marginBottom:2}}>
       <span style={{fontSize:11,color:"#718096"}}>{label}</span>
-      <span style={{fontSize:11,fontWeight:500,color:NAVY}}>{score}/{max}{note&&<span style={{color:"#A0AEC0",marginLeft:4}}>{note}</span>}</span>
+      <span style={{fontSize:11,fontWeight:500,color:NAVY,whiteSpace:"nowrap"}}>{score}/{max}{note&&<span style={{color:"#A0AEC0",marginLeft:4}}>{note}</span>}</span>
     </div>
     <div style={{height:4,background:"#E2E8F0",borderRadius:2,overflow:"hidden"}}>
       <div style={{height:"100%",width:`${(score/max)*100}%`,background:score===max?GOLD:score>max*.6?"#60A5FA":"#CBD5E0",borderRadius:2}}/>
@@ -119,7 +181,7 @@ const ScoreBar=({label,score,max,note})=>(
 // Barre horizontale simple — répartition géographique
 const GeoBar=({label,value,max})=>(
   <div style={{marginBottom:8}}>
-    <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+    <div style={{display:"flex",justifyContent:"space-between",gap:8,marginBottom:3}}>
       <span style={{fontSize:12,color:"#4A5568"}}>{label}</span>
       <span style={{fontSize:12,fontWeight:500,color:NAVY}}>{value}</span>
     </div>
@@ -143,7 +205,7 @@ const GeoDonut=({data})=>{
     return seg;
   });
   return(
-    <div style={{display:"flex",alignItems:"center",gap:18,flexWrap:"wrap"}}>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:18,flexWrap:"wrap"}}>
       <svg width="132" height="132" viewBox="0 0 132 132" style={{flexShrink:0}}>
         <circle cx="66" cy="66" r={R} fill="none" stroke="#E2E8F0" strokeWidth="16"/>
         {segs.map((s,i)=>(
@@ -159,7 +221,7 @@ const GeoDonut=({data})=>{
         {segs.map((s,i)=>(
           <div key={i} style={{display:"flex",alignItems:"center",gap:7,marginBottom:5}}>
             <span style={{width:10,height:10,borderRadius:3,background:s.color,flexShrink:0}}/>
-            <span style={{fontSize:12,color:"#4A5568",flex:1}}>{s.label}</span>
+            <span style={{fontSize:12,color:"#4A5568",flex:1,minWidth:0}}>{s.label}</span>
             <span style={{fontSize:12,fontWeight:500,color:NAVY}}>{s.value}</span>
             <span style={{fontSize:11,color:"#A0AEC0",width:36,textAlign:"right"}}>{Math.round(s.frac*100)}%</span>
           </div>
@@ -177,7 +239,7 @@ const GapBar=({spec,demande,offre,gap,max})=>{
   const label=penurie?`Pénurie de ${gap}`:excedent?`Excédent de ${-gap}`:"Équilibré";
   return(
     <div style={{marginBottom:12}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginBottom:4,flexWrap:"wrap"}}>
         <span style={{fontSize:12,color:"#4A5568"}}>{spec}</span>
         <Badge bg={bg} color={color} label={label}/>
       </div>
@@ -197,7 +259,7 @@ const GapBar=({spec,demande,offre,gap,max})=>{
 const KpiCard=({label,value,unit,sub,dark,accent,onClick})=>(
   <div onClick={onClick} style={{background:dark?NAVY:"#fff",border:dark?"none":"1px solid #E2E8F0",borderRadius:14,padding:"16px 18px",cursor:onClick?"pointer":"default",minWidth:0}}>
     <p style={{margin:"0 0 6px",fontSize:11.5,color:dark?GOLD:"#8a7a4a",fontWeight:500,textTransform:"uppercase",letterSpacing:.5}}>{label}</p>
-    <p style={{margin:0,fontSize:26,fontWeight:600,color:dark?CREAM:accent||NAVY,lineHeight:1.1}}>
+    <p style={{margin:0,fontSize:26,fontWeight:600,color:dark?CREAM:accent||NAVY,lineHeight:1.1,wordBreak:"break-word"}}>
       {value}{unit&&<span style={{fontSize:13,fontWeight:400,marginLeft:5,color:dark?"rgba(248,245,237,0.7)":"#718096"}}>{unit}</span>}
     </p>
     {sub&&<p style={{margin:"5px 0 0",fontSize:11,color:dark?"rgba(248,245,237,0.55)":"#A0AEC0"}}>{sub}</p>}
@@ -230,6 +292,12 @@ export default function AdminDashboard(){
   const [confirmant,setConfirmant]=useState(null);
   const [relance,setRelance]=useState(null); // null | "encours" | "termine"
 
+// Responsive : le hook doit être appelé avant tout retour anticipé
+const isMobile=useIsMobile();
+const pad=isMobile?"14px":"20px";                 // marge générale des pages
+const g2=isMobile?"1fr":"1fr 1fr";                // grilles à 2 colonnes
+const colonnes=isMobile?"1fr":"repeat(auto-fit,minmax(320px,1fr))";
+
 // Si une session admin est déjà active (rechargement de page), on garde l'accès
 useEffect(()=>{
   supabase.auth.getSession().then(({data})=>{
@@ -247,9 +315,9 @@ const connexion = async () => {
 const deconnexion = async () => { await supabase.auth.signOut(); window.location.href = "/"; };
 
 if(!auth) return(
-  <div style={{background:CREAM,minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:24}}>
-    <div style={{background:"#fff",borderRadius:16,padding:"40px 36px",maxWidth:380,width:"100%",border:"1px solid #E2E8F0",textAlign:"center"}}>
-      <div style={{background:NAVY,color:GOLD,fontWeight:700,fontSize:20,padding:"6px 16px",borderRadius:8,letterSpacing:1,display:"inline-block",marginBottom:24}}>JURI<span style={{color:"#fff"}}>JOB</span></div>
+  <div style={{background:CREAM,minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:isMobile?16:24}}>
+    <div style={{background:"#fff",borderRadius:16,padding:isMobile?"32px 22px":"40px 36px",maxWidth:380,width:"100%",border:"1px solid #E2E8F0",textAlign:"center",boxSizing:"border-box"}}>
+      <div style={{marginBottom:24,display:"flex",justifyContent:"center"}}><Logo/></div>
       <p style={{fontSize:13,color:"#718096",margin:"0 0 20px"}}>Accès réservé à l'administrateur</p>
       <input
         type="password"
@@ -257,11 +325,11 @@ if(!auth) return(
         onChange={e=>{setMdp(e.target.value);setErreur(false);}}
         onKeyDown={e=>{if(e.key==="Enter") connexion();}}
         placeholder="Mot de passe"
-        style={{width:"100%",padding:"10px 14px",borderRadius:8,fontSize:14,border:`1.5px solid ${erreur?"#E53E3E":"#CBD5E0"}`,outline:"none",boxSizing:"border-box",marginBottom:8,color:"#0B2545"}}
+        style={{width:"100%",padding:"11px 14px",borderRadius:8,fontSize:14,border:`1.5px solid ${erreur?"#E53E3E":"#CBD5E0"}`,outline:"none",boxSizing:"border-box",marginBottom:8,color:"#0B2545"}}
       />
       {erreur&&<p style={{color:"#E53E3E",fontSize:12,margin:"0 0 8px"}}>Mot de passe incorrect</p>}
       <button onClick={connexion}
-        style={{width:"100%",padding:"10px",borderRadius:8,background:"#0B2545",color:"#fff",border:"none",fontSize:14,cursor:"pointer",fontWeight:500,marginTop:4}}>
+        style={{width:"100%",padding:"12px",borderRadius:8,background:"#0B2545",color:"#fff",border:"none",fontSize:14,cursor:"pointer",fontWeight:500,marginTop:4}}>
         Accéder au tableau de bord
       </button>
     </div>
@@ -490,39 +558,40 @@ const statP={
   };
 
   const navItems=[
-    {id:"dashboard",icon:"⊞",label:"Vue d'ensemble"},
-    {id:"demandes",icon:"📋",label:"Demandes"},
-    {id:"cvtheque",icon:"👥",label:"CVthèque"},
-    {id:"shortlists",icon:"📤",label:"Short-lists"},
-    {id:"paiements",icon:"💳",label:"Paiements"},
+    {id:"dashboard",icon:"⊞",label:"Vue d'ensemble",court:"Vue"},
+    {id:"demandes",icon:"📋",label:"Demandes",court:"Demandes"},
+    {id:"cvtheque",icon:"👥",label:"CVthèque",court:"CVthèque"},
+    {id:"shortlists",icon:"📤",label:"Short-lists",court:"Short-lists"},
+    {id:"paiements",icon:"💳",label:"Paiements",court:"Paiements"},
   ];
 
   const Header=()=>(
-    <div style={{background:NAVY,padding:"0 20px",display:"flex",alignItems:"center",justifyContent:"space-between",height:52}}>
-      <div style={{display:"flex",alignItems:"center",gap:10}}>
-        <div style={{background:GOLD,color:NAVY,fontWeight:700,fontSize:16,padding:"4px 11px",borderRadius:7,letterSpacing:1}}>JURIJOB</div>
-        <span style={{fontSize:12,color:"rgba(255,255,255,0.4)"}}>Admin</span>
+    <div style={{background:NAVY,padding:isMobile?"0 14px":"0 20px",display:"flex",alignItems:"center",justifyContent:"space-between",height:52,gap:8}}>
+      <div style={{display:"flex",alignItems:"center",gap:10,minWidth:0}}>
+        <Logo variant="light"/>
+        {!isMobile&&<span style={{fontSize:12,color:"rgba(255,255,255,0.4)"}}>Admin</span>}
       </div>
-      <div style={{display:"flex",alignItems:"center",gap:8}}>
-        <div style={{width:30,height:30,borderRadius:"50%",background:GOLD,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:600,color:NAVY}}>MS</div>
-        <span style={{fontSize:13,color:"rgba(255,255,255,0.75)"}}>M. Sentissi</span>
-        <button onClick={deconnexion} style={{marginLeft:8,background:"rgba(255,255,255,0.1)",border:"none",color:"rgba(255,255,255,0.75)",fontSize:12,padding:"5px 11px",borderRadius:6,cursor:"pointer"}}>Déconnexion</button>
+      <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
+        <div style={{width:30,height:30,borderRadius:"50%",background:GOLD,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:600,color:NAVY,flexShrink:0}}>MS</div>
+        {!isMobile&&<span style={{fontSize:13,color:"rgba(255,255,255,0.75)"}}>M. Sentissi</span>}
+        <button onClick={deconnexion} style={{marginLeft:isMobile?0:8,background:"rgba(255,255,255,0.1)",border:"none",color:"rgba(255,255,255,0.75)",fontSize:12,padding:"6px 11px",borderRadius:6,cursor:"pointer",whiteSpace:"nowrap"}}>{isMobile?"Sortir":"Déconnexion"}</button>
       </div>
     </div>
   );
 
+  // Sur mobile, les 5 onglets ne tiennent pas : la barre défile horizontalement
   const Nav=()=>(
-    <div style={{background:"#fff",borderBottom:"1px solid #E2E8F0",display:"flex",padding:"0 20px",gap:4}}>
+    <div style={{background:"#fff",borderBottom:"1px solid #E2E8F0",display:"flex",padding:isMobile?"0 10px":"0 20px",gap:4,overflowX:"auto",WebkitOverflowScrolling:"touch"}}>
       {navItems.map(n=>(
-        <button key={n.id} onClick={()=>{setTab(n.id);setSelectedDem(null);}} style={{padding:"11px 12px",fontSize:12.5,cursor:"pointer",background:"none",border:"none",borderBottom:`2.5px solid ${tab===n.id?GOLD:"transparent"}`,color:tab===n.id?NAVY:"#718096",fontWeight:tab===n.id?500:400,display:"flex",alignItems:"center",gap:5}}>
-          <span style={{fontSize:14}}>{n.icon}</span>{n.label}
+        <button key={n.id} onClick={()=>{setTab(n.id);setSelectedDem(null);}} style={{padding:isMobile?"12px 9px":"11px 12px",fontSize:12.5,cursor:"pointer",background:"none",border:"none",borderBottom:`2.5px solid ${tab===n.id?GOLD:"transparent"}`,color:tab===n.id?NAVY:"#718096",fontWeight:tab===n.id?500:400,display:"flex",alignItems:"center",gap:5,whiteSpace:"nowrap",flexShrink:0}}>
+          <span style={{fontSize:14}}>{n.icon}</span>{isMobile?n.court:n.label}
         </button>
       ))}
     </div>
   );
 
   const renderDashboard=()=>(
-    <div style={{padding:"20px",display:"flex",flexDirection:"column",gap:16,maxWidth:1100,margin:"0 auto",width:"100%",boxSizing:"border-box"}}>
+    <div style={{padding:pad,display:"flex",flexDirection:"column",gap:16,maxWidth:1100,margin:"0 auto",width:"100%",boxSizing:"border-box"}}>
       <div>
         <p style={{fontSize:11,color:GOLD,fontWeight:500,textTransform:"uppercase",letterSpacing:.8,margin:"0 0 4px"}}>Tableau de bord</p>
         <h2 style={{color:NAVY,fontSize:19,fontWeight:500,margin:0}}>Bonjour, M. Sentissi 👋</h2>
@@ -531,7 +600,7 @@ const statP={
       {loading&&<p style={{color:"#718096",fontSize:13}}>Chargement des données...</p>}
 
       {/* ── Ligne de KPI ── */}
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:12}}>
+      <div style={{display:"grid",gridTemplateColumns:isMobile?"repeat(2,1fr)":"repeat(auto-fit,minmax(160px,1fr))",gap:12}}>
         <KpiCard dark label="CVthèque" value={candidats.length}
           sub={`${statC.valide} validé${statC.valide>1?"s":""} · ${statC.en_attente} en attente`}/>
         <KpiCard label="Demandes en cours" value={statD.en_cours}
@@ -546,7 +615,7 @@ const statP={
       </div>
 
       {/* ── Graphiques : écart offre/demande + répartition géographique ── */}
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(320px,1fr))",gap:16}}>
+      <div style={{display:"grid",gridTemplateColumns:colonnes,gap:16}}>
         <DashCard title="⚖️ Écart offre / demande par spécialisation"
           footnote={specGap.length>0?"Spécialisations effectivement demandées, triées par fréquence · Demande = total des demandes reçues · Offre = profils validés dans la CVthèque":null}>
           {specGap.length===0&&<p style={{fontSize:12,color:"#A0AEC0",margin:0}}>Pas encore assez de demandes ou de profils validés pour calculer les écarts.</p>}
@@ -562,14 +631,14 @@ const statP={
       </div>
 
       {/* ── Tunnel de conversion + qualité des profils ── */}
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(320px,1fr))",gap:16}}>
+      <div style={{display:"grid",gridTemplateColumns:colonnes,gap:16}}>
         <DashCard title="📊 Tunnel de conversion"
           footnote="Les pourcentages sont calculés par rapport à l'étape précédente. Ne mesure pas si le recruteur a finalisé une embauche — cette information n'est pas suivie par JURIJOB.">
           {[["Demandes reçues",demandesTotal,null],["Short-lists envoyées",nbShortlistsEnvoyees,tauxShortlist],["Payées",nbPayees,tauxPaiement]].map(([label,val,taux],i)=>(
             <div key={label} style={{marginBottom:i<2?10:0}}>
-              <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+              <div style={{display:"flex",justifyContent:"space-between",gap:8,marginBottom:3}}>
                 <span style={{fontSize:12,color:"#4A5568"}}>{label}</span>
-                <span style={{fontSize:12,fontWeight:500,color:NAVY}}>{val}{taux!==null&&<span style={{color:"#A0AEC0",marginLeft:6}}>({taux}%)</span>}</span>
+                <span style={{fontSize:12,fontWeight:500,color:NAVY,whiteSpace:"nowrap"}}>{val}{taux!==null&&<span style={{color:"#A0AEC0",marginLeft:6}}>({taux}%)</span>}</span>
               </div>
               <div style={{height:10,background:"#E2E8F0",borderRadius:5,overflow:"hidden"}}>
                 <div style={{height:"100%",width:`${(val/tunnelMax)*100}%`,background:i===2?"#166534":i===1?GOLD:NAVY,borderRadius:5}}/>
@@ -578,10 +647,10 @@ const statP={
           ))}
         </DashCard>
         <DashCard title="✅ Qualité des profils"
-          footnote="Un profil incomplet perd jusqu'à 35 points sur 100 dans l'algorithme de scoring (niveau + diplôme).">
-          <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+          footnote="Un profil incomplet perd jusqu'à 30 points sur 100 dans l'algorithme de scoring (niveau + diplôme).">
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:4,flexWrap:"wrap",gap:4}}>
             <span style={{fontSize:12,color:"#4A5568"}}>Profils validés avec matching complet (niveau + diplôme)</span>
-            <span style={{fontSize:12,fontWeight:500,color:NAVY,whiteSpace:"nowrap",marginLeft:8}}>{profilsCompletsCount}/{statC.valide} ({qualitePct}%)</span>
+            <span style={{fontSize:12,fontWeight:500,color:NAVY,whiteSpace:"nowrap"}}>{profilsCompletsCount}/{statC.valide} ({qualitePct}%)</span>
           </div>
           <div style={{height:10,background:"#E2E8F0",borderRadius:5,overflow:"hidden"}}>
             <div style={{height:"100%",width:`${qualitePct}%`,background:qualitePct>=70?"#166534":qualitePct>=40?GOLD:"#991B1B",borderRadius:5}}/>
@@ -594,21 +663,21 @@ const statP={
         <DashCard title="🔔 Alertes opérationnelles" style={{scrollMarginTop:16}}>
           <div id="bloc-alertes" style={{display:"flex",flexDirection:"column",gap:8}}>
             {paiementsEnRetard.length>0&&(
-              <div onClick={()=>setTab("paiements")} style={{background:"#FEF2F2",borderRadius:10,padding:"10px 14px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div onClick={()=>setTab("paiements")} style={{background:"#FEF2F2",borderRadius:10,padding:"10px 14px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
                 <span style={{fontSize:12.5,color:"#991B1B"}}>💳 {paiementsEnRetard.length} paiement{paiementsEnRetard.length>1?"s":""} en attente depuis plus de 48h</span>
-                <span style={{fontSize:11,color:"#991B1B"}}>Voir →</span>
+                <span style={{fontSize:11,color:"#991B1B",flexShrink:0}}>Voir →</span>
               </div>
             )}
             {demandesStagnantes.length>0&&(
-              <div onClick={()=>setTab("demandes")} style={{background:GOLD_LIGHT,borderRadius:10,padding:"10px 14px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div onClick={()=>setTab("demandes")} style={{background:GOLD_LIGHT,borderRadius:10,padding:"10px 14px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
                 <span style={{fontSize:12.5,color:"#92400E"}}>📋 {demandesStagnantes.length} demande{demandesStagnantes.length>1?"s":""} en cours depuis plus de 5 jours sans short-list</span>
-                <span style={{fontSize:11,color:"#92400E"}}>Voir →</span>
+                <span style={{fontSize:11,color:"#92400E",flexShrink:0}}>Voir →</span>
               </div>
             )}
             {candidatsARelancer.length>0&&(
-              <div onClick={()=>setTab("cvtheque")} style={{background:"#EFF6FF",borderRadius:10,padding:"10px 14px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div onClick={()=>setTab("cvtheque")} style={{background:"#EFF6FF",borderRadius:10,padding:"10px 14px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
                 <span style={{fontSize:12.5,color:"#1D4ED8"}}>📧 {candidatsARelancer.length} profil{candidatsARelancer.length>1?"s":""} incomplet{candidatsARelancer.length>1?"s":""} à relancer</span>
-                <span style={{fontSize:11,color:"#1D4ED8"}}>Voir →</span>
+                <span style={{fontSize:11,color:"#1D4ED8",flexShrink:0}}>Voir →</span>
               </div>
             )}
           </div>
@@ -620,9 +689,9 @@ const statP={
         <div style={{background:"#FFF7ED",border:"1px solid #FCD34D",borderRadius:14,padding:"14px 18px"}}>
           <p style={{margin:"0 0 10px",fontSize:13,fontWeight:500,color:"#92400E"}}>⚡ Demandes urgentes à traiter</p>
           {demandes.filter(d=>d.statut==="en_cours"&&d.urgence!=="normal").map(d=>(
-            <div key={d.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-              <div><p style={{margin:0,fontSize:13,color:NAVY,fontWeight:500}}>{d.poste}</p><p style={{margin:"2px 0 0",fontSize:12,color:"#718096"}}>{d.entreprise}</p></div>
-              <button onClick={()=>{ouvrirDemande(d);setTab("demandes");}} style={{padding:"5px 12px",borderRadius:7,background:NAVY,color:"#fff",border:"none",fontSize:12,cursor:"pointer",fontWeight:500}}>Traiter</button>
+            <div key={d.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,marginBottom:8}}>
+              <div style={{minWidth:0}}><p style={{margin:0,fontSize:13,color:NAVY,fontWeight:500,wordBreak:"break-word"}}>{d.poste}</p><p style={{margin:"2px 0 0",fontSize:12,color:"#718096",wordBreak:"break-word"}}>{d.entreprise}</p></div>
+              <button onClick={()=>{ouvrirDemande(d);setTab("demandes");}} style={{padding:"7px 14px",borderRadius:7,background:NAVY,color:"#fff",border:"none",fontSize:12,cursor:"pointer",fontWeight:500,flexShrink:0}}>Traiter</button>
             </div>
           ))}
         </div>
@@ -632,8 +701,8 @@ const statP={
       {shortlistSent.length>0&&(
         <DashCard title="Short-lists récentes">
           {shortlistSent.slice(-3).reverse().map((sl,i)=>(
-            <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:i<Math.min(shortlistSent.length,3)-1?"1px solid #F0F4F8":"none"}}>
-              <div><p style={{margin:0,fontSize:13,fontWeight:500,color:NAVY}}>{sl.poste}</p><p style={{margin:"2px 0 0",fontSize:12,color:"#718096"}}>{sl.entreprise} · {sl.candidats.length} profils · {sl.date}</p></div>
+            <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,padding:"8px 0",borderBottom:i<Math.min(shortlistSent.length,3)-1?"1px solid #F0F4F8":"none"}}>
+              <div style={{minWidth:0}}><p style={{margin:0,fontSize:13,fontWeight:500,color:NAVY,wordBreak:"break-word"}}>{sl.poste}</p><p style={{margin:"2px 0 0",fontSize:12,color:"#718096",wordBreak:"break-word"}}>{sl.entreprise} · {sl.candidats.length} profils · {sl.date}</p></div>
               <Badge bg="#F0FDF4" color="#166534" label="Envoyée"/>
             </div>
           ))}
@@ -648,28 +717,28 @@ const statP={
       const totalValides=scored.length;
       const nbCv=selectedDem.nb_cv||selectedDem.nbCv||3;
       return(
-        <div style={{padding:"20px"}}>
+        <div style={{padding:pad}}>
           <button onClick={()=>{setSelectedDem(null);setShortlistSel([]);}} style={{background:"none",border:"none",color:"#718096",fontSize:13,cursor:"pointer",marginBottom:14,padding:0}}>← Retour aux demandes</button>
-          <div style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:12,padding:"16px 18px",marginBottom:16}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12}}>
-              <div><p style={{margin:"0 0 3px",fontSize:11,color:GOLD,fontWeight:500,textTransform:"uppercase",letterSpacing:.8}}>{selectedDem.id}</p><h3 style={{margin:"0 0 3px",fontSize:15,fontWeight:500,color:NAVY}}>{selectedDem.poste}</h3><p style={{margin:0,fontSize:12,color:"#718096"}}>{selectedDem.entreprise} · {selectedDem.contact}{selectedDem.recruteur_email?` · ${selectedDem.recruteur_email}`:""}</p></div>
+          <div style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:12,padding:isMobile?"14px":"16px 18px",marginBottom:16}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8,marginBottom:12,flexWrap:"wrap"}}>
+              <div style={{minWidth:0}}><p style={{margin:"0 0 3px",fontSize:11,color:GOLD,fontWeight:500,textTransform:"uppercase",letterSpacing:.8,wordBreak:"break-all"}}>{selectedDem.id}</p><h3 style={{margin:"0 0 3px",fontSize:15,fontWeight:500,color:NAVY,wordBreak:"break-word"}}>{selectedDem.poste}</h3><p style={{margin:0,fontSize:12,color:"#718096",wordBreak:"break-word"}}>{selectedDem.entreprise} · {selectedDem.contact}{selectedDem.recruteur_email?` · ${selectedDem.recruteur_email}`:""}</p></div>
               {URGENCE_STYLE[selectedDem.urgence]&&<Badge {...URGENCE_STYLE[selectedDem.urgence]}/>}
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-              {[["Niveau",selectedDem.niveau],["Diplôme",selectedDem.diplome],["Langues",(selectedDem.langues||[]).join(", ")],["CV demandés",`${nbCv} profils`],["Modalité",selectedDem.modalite||"—"]].map(([k,v])=>(
-                <div key={k} style={{background:CREAM,borderRadius:8,padding:"8px 12px"}}><p style={{margin:"0 0 2px",fontSize:11,color:"#A0AEC0"}}>{k}</p><p style={{margin:0,fontSize:13,fontWeight:500,color:NAVY}}>{v}</p></div>
+            <div style={{display:"grid",gridTemplateColumns:g2,gap:8}}>
+              {[["Niveau",selectedDem.niveau],["Diplôme",selectedDem.diplome],["Lieu du poste",[selectedDem.ville,selectedDem.pays].filter(Boolean).join(", ")||"non précisé"],["Langues",(selectedDem.langues||[]).join(", ")],["CV demandés",`${nbCv} profils`],["Modalité",selectedDem.modalite||"—"]].map(([k,v])=>(
+                <div key={k} style={{background:CREAM,borderRadius:8,padding:"8px 12px"}}><p style={{margin:"0 0 2px",fontSize:11,color:"#A0AEC0"}}>{k}</p><p style={{margin:0,fontSize:13,fontWeight:500,color:NAVY,wordBreak:"break-word"}}>{v}</p></div>
               ))}
             </div>
             <div style={{marginTop:10}}><p style={{fontSize:11,color:"#A0AEC0",margin:"0 0 6px"}}>Spécialisations requises</p><div style={{display:"flex",flexWrap:"wrap",gap:5}}>{(selectedDem.specs||[]).map(s=><span key={s} style={{background:GOLD_LIGHT,color:NAVY,fontSize:11,padding:"3px 10px",borderRadius:20}}>{s}</span>)}</div></div>
           </div>
-          <div style={{background:"#EFF6FF",borderRadius:10,padding:"12px 16px",marginBottom:14,display:"flex",alignItems:"flex-start",gap:10}}>
+          <div style={{background:"#EFF6FF",borderRadius:10,padding:isMobile?"12px 14px":"12px 16px",marginBottom:14,display:"flex",alignItems:"flex-start",gap:10}}>
             <span style={{fontSize:16}}>🤖</span>
             <div>
               <p style={{margin:"0 0 3px",fontSize:13,fontWeight:500,color:NAVY}}>Matching automatique activé</p>
               <p style={{margin:0,fontSize:12,color:"#4A5568"}}>{totalValides} profil{totalValides>1?"s":""} analysé{totalValides>1?"s":""}. Les <strong>{Math.min(nbCv,totalValides)} meilleurs scores</strong> ont été pré-sélectionnés.</p>
             </div>
           </div>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginBottom:10,flexWrap:"wrap"}}>
             <p style={{margin:0,fontSize:13,fontWeight:500,color:NAVY}}>Résultats classés par pertinence</p>
             {shortlistSel.length>0&&<span style={{background:GOLD_LIGHT,color:NAVY,fontSize:11,fontWeight:500,padding:"3px 10px",borderRadius:20}}>{shortlistSel.length} sélectionné{shortlistSel.length>1?"s":""}</span>}
           </div>
@@ -679,41 +748,43 @@ const statP={
             const sc=scoreColor(c.score);
             const expanded=expandedScore===c.id;
             return(
-              <div key={c.id} style={{background:sel?"#EFF6FF":"#fff",border:`1.5px solid ${sel?NAVY:"#E2E8F0"}`,borderRadius:11,padding:"14px",marginBottom:10}}>
-                <div style={{display:"flex",gap:10,alignItems:"flex-start"}}>
+              <div key={c.id} style={{background:sel?"#EFF6FF":"#fff",border:`1.5px solid ${sel?NAVY:"#E2E8F0"}`,borderRadius:11,padding:isMobile?"12px 10px":"14px",marginBottom:10}}>
+                <div style={{display:"flex",gap:isMobile?7:10,alignItems:"flex-start"}}>
                   <div onClick={()=>setShortlistSel(sl=>sl.includes(c.id)?sl.filter(x=>x!==c.id):[...sl,c.id])}
-                    style={{width:20,height:20,borderRadius:4,border:`2px solid ${sel?NAVY:"#CBD5E0"}`,background:sel?NAVY:"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:14,cursor:"pointer"}}>
+                    style={{width:22,height:22,borderRadius:4,border:`2px solid ${sel?NAVY:"#CBD5E0"}`,background:sel?NAVY:"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:13,cursor:"pointer"}}>
                     {sel&&<span style={{color:"#fff",fontSize:12,lineHeight:1}}>✓</span>}
                   </div>
                   <div style={{width:22,height:22,borderRadius:"50%",background:idx<nbCv?NAVY:CREAM,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:600,color:idx<nbCv?"#fff":"#A0AEC0",flexShrink:0,marginTop:13}}>#{idx+1}</div>
-                  <Avatar prenom={c.prenom||""} nom={c.nom||""} size={40}/>
+                  {/* L'avatar est masqué sur mobile : 40 px de large pris sur une colonne déjà étroite */}
+                  {!isMobile&&<Avatar prenom={c.prenom||""} nom={c.nom||""} size={40}/>}
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:6}}>
-                      <div>
-                        <p style={{margin:"0 0 1px",fontSize:14,fontWeight:500,color:NAVY}}>{c.prenom} {c.nom}</p>
-                        <p style={{margin:0,fontSize:12,color:"#718096"}}>{c.titre} · {c.ville}{c.diplome?` · ${DIPLOMES_CAND_LABELS[c.diplome]||c.diplome}`:""}{c.niveau?` · ${NIVEAUX_LABELS[c.niveau]||c.niveau}`:""}</p>
+                      <div style={{minWidth:0}}>
+                        <p style={{margin:"0 0 1px",fontSize:14,fontWeight:500,color:NAVY,wordBreak:"break-word"}}>{c.prenom} {c.nom}</p>
+                        <p style={{margin:0,fontSize:12,color:"#718096",wordBreak:"break-word"}}>{c.titre} · {c.ville}{c.diplome?` · ${DIPLOMES_CAND_LABELS[c.diplome]||c.diplome}`:""}{c.niveau?` · ${NIVEAUX_LABELS[c.niveau]||c.niveau}`:""}</p>
                       </div>
                       <ScoreRing score={c.score}/>
                     </div>
-                    {(c.formations||[]).length>0&&<div style={{margin:"6px 0 0"}}><p style={{margin:"0 0 2px",fontSize:10,fontWeight:500,color:"#4A5568"}}>🎓 Formation</p>{triFo(c.formations).slice(0,2).map((fo,i)=><p key={i} style={{margin:"0 0 1px",fontSize:10,color:"#718096"}}>{fo.diplome}{fo.etab?` — ${fo.etab}`:""}{fo.annee?` (${fo.annee})`:""}</p>)}{(c.formations||[]).length>2&&<p style={{margin:0,fontSize:9,color:"#A0AEC0"}}>+ {(c.formations||[]).length-2} autre(s)</p>}</div>}
-                    {(c.experiences||[]).length>0&&<div style={{margin:"4px 0 0"}}><p style={{margin:"0 0 2px",fontSize:10,fontWeight:500,color:"#4A5568"}}>💼 Expérience</p>{triExp(c.experiences).slice(0,2).map((e,i)=>{const du=calcDuree(e.debut,e.fin,e.encours);return <p key={i} style={{margin:"0 0 1px",fontSize:10,color:"#718096"}}>{e.poste}{e.org?` — ${e.org}`:""}{e.debut?` (${e.debut}${e.encours?" – en cours":e.fin?` – ${e.fin}`:""}${du?` · ${du}`:""})`:""}</p>;})}{(c.experiences||[]).length>2&&<p style={{margin:0,fontSize:9,color:"#A0AEC0"}}>+ {(c.experiences||[]).length-2} autre(s)</p>}</div>}
+                    {(c.formations||[]).length>0&&<div style={{margin:"6px 0 0"}}><p style={{margin:"0 0 2px",fontSize:10,fontWeight:500,color:"#4A5568"}}>🎓 Formation</p>{triFo(c.formations).slice(0,2).map((fo,i)=><p key={i} style={{margin:"0 0 1px",fontSize:10,color:"#718096",wordBreak:"break-word"}}>{fo.diplome}{fo.etab?` — ${fo.etab}`:""}{fo.annee?` (${fo.annee})`:""}</p>)}{(c.formations||[]).length>2&&<p style={{margin:0,fontSize:9,color:"#A0AEC0"}}>+ {(c.formations||[]).length-2} autre(s)</p>}</div>}
+                    {(c.experiences||[]).length>0&&<div style={{margin:"4px 0 0"}}><p style={{margin:"0 0 2px",fontSize:10,fontWeight:500,color:"#4A5568"}}>💼 Expérience</p>{triExp(c.experiences).slice(0,2).map((e,i)=>{const du=calcDuree(e.debut,e.fin,e.encours);return <p key={i} style={{margin:"0 0 1px",fontSize:10,color:"#718096",wordBreak:"break-word"}}>{e.poste}{e.org?` — ${e.org}`:""}{e.debut?` (${e.debut}${e.encours?" – en cours":e.fin?` – ${e.fin}`:""}${du?` · ${du}`:""})`:""}</p>;})}{(c.experiences||[]).length>2&&<p style={{margin:0,fontSize:9,color:"#A0AEC0"}}>+ {(c.experiences||[]).length-2} autre(s)</p>}</div>}
                     <div style={{display:"flex",flexWrap:"wrap",gap:5,margin:"8px 0 6px"}}>
                       {(c.specs||[]).filter(s=>(selectedDem.specs||[]).includes(s)).map(s=><span key={s} style={{background:GOLD_LIGHT,color:NAVY,fontSize:11,padding:"2px 8px",borderRadius:20,fontWeight:500}}>✓ {s}</span>)}
                       {(c.specs||[]).filter(s=>!(selectedDem.specs||[]).includes(s)).map(s=><span key={s} style={{background:CREAM,color:"#718096",fontSize:11,padding:"2px 8px",borderRadius:20}}>{s}</span>)}
                     </div>
-                    <p style={{margin:"0 0 6px",fontSize:12,color:"#718096"}}>🌍 {(c.langues||[]).map(l=>typeof l==="string"?l:l.langue).filter(Boolean).join(", ")} · 💰 {c.salaire} · 📅 {c.disponibilite}{(c.modalites||[]).length>0?` · 🏢 ${(c.modalites||[]).join(" / ")}`:""}</p>
-                    <button onClick={()=>setExpandedScore(expanded?null:c.id)} style={{background:"none",border:"none",fontSize:12,color:"#718096",cursor:"pointer",padding:0,textDecoration:"underline"}}>
+                    <p style={{margin:"0 0 6px",fontSize:12,color:"#718096",wordBreak:"break-word"}}>🌍 {(c.langues||[]).map(l=>typeof l==="string"?l:l.langue).filter(Boolean).join(", ")} · 💰 {c.salaire} · 📅 {c.disponibilite}{(c.modalites||[]).length>0?` · 🏢 ${(c.modalites||[]).join(" / ")}`:""}</p>
+                    <button onClick={()=>setExpandedScore(expanded?null:c.id)} style={{background:"none",border:"none",fontSize:12,color:"#718096",cursor:"pointer",padding:"4px 0",textDecoration:"underline"}}>
                       {expanded?"Masquer le détail":"Voir le détail du score →"}
                     </button>
                     {expanded&&(
                       <div style={{background:CREAM,borderRadius:8,padding:"12px",marginTop:8}}>
-                        <ScoreBar label="Spécialisations" score={c.details.specs.score} max={40} note={`${c.details.specs.matched.length}/${c.details.specs.total} domaines`}/>
+                        <ScoreBar label="Spécialisations" score={c.details.specs.score} max={35} note={`${c.details.specs.matched.length}/${c.details.specs.total} domaines`}/>
                         <ScoreBar label="Langues" score={c.details.langues.score} max={25} note={`${c.details.langues.matched.length}/${c.details.langues.total} langues`}/>
                         <ScoreBar label="Niveau d'expérience" score={c.details.niveau.score} max={20}/>
-                        <ScoreBar label="Diplôme" score={c.details.diplome.score} max={15}/>
-                        <div style={{display:"flex",justifyContent:"space-between",paddingTop:8,borderTop:"1px solid #E2E8F0",marginTop:4}}>
+                        <ScoreBar label="Diplôme" score={c.details.diplome.score} max={10}/>
+                        <ScoreBar label="Géographie" score={c.details.geo.score} max={10} note={c.details.geo.note}/>
+                        <div style={{display:"flex",justifyContent:"space-between",gap:8,paddingTop:8,borderTop:"1px solid #E2E8F0",marginTop:4}}>
                           <span style={{fontSize:12,fontWeight:500,color:NAVY}}>Score total</span>
-                          <span style={{fontSize:13,fontWeight:600,color:scoreColor(c.score).color}}>{c.score}/100 — {scoreColor(c.score).label}</span>
+                          <span style={{fontSize:13,fontWeight:600,color:scoreColor(c.score).color,whiteSpace:"nowrap"}}>{c.score}/100 — {scoreColor(c.score).label}</span>
                         </div>
                       </div>
                     )}
@@ -724,7 +795,7 @@ const statP={
           })}
           {shortlistSel.length>0&&(
             <div style={{position:"sticky",bottom:0,background:"#fff",borderTop:"1px solid #E2E8F0",padding:"12px 0 0",marginTop:8}}>
-              <button onClick={envoyerShortlist} style={{width:"100%",padding:"11px",borderRadius:9,background:GOLD,color:NAVY,border:"none",fontSize:14,cursor:"pointer",fontWeight:600}}>
+              <button onClick={envoyerShortlist} style={{width:"100%",padding:"13px",borderRadius:9,background:GOLD,color:NAVY,border:"none",fontSize:14,cursor:"pointer",fontWeight:600}}>
                 📤 Générer et envoyer la short-list ({shortlistSel.length} profil{shortlistSel.length>1?"s":""})
               </button>
             </div>
@@ -733,7 +804,7 @@ const statP={
       );
     }
     return(
-      <div style={{padding:"20px"}}>
+      <div style={{padding:pad}}>
         <p style={{fontSize:11,color:GOLD,fontWeight:500,textTransform:"uppercase",letterSpacing:.8,margin:"0 0 4px"}}>Gestion</p>
         <h2 style={{color:NAVY,fontSize:19,fontWeight:500,margin:"0 0 18px"}}>Demandes recruteurs</h2>
         {demandes.length===0&&!loading&&<p style={{color:"#A0AEC0",fontSize:13,textAlign:"center",padding:"32px 0"}}>Aucune demande pour le moment.</p>}
@@ -744,17 +815,17 @@ const statP={
             <div key={statut} style={{marginBottom:20}}>
               <p style={{fontSize:12,fontWeight:500,color:"#4A5568",margin:"0 0 8px",display:"flex",alignItems:"center",gap:8}}><Badge {...STATUT_D[statut]}/><span>{list.length} demande{list.length>1?"s":""}</span></p>
               {list.map(d=>(
-                <div key={d.id} style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:10,padding:"14px 16px",marginBottom:8,display:"flex",justifyContent:"space-between",alignItems:"center",gap:10}}>
+                <div key={d.id} style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:10,padding:"14px 16px",marginBottom:8,display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,flexWrap:"wrap"}}>
                   <div style={{flex:1,minWidth:0}}>
-                    <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:4}}><span style={{fontSize:11,color:"#A0AEC0"}}>{d.id}</span>{URGENCE_STYLE[d.urgence]&&<Badge {...URGENCE_STYLE[d.urgence]}/>}</div>
-                    <p style={{margin:"0 0 2px",fontSize:14,fontWeight:500,color:NAVY}}>{d.poste}</p>
-                    <p style={{margin:0,fontSize:12,color:"#718096"}}>{d.entreprise} · {d.contact} · {new Date(d.created_at).toLocaleDateString("fr-FR")}</p>
-                    <p style={{margin:"3px 0 0",fontSize:12,color:"#718096"}}>📁 {d.nb_cv} CV · {(d.langues||[]).join(", ")}</p>
+                    <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:4,flexWrap:"wrap"}}><span style={{fontSize:11,color:"#A0AEC0",wordBreak:"break-all"}}>{d.id}</span>{URGENCE_STYLE[d.urgence]&&<Badge {...URGENCE_STYLE[d.urgence]}/>}</div>
+                    <p style={{margin:"0 0 2px",fontSize:14,fontWeight:500,color:NAVY,wordBreak:"break-word"}}>{d.poste}</p>
+                    <p style={{margin:0,fontSize:12,color:"#718096",wordBreak:"break-word"}}>{d.entreprise} · {d.contact} · {new Date(d.created_at).toLocaleDateString("fr-FR")}</p>
+                    <p style={{margin:"3px 0 0",fontSize:12,color:"#718096"}}>📁 {d.nb_cv} CV · {(d.langues||[]).join(", ")}{d.ville?` · 📍 ${d.ville}${d.pays&&d.pays!=="Maroc"?`, ${d.pays}`:""}`:""}</p>
                   </div>
                   {statut==="en_cours"&&(
-                    <div style={{display:"flex",flexDirection:"column",gap:6,flexShrink:0}}>
-                      <button onClick={()=>ouvrirDemande(d)} style={{padding:"7px 14px",borderRadius:7,background:NAVY,color:"#fff",border:"none",fontSize:12,cursor:"pointer",fontWeight:500,whiteSpace:"nowrap"}}>Traiter →</button>
-                      <button onClick={()=>cloturerDemande(d.id,"annulee")} style={{padding:"7px 14px",borderRadius:7,background:"transparent",color:"#718096",border:"1px solid #E2E8F0",fontSize:12,cursor:"pointer"}}>Annuler</button>
+                    <div style={{display:"flex",flexDirection:isMobile?"row":"column",gap:6,flexShrink:0,flexBasis:isMobile?"100%":"auto"}}>
+                      <button onClick={()=>ouvrirDemande(d)} style={{padding:"9px 14px",borderRadius:7,background:NAVY,color:"#fff",border:"none",fontSize:12,cursor:"pointer",fontWeight:500,whiteSpace:"nowrap",flex:isMobile?1:"none"}}>Traiter →</button>
+                      <button onClick={()=>cloturerDemande(d.id,"annulee")} style={{padding:"9px 14px",borderRadius:7,background:"transparent",color:"#718096",border:"1px solid #E2E8F0",fontSize:12,cursor:"pointer",flex:isMobile?1:"none"}}>Annuler</button>
                     </div>
                   )}
                 </div>
@@ -767,16 +838,16 @@ const statP={
   };
 
   const renderCvtheque=()=>(
-    <div style={{padding:"20px"}}>
+    <div style={{padding:pad}}>
       <p style={{fontSize:11,color:GOLD,fontWeight:500,textTransform:"uppercase",letterSpacing:.8,margin:"0 0 4px"}}>Modération</p>
       <h2 style={{color:NAVY,fontSize:19,fontWeight:500,margin:"0 0 18px"}}>CVthèque — {candidats.length} profils</h2>
       {candidatsARelancer.length > 0 && (
         <div style={{background:GOLD_LIGHT,border:`1px solid ${GOLD}`,borderRadius:10,padding:"12px 16px",marginBottom:16,display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap"}}>
-          <div style={{flex:1,minWidth:200}}>
+          <div style={{flex:1,minWidth:isMobile?"100%":200}}>
             <p style={{margin:"0 0 3px",fontSize:13,fontWeight:600,color:NAVY}}>📧 Profils incomplets à relancer : {candidatsARelancer.length}</p>
             <p style={{margin:0,fontSize:11.5,color:"#92400E"}}>Candidats validés dont le niveau, le diplôme, la ville ou le pays n'est pas renseigné (exclus : relancés dans les 7 derniers jours).</p>
           </div>
-          <button onClick={relancerProfilsIncomplets} disabled={relance==="encours"} style={{padding:"9px 16px",borderRadius:7,background:relance==="encours"?"#E2E8F0":NAVY,color:relance==="encours"?"#A0AEC0":"#fff",border:"none",fontSize:12.5,cursor:relance==="encours"?"default":"pointer",fontWeight:600,whiteSpace:"nowrap"}}>
+          <button onClick={relancerProfilsIncomplets} disabled={relance==="encours"} style={{padding:"11px 16px",borderRadius:7,background:relance==="encours"?"#E2E8F0":NAVY,color:relance==="encours"?"#A0AEC0":"#fff",border:"none",fontSize:12.5,cursor:relance==="encours"?"default":"pointer",fontWeight:600,whiteSpace:"nowrap",width:isMobile?"100%":"auto"}}>
             {relance==="encours" ? "Envoi en cours…" : `Relancer les ${candidatsARelancer.length} profils`}
           </button>
         </div>
@@ -789,22 +860,22 @@ const statP={
           <div key={statut} style={{marginBottom:20}}>
             <p style={{fontSize:12,fontWeight:500,color:"#4A5568",margin:"0 0 8px",display:"flex",alignItems:"center",gap:8}}><Badge {...STATUT_C[statut]}/><span>{list.length} profil{list.length>1?"s":""}</span></p>
             {list.map(c=>(
-              <div key={c.id} style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:10,padding:"14px",marginBottom:8}}>
-                <div style={{display:"flex",gap:12,alignItems:"flex-start"}}>
+              <div key={c.id} style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:10,padding:isMobile?"12px":"14px",marginBottom:8}}>
+                <div style={{display:"flex",gap:12,alignItems:"flex-start",flexWrap:"wrap"}}>
                   <Avatar prenom={c.prenom||""} nom={c.nom||""}/>
-                  <div style={{flex:1}}>
-                    <p style={{margin:"0 0 2px",fontSize:14,fontWeight:500,color:NAVY}}>{c.prenom} {c.nom}</p>
-                    <p style={{margin:"0 0 6px",fontSize:12,color:"#718096"}}>{c.titre} · {c.ville}{c.pays&&c.pays!=="Maroc"?`, ${c.pays}`:""}{c.diplome?` · ${DIPLOMES_CAND_LABELS[c.diplome]||c.diplome}`:""}{c.niveau?` · ${NIVEAUX_LABELS[c.niveau]||c.niveau}`:""}</p>
-                    {(c.formations||[]).length>0&&<div style={{margin:"0 0 6px"}}><p style={{margin:"0 0 3px",fontSize:11,fontWeight:500,color:"#4A5568"}}>🎓 Formation</p>{triFo(c.formations).slice(0,3).map((fo,i)=><p key={i} style={{margin:"0 0 2px",fontSize:11,color:"#718096"}}>{fo.diplome}{fo.etab?` — ${fo.etab}`:""}{fo.annee?` (${fo.annee})`:""}</p>)}{(c.formations||[]).length>3&&<p style={{margin:0,fontSize:10,color:"#A0AEC0"}}>+ {(c.formations||[]).length-3} autre(s)</p>}</div>}
-                    {(c.experiences||[]).length>0&&<div style={{margin:"0 0 6px"}}><p style={{margin:"0 0 3px",fontSize:11,fontWeight:500,color:"#4A5568"}}>💼 Expérience</p>{triExp(c.experiences).slice(0,3).map((e,i)=>{const du=calcDuree(e.debut,e.fin,e.encours);return <p key={i} style={{margin:"0 0 2px",fontSize:11,color:"#718096"}}>{e.poste}{e.org?` — ${e.org}`:""}{e.debut?` (${e.debut}${e.encours?" – en cours":e.fin?` – ${e.fin}`:""}${du?` · ${du}`:""})`:""}</p>;})}{(c.experiences||[]).length>3&&<p style={{margin:0,fontSize:10,color:"#A0AEC0"}}>+ {(c.experiences||[]).length-3} autre(s)</p>}</div>}
+                  <div style={{flex:1,minWidth:0}}>
+                    <p style={{margin:"0 0 2px",fontSize:14,fontWeight:500,color:NAVY,wordBreak:"break-word"}}>{c.prenom} {c.nom}</p>
+                    <p style={{margin:"0 0 6px",fontSize:12,color:"#718096",wordBreak:"break-word"}}>{c.titre} · {c.ville}{c.pays&&c.pays!=="Maroc"?`, ${c.pays}`:""}{c.diplome?` · ${DIPLOMES_CAND_LABELS[c.diplome]||c.diplome}`:""}{c.niveau?` · ${NIVEAUX_LABELS[c.niveau]||c.niveau}`:""}</p>
+                    {(c.formations||[]).length>0&&<div style={{margin:"0 0 6px"}}><p style={{margin:"0 0 3px",fontSize:11,fontWeight:500,color:"#4A5568"}}>🎓 Formation</p>{triFo(c.formations).slice(0,3).map((fo,i)=><p key={i} style={{margin:"0 0 2px",fontSize:11,color:"#718096",wordBreak:"break-word"}}>{fo.diplome}{fo.etab?` — ${fo.etab}`:""}{fo.annee?` (${fo.annee})`:""}</p>)}{(c.formations||[]).length>3&&<p style={{margin:0,fontSize:10,color:"#A0AEC0"}}>+ {(c.formations||[]).length-3} autre(s)</p>}</div>}
+                    {(c.experiences||[]).length>0&&<div style={{margin:"0 0 6px"}}><p style={{margin:"0 0 3px",fontSize:11,fontWeight:500,color:"#4A5568"}}>💼 Expérience</p>{triExp(c.experiences).slice(0,3).map((e,i)=>{const du=calcDuree(e.debut,e.fin,e.encours);return <p key={i} style={{margin:"0 0 2px",fontSize:11,color:"#718096",wordBreak:"break-word"}}>{e.poste}{e.org?` — ${e.org}`:""}{e.debut?` (${e.debut}${e.encours?" – en cours":e.fin?` – ${e.fin}`:""}${du?` · ${du}`:""})`:""}</p>;})}{(c.experiences||[]).length>3&&<p style={{margin:0,fontSize:10,color:"#A0AEC0"}}>+ {(c.experiences||[]).length-3} autre(s)</p>}</div>}
                     <div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:5}}>{(c.specs||[]).map(s=><span key={s} style={{background:CREAM,color:NAVY,fontSize:11,padding:"2px 8px",borderRadius:20}}>{s}</span>)}</div>
-                    <p style={{margin:0,fontSize:12,color:"#718096"}}>🌍 {(c.langues||[]).map(l=>typeof l==="string"?l:l.langue).filter(Boolean).join(", ")} · 💰 {c.salaire} · 📅 {c.disponibilite}{(c.modalites||[]).length>0?` · 🏢 ${(c.modalites||[]).join(" / ")}`:""}</p>
-                    <p style={{margin:"5px 0 0",fontSize:12,color:NAVY,fontWeight:500}}>📞 {c.tel||"non renseigné"} · ✉️ {c.email||"non renseigné"}</p>
+                    <p style={{margin:0,fontSize:12,color:"#718096",wordBreak:"break-word"}}>🌍 {(c.langues||[]).map(l=>typeof l==="string"?l:l.langue).filter(Boolean).join(", ")} · 💰 {c.salaire} · 📅 {c.disponibilite}{(c.modalites||[]).length>0?` · 🏢 ${(c.modalites||[]).join(" / ")}`:""}</p>
+                    <p style={{margin:"5px 0 0",fontSize:12,color:NAVY,fontWeight:500,wordBreak:"break-word"}}>📞 {c.tel||"non renseigné"} · ✉️ {c.email||"non renseigné"}</p>
                   </div>
-                  <div style={{display:"flex",flexDirection:"column",gap:6,flexShrink:0}}>
-                    {statut==="en_attente"&&<><button onClick={()=>validerCandidat(c.id,"valide")} style={{padding:"6px 12px",borderRadius:7,background:"#F0FDF4",color:"#166534",border:"1px solid #BBF7D0",fontSize:12,cursor:"pointer",fontWeight:500}}>✓ Valider</button><button onClick={()=>validerCandidat(c.id,"refuse")} style={{padding:"6px 12px",borderRadius:7,background:"#FEF2F2",color:"#991B1B",border:"1px solid #FECACA",fontSize:12,cursor:"pointer"}}>✕ Refuser</button></>}
-                    {statut==="refuse"&&<button onClick={()=>validerCandidat(c.id,"en_attente")} style={{padding:"6px 12px",borderRadius:7,background:CREAM,color:NAVY,border:"1px solid #E2E8F0",fontSize:12,cursor:"pointer"}}>↩ Remettre</button>}
-                    {statut==="valide"&&<button onClick={()=>validerCandidat(c.id,"refuse")} style={{padding:"6px 12px",borderRadius:7,background:"transparent",color:"#718096",border:"1px solid #E2E8F0",fontSize:12,cursor:"pointer"}}>Archiver</button>}
+                  <div style={{display:"flex",flexDirection:isMobile?"row":"column",gap:6,flexShrink:0,flexBasis:isMobile?"100%":"auto"}}>
+                    {statut==="en_attente"&&<><button onClick={()=>validerCandidat(c.id,"valide")} style={{padding:"9px 12px",borderRadius:7,background:"#F0FDF4",color:"#166534",border:"1px solid #BBF7D0",fontSize:12,cursor:"pointer",fontWeight:500,flex:isMobile?1:"none"}}>✓ Valider</button><button onClick={()=>validerCandidat(c.id,"refuse")} style={{padding:"9px 12px",borderRadius:7,background:"#FEF2F2",color:"#991B1B",border:"1px solid #FECACA",fontSize:12,cursor:"pointer",flex:isMobile?1:"none"}}>✕ Refuser</button></>}
+                    {statut==="refuse"&&<button onClick={()=>validerCandidat(c.id,"en_attente")} style={{padding:"9px 12px",borderRadius:7,background:CREAM,color:NAVY,border:"1px solid #E2E8F0",fontSize:12,cursor:"pointer",flex:isMobile?1:"none"}}>↩ Remettre</button>}
+                    {statut==="valide"&&<button onClick={()=>validerCandidat(c.id,"refuse")} style={{padding:"9px 12px",borderRadius:7,background:"transparent",color:"#718096",border:"1px solid #E2E8F0",fontSize:12,cursor:"pointer",flex:isMobile?1:"none"}}>Archiver</button>}
                   </div>
                 </div>
               </div>
@@ -816,21 +887,21 @@ const statP={
   );
 
   const renderShortlists=()=>(
-    <div style={{padding:"20px"}}>
+    <div style={{padding:pad}}>
       <p style={{fontSize:11,color:GOLD,fontWeight:500,textTransform:"uppercase",letterSpacing:.8,margin:"0 0 4px"}}>Historique</p>
       <h2 style={{color:NAVY,fontSize:19,fontWeight:500,margin:"0 0 18px"}}>Short-lists envoyées</h2>
       {!shortlistSent.length&&<p style={{fontSize:13,color:"#A0AEC0",textAlign:"center",padding:"32px 0"}}>Aucune short-list générée pour le moment.<br/>Traitez une demande pour en créer une.</p>}
       {shortlistSent.map((sl,i)=>(
         <div key={i} style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:12,overflow:"hidden",marginBottom:16}}>
-          <div style={{background:NAVY,padding:"14px 18px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-            <div><p style={{margin:"0 0 2px",fontSize:14,fontWeight:500,color:"#fff"}}>{sl.poste}</p><p style={{margin:0,fontSize:12,color:"rgba(255,255,255,0.6)"}}>{sl.entreprise} · {sl.contact} · {sl.date}</p></div>
+          <div style={{background:NAVY,padding:isMobile?"12px 14px":"14px 18px",display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+            <div style={{minWidth:0}}><p style={{margin:"0 0 2px",fontSize:14,fontWeight:500,color:"#fff",wordBreak:"break-word"}}>{sl.poste}</p><p style={{margin:0,fontSize:12,color:"rgba(255,255,255,0.6)",wordBreak:"break-word"}}>{sl.entreprise} · {sl.contact} · {sl.date}</p></div>
             <Badge bg={GOLD_LIGHT} color={NAVY} label={`${sl.candidats.length} profils`}/>
           </div>
-          <div style={{padding:"14px 18px"}}>
+          <div style={{padding:isMobile?"12px 14px":"14px 18px"}}>
             {sl.candidats.map((c,j)=>(
               <div key={c.id} style={{display:"flex",gap:12,alignItems:"center",padding:"10px 0",borderBottom:j<sl.candidats.length-1?"1px solid #F0F4F8":"none"}}>
                 <Avatar prenom={c.prenom||""} nom={c.nom||""} size={36}/>
-                <div style={{flex:1}}><p style={{margin:"0 0 2px",fontSize:13,fontWeight:500,color:NAVY}}>{j+1}. {c.prenom} {c.nom}</p><p style={{margin:0,fontSize:12,color:"#718096"}}>{c.titre} · {c.niveau} · {c.disponibilite}</p></div>
+                <div style={{flex:1,minWidth:0}}><p style={{margin:"0 0 2px",fontSize:13,fontWeight:500,color:NAVY,wordBreak:"break-word"}}>{j+1}. {c.prenom} {c.nom}</p><p style={{margin:0,fontSize:12,color:"#718096",wordBreak:"break-word"}}>{c.titre} · {c.niveau} · {c.disponibilite}</p></div>
               </div>
             ))}
           </div>
@@ -840,7 +911,7 @@ const statP={
   );
 
   const renderPaiements = () => (
-    <div style={{padding:"20px"}}>
+    <div style={{padding:pad}}>
       <p style={{fontSize:11,color:GOLD,fontWeight:500,textTransform:"uppercase",letterSpacing:.8,margin:"0 0 4px"}}>Trésorerie</p>
       <h2 style={{color:NAVY,fontSize:19,fontWeight:500,margin:"0 0 18px"}}>Paiements — {paiements.length}</h2>
       {paiements.length===0 && !loading && <p style={{color:"#A0AEC0",fontSize:13,textAlign:"center",padding:"32px 0"}}>Aucun paiement pour le moment.</p>}
@@ -852,21 +923,21 @@ const statP={
           : {bg:"#F0FDF4",color:"#166534",label:"Confirmé"};
         return (
           <div key={statut} style={{marginBottom:20}}>
-            <p style={{fontSize:12,fontWeight:500,color:"#4A5568",margin:"0 0 8px",display:"flex",alignItems:"center",gap:8}}><Badge {...styleSt}/><span>{list.length} paiement{list.length>1?"s":""}</span></p>
+            <p style={{fontSize:12,fontWeight:500,color:"#4A5568",margin:"0 0 8px",display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}><Badge {...styleSt}/><span>{list.length} paiement{list.length>1?"s":""}</span></p>
             {list.map(p=>{
               const dem = demandes.find(d=>d.id===p.demande_id);
               const enCours = confirmant === p.id;
               return (
-                <div key={p.id} style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:10,padding:"14px 16px",marginBottom:8}}>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10}}>
+                <div key={p.id} style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:10,padding:isMobile?"12px 14px":"14px 16px",marginBottom:8}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10,flexWrap:"wrap"}}>
                     <div style={{flex:1,minWidth:0}}>
                       <p style={{margin:"0 0 2px",fontSize:15,fontWeight:600,color:NAVY}}>{p.montant_total?.toLocaleString("fr-FR")} MAD <span style={{fontSize:12,color:"#718096",fontWeight:400,marginLeft:6}}>({p.nb_cv} × {p.montant_unitaire?.toLocaleString("fr-FR")} MAD)</span></p>
-                      <p style={{margin:"0 0 2px",fontSize:12,color:NAVY}}>📧 {p.recruteur_email}</p>
-                      {dem && <p style={{margin:0,fontSize:12,color:"#718096"}}>📋 {dem.poste} — {dem.entreprise}</p>}
-                      <p style={{margin:"4px 0 0",fontSize:11,color:"#A0AEC0"}}>Réf. {p.reference_virement || "—"} · {p.mode_paiement} · Signalé le {new Date(p.created_at).toLocaleDateString("fr-FR")}{p.date_confirmation && <span> · Confirmé le {new Date(p.date_confirmation).toLocaleDateString("fr-FR")}</span>}</p>
+                      <p style={{margin:"0 0 2px",fontSize:12,color:NAVY,wordBreak:"break-word"}}>📧 {p.recruteur_email}</p>
+                      {dem && <p style={{margin:0,fontSize:12,color:"#718096",wordBreak:"break-word"}}>📋 {dem.poste} — {dem.entreprise}</p>}
+                      <p style={{margin:"4px 0 0",fontSize:11,color:"#A0AEC0",wordBreak:"break-word"}}>Réf. {p.reference_virement || "—"} · {p.mode_paiement} · Signalé le {new Date(p.created_at).toLocaleDateString("fr-FR")}{p.date_confirmation && <span> · Confirmé le {new Date(p.date_confirmation).toLocaleDateString("fr-FR")}</span>}</p>
                     </div>
                     {statut==="en_attente" && (
-                      <button onClick={()=>confirmerPaiement(p)} disabled={enCours} style={{padding:"8px 16px",borderRadius:7,background:enCours?"#E2E8F0":"#166534",color:enCours?"#A0AEC0":"#fff",border:"none",fontSize:12.5,cursor:enCours?"default":"pointer",fontWeight:600,whiteSpace:"nowrap"}}>{enCours ? "Confirmation…" : "✓ Confirmer"}</button>
+                      <button onClick={()=>confirmerPaiement(p)} disabled={enCours} style={{padding:"11px 16px",borderRadius:7,background:enCours?"#E2E8F0":"#166534",color:enCours?"#A0AEC0":"#fff",border:"none",fontSize:12.5,cursor:enCours?"default":"pointer",fontWeight:600,whiteSpace:"nowrap",width:isMobile?"100%":"auto"}}>{enCours ? "Confirmation…" : "✓ Confirmer"}</button>
                     )}
                   </div>
                 </div>

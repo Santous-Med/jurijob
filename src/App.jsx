@@ -992,7 +992,7 @@ const STAT_R={en_cours:{bg:"#EFF6FF",color:"#1D4ED8",label:"En cours d'analyse"}
 
 function EspaceRecruteur({session,onLogout}){
   const rmeta=session?.user?.user_metadata||{};
-  const initialF={entreprise:rmeta.entreprise||"",contact:rmeta.contact||"",poste:"",langues:[],niveau:"",diplome:"",specs:[],nbCv:3,urgence:"normal",modalite:"Indifférent",notes:"",budget:"",budgetConfidentiel:false};
+  const initialF={entreprise:rmeta.entreprise||"",contact:rmeta.contact||"",poste:"",pays:"Maroc",ville:"",langues:[],niveau:"",diplome:"",specs:[],nbCv:3,urgence:"normal",modalite:"Indifférent",notes:"",budget:"",budgetConfidentiel:false};
 
   /* Responsive : mêmes règles que l'espace candidat */
   const isMobile=useIsMobile();
@@ -1089,6 +1089,8 @@ function EspaceRecruteur({session,onLogout}){
       entreprise: f.entreprise,
       contact: f.contact,
       poste: f.poste,
+      pays: f.pays,
+      ville: f.ville,
       niveau: f.niveau,
       diplome: f.diplome,
       specs: f.specs,
@@ -1107,7 +1109,7 @@ budget: f.budgetConfidentiel ? "Confidentiel" : f.budget,
   const set=(k,v)=>setF(x=>({...x,[k]:v}));
   const toggle=(k,v)=>setF(x=>({...x,[k]:x[k].includes(v)?x[k].filter(i=>i!==v):[...x[k],v]}));
   const ok=()=>{
-    if(step===0)return f.entreprise.trim()&&f.poste.trim();
+    if(step===0)return f.entreprise.trim()&&f.poste.trim()&&f.contact.trim()&&f.pays.trim()&&f.ville.trim();
     if(step===1)return f.langues.length>0;
     if(step===2)return f.niveau&&f.diplome;
     if(step===3)return f.specs.length>0;
@@ -1117,8 +1119,20 @@ budget: f.budgetConfidentiel ? "Confidentiel" : f.budget,
     if(step===0)return(
       <div style={{display:"flex",flexDirection:"column",gap:16}}>
         <div><Lbl t="Entreprise / Cabinet" r/><Inp val={f.entreprise} onChange={v=>set("entreprise",v)} ph={isMobile?"Ex. : Société Générale Maroc":"Ex. : Société Générale Maroc, Cabinet Mikou…"}/></div>
-        <div><Lbl t="Nom du contact RH"/><Inp val={f.contact} onChange={v=>set("contact",v)} ph="Prénom Nom"/></div>
+        <div><Lbl t="Nom du contact RH" r/><Inp val={f.contact} onChange={v=>set("contact",v)} ph="Prénom Nom"/></div>
         <div><Lbl t="Intitulé du poste recherché" r/><Inp val={f.poste} onChange={v=>set("poste",v)} ph={isMobile?"Ex. : Juriste d'entreprise":"Ex. : Juriste d'entreprise, Avocat collaborateur…"}/></div>
+        <div>
+          <Lbl t="Lieu du poste" r/>
+          <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:12}}>
+            <select value={f.pays} onChange={e=>setF(x=>({...x,pays:e.target.value,ville:""}))} style={{...iSt,cursor:"pointer"}}>
+              {PAYS.map(p=><option key={p} value={p}>{p}</option>)}
+            </select>
+            {VILLES[f.pays]
+              ? <SelectOuAutre key={f.pays} value={f.ville} options={VILLES[f.pays]} onChange={v=>set("ville",v)} ph="Ville du poste"/>
+              : <Inp val={f.ville} onChange={v=>set("ville",v)} ph="Ville du poste"/>}
+          </div>
+          <p style={{fontSize:11,color:"#A0AEC0",margin:"5px 0 0",lineHeight:1.5}}>Lieu d'exercice, pas nécessairement le siège social. Les agglomérations proches sont traitées comme un même bassin d'emploi. Si vous retenez le télétravail plus bas, le lieu n'entre pas dans la sélection.</p>
+        </div>
         <div>
           <Lbl t="Nombre de CV souhaités"/>
           <div style={{display:"flex",gap:8}}>{[1,2,3,5,10].map(n=><button key={n} onClick={()=>set("nbCv",n)} style={{flex:1,minWidth:0,padding:"11px 4px",borderRadius:8,fontSize:14,cursor:"pointer",background:f.nbCv===n?NAVY:"transparent",color:f.nbCv===n?"#fff":NAVY,border:`1.5px solid ${f.nbCv===n?NAVY:"#CBD5E0"}`,fontWeight:f.nbCv===n?500:400}}>{n}</button>)}</div>
@@ -1172,7 +1186,7 @@ budget: f.budgetConfidentiel ? "Confidentiel" : f.budget,
     );
     if(step===4)return(
       <div style={{display:"flex",flexDirection:"column",gap:10}}>
-        {[["Entreprise",f.entreprise],["Contact RH",f.contact||"—"],["Poste",f.poste],["CV demandés",f.nbCv],["Urgence",f.urgence==="normal"?"Normal":f.urgence==="urgent"?"Urgent":"Immédiat"],["Modalité",f.modalite],["Langues",f.langues.join(", ")],["Niveau",NIVEAUX_RH.find(n=>n.val===f.niveau)?.label],["Diplôme",DIPLOMES_RH.find(d=>d.val===f.diplome)?.label],["Spécialisations",f.specs.join(" · ")],["Budget",f.budgetConfidentiel?"Confidentiel":f.budget||"—"],["Notes",f.notes||"—"]].map(([k,v])=>(
+        {[["Entreprise",f.entreprise],["Contact RH",f.contact],["Poste",f.poste],["Lieu du poste",[f.ville,f.pays].filter(Boolean).join(", ")],["CV demandés",f.nbCv],["Urgence",f.urgence==="normal"?"Normal":f.urgence==="urgent"?"Urgent":"Immédiat"],["Modalité",f.modalite],["Langues",f.langues.join(", ")],["Niveau",NIVEAUX_RH.find(n=>n.val===f.niveau)?.label],["Diplôme",DIPLOMES_RH.find(d=>d.val===f.diplome)?.label],["Spécialisations",f.specs.join(" · ")],["Budget",f.budgetConfidentiel?"Confidentiel":f.budget||"—"],["Notes",f.notes||"—"]].map(([k,v])=>(
           <div key={k} style={{display:"flex",flexDirection:isMobile?"column":"row",justifyContent:"space-between",alignItems:"flex-start",padding:"9px 13px",background:CREAM,borderRadius:8,gap:isMobile?3:12}}>
             <span style={{fontSize:isMobile?11.5:13,color:"#718096",flexShrink:0}}>{k}</span>
             <span style={{fontSize:13,color:NAVY,fontWeight:500,textAlign:isMobile?"left":"right",wordBreak:"break-word"}}>{v}</span>
@@ -1230,7 +1244,7 @@ budget: f.budgetConfidentiel ? "Confidentiel" : f.budget,
                 <div style={{flex:1,minWidth:0}}>
                   <p style={{margin:"0 0 2px",fontSize:14,fontWeight:500,color:NAVY,wordBreak:"break-word"}}>{d.poste}</p>
                   <p style={{margin:0,fontSize:12,color:"#718096",wordBreak:"break-word"}}>{d.entreprise}{d.created_at?` · ${new Date(d.created_at).toLocaleDateString("fr-FR")}`:""}</p>
-                  <p style={{margin:"4px 0 0",fontSize:12,color:"#718096"}}>📁 {d.nb_cv} CV demandé{d.nb_cv>1?"s":""}{(d.langues&&d.langues.length)?` · 🌍 ${d.langues.join(", ")}`:""}{d.modalite&&d.modalite!=="Indifférent"?` · 🏢 ${d.modalite}`:""}</p>
+                  <p style={{margin:"4px 0 0",fontSize:12,color:"#718096"}}>📁 {d.nb_cv} CV demandé{d.nb_cv>1?"s":""}{d.ville?` · 📍 ${d.ville}`:""}{(d.langues&&d.langues.length)?` · 🌍 ${d.langues.join(", ")}`:""}{d.modalite&&d.modalite!=="Indifférent"?` · 🏢 ${d.modalite}`:""}</p>
                 </div>
                 <div style={{textAlign:isMobile?"left":"right",flexShrink:0}}>
                   <span style={{background:st.bg,color:st.color,fontSize:11,fontWeight:500,padding:"4px 10px",borderRadius:20,whiteSpace:"nowrap",display:"inline-block"}}>{st.label}</span>
